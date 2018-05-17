@@ -982,7 +982,7 @@ void TR::AMD64JNILinkage::releaseVMAccess(TR::Node *callNode)
 
    TR_OutlinedInstructions *outlinedLongRelease =
          new (trHeapMemory()) TR_OutlinedInstructions(outlineCallNode, TR::icall,
-                                    NULL, longReleaseSnippetLabel, NULL, cg());
+                                    NULL, longReleaseSnippetLabel, longReleaseRestartLabel, cg());
    cg()->getOutlinedInstructionsList().push_front(outlinedLongRelease);
 
    cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
@@ -1151,7 +1151,7 @@ void TR::AMD64JNILinkage::releaseVMAccessAtomicFree(TR::Node *callNode)
 
    TR_OutlinedInstructions *outlinedLongRelease =
          new (trHeapMemory()) TR_OutlinedInstructions(outlineCallNode, TR::icall,
-                                    NULL, longReleaseSnippetLabel, NULL, cg());
+                                    NULL, longReleaseSnippetLabel, longReleaseRestartLabel, cg());
    cg()->getOutlinedInstructionsList().push_front(outlinedLongRelease);
 
    cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
