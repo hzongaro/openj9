@@ -1517,7 +1517,7 @@ TR::Register *TR::AMD64JNILinkage::buildDirectJNIDispatch(TR::Node *callNode)
       passThread          = false;
       }
 
-   cg()->generateDebugCounter(
+   cg()->generateDebugCounter(callNode,
                  TR::DebugCounter::debugCounterName(comp(),
                                            "JNICallee/%s/(%s)/%d/%d",
                                            callNode->getOpCode().getName(),
