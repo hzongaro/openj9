@@ -14595,12 +14595,6 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       || gcMode == TR_WrtbarAlways
       ;
 
-   bool doIsSrcInNurseryCheck =
-         gcMode == TR_WrtbarOldCheck
-      || gcMode == TR_WrtbarCardMarkAndOldCheck
-      || gcMode == TR_WrtbarAlways
-      ;
-
    bool unsafeCallBarrier = false;
    if (doIsDestInOldSpaceCheck &&
        (gcMode == TR_WrtbarCardMark
