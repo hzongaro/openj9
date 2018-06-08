@@ -13632,6 +13632,11 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       || gcMode == TR_WrtbarAlways
       ;
 
+   bool doIsSrcInNurseryCheck =
+         gcMode == TR_WrtbarOldCheck
+      || gcMode == TR_WrtbarCardMarkAndOldCheck
+      || gcMode == TR_WrtbarAlways
+      ;
 
    bool unsafeCallBarrier = false;
    if (doIsDestInOldSpaceCheck &&
@@ -13774,7 +13779,7 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
             }
          else
             {
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+            generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
             }
          }
 
@@ -13868,8 +13873,8 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       TR_X86OpCodes branchOp;
       TR_WriteBarrierKind gcModeForSnippet = gcMode;
 
-      bool branchToSnippetIfOld = false;
-      bool branchToSnippetIfOldAndNotRemembered = false;
+      bool branchToSnippet = false;
+      bool branchToSnippetIfSrcNotOldAndDestNotRemembered = false;
       TR::LabelSymbol *labelAfterBranchToSnippet = NULL;
 
       if (gcMode == TR_WrtbarAlways)
@@ -13894,45 +13899,37 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
              && (node->getOpCodeValue() == TR::wrtbari)
              && doInternalControlFlow)
             {
-            uintptrj_t nurseryBase, nurseryTop;
+            bool is64Bit = TR::Compiler->target.is64Bit(); // On compressed refs, owningObjectReg is already uncompressed, and the vmthread fields are 64 bits
+            labelAfterBranchToSnippet = generateLabelSymbol(cg);
 
-            fej9->getNurserySpaceBounds(&nurseryBase, &nurseryTop);
+            TR::Register *tempOwningObjReg = srm->findOrCreateScratchRegister();
+            generateRegRegInstruction(MOVRegReg(),  node, tempOwningObjReg, owningObjectReg, cg);
+            uintptr_t chb = comp->getOptions()->getHeapBaseForBarrierRange0();
+            // asum chb is align to 2
+            uintptr_t halfchb = chb >> 1;
 
-            // sometimes the tenured space can grow, so we can't deal with the case
-            // where the tenured area is above the nursery, unless in the future we
-            // can tell the possible tenured space max boundary.
-            //
-            if ((nurseryBase != 0) && (nurseryTop != 0))
+            if (TR::Compiler->target.is64Bit() && !TR::Compiler->om.nativeAddressesCanChangeSize() && !IS_32BIT_SIGNED(chb) && IS_32BIT_SIGNED(halfchb))
                {
-               TR_X86OpCodes nurseryCompareOp = JAE4;
-               TR_X86OpCodes stackCompareOp = JB4;
-               uintptrj_t nurseryCompareValue = nurseryBase;
-
-#if defined(J9VM_GC_MODRON_CONCURRENT_MARK)
-               uintptrj_t stackCompareValue = comp->getOptions()->getHeapBase();
-#else
-               uintptrj_t stackCompareValue = 0;
-#endif
-               //printf("Heap base %p, Nursery base %p\n", stackCompareValue, nurseryCompareValue);
-
-               bool canDoImmCompare = (TR::Compiler->target.is64Bit()) ? IS_32BIT_SIGNED(nurseryCompareValue) : true;
-               if (nurseryCompareValue && canDoImmCompare)
-                  {
-                  generateRegImmInstruction(CMPRegImm4(), node, owningObjectReg, (uint32_t)nurseryCompareValue, cg);
-                  generateLabelInstruction(nurseryCompareOp, node, doneLabel, cg);
-                  }
-
-               if (stackCompareValue != 0 && wrtbarNode->isLikelyStackWrtBar())
-                  {
-                  canDoImmCompare = (TR::Compiler->target.is64Bit()) ? IS_32BIT_SIGNED(stackCompareValue) : true;
-                  if (stackCompareValue && canDoImmCompare)
-                     {
-                     //printf("Likely stack wrtbar in method %s, tenureTop %p\n", comp->signature(), tenureBase);
-                     generateRegImmInstruction(CMPRegImm4(), node, owningObjectReg, (uint32_t)stackCompareValue, cg);
-                     generateLabelInstruction(stackCompareOp, node, doneLabel, cg);
-                     }
-                  }
+               generateRegImmInstruction(SUBRegImm4(), node, tempOwningObjReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+               generateRegImmInstruction(SUBRegImm4(), node, tempOwningObjReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
                }
+            else if (TR::Compiler->target.is64Bit() && (!IS_32BIT_SIGNED(chb) || TR::Compiler->om.nativeAddressesCanChangeSize()))
+               {
+               TR::Register *chbReg = srm->findOrCreateScratchRegister();
+               generateRegImm64Instruction(MOV8RegImm64, node, chbReg, chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+               generateRegRegInstruction(SUBRegReg(), node, tempOwningObjReg, chbReg, cg);
+               srm->reclaimScratchRegister(chbReg);
+               }
+            else
+               {
+               generateRegImmInstruction(SUBRegImm4(), node, tempOwningObjReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+               }
+            TR::MemoryReference *vhsMR1 =
+                  generateX86MemoryReference(cg->getVMThreadRegister(), offsetof(J9VMThread, heapSizeForBarrierRange0), cg);
+            generateRegMemInstruction(CMPRegMem(), node, tempOwningObjReg, vhsMR1, cg);
+            generateLabelInstruction(JAE1, node, doneLabel, cg);
+
+            srm->reclaimScratchRegister(tempOwningObjReg);
             }
 
          // See if we can do a TEST1MemImm1
@@ -13956,7 +13953,7 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
          // If the destination object is old and not remembered then process the remembered
          // set update out-of-line with the generational helper.
          //
-         branchToSnippetIfOldAndNotRemembered = true;
+         branchToSnippetIfSrcNotOldAndDestNotRemembered = true;
          gcModeForSnippet = TR_WrtbarOldCheck;
          }
       else if (gcMode == TR_WrtbarOldCheck)
@@ -13964,63 +13961,45 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
          // For pure generational barriers if the object is old and remembered then the helper
          // can be skipped.
          //
-         branchToSnippetIfOldAndNotRemembered = true;
+         branchToSnippetIfSrcNotOldAndDestNotRemembered = true;
          }
       else
          {
-         branchToSnippetIfOld = true;
+         branchToSnippet = true;
          }
 
-      if (branchToSnippetIfOldAndNotRemembered)
+      if (branchToSnippetIfSrcNotOldAndDestNotRemembered)
          {
+         TR_ASSERT(srcReg, "Expected to have a source register for wrtbari");
          bool is64Bit = TR::Compiler->target.is64Bit(); // On compressed refs, owningObjectReg is already uncompressed, and the vmthread fields are 64 bits
          labelAfterBranchToSnippet = generateLabelSymbol(cg);
+         TR::Register *tempSrcReg = srm->findOrCreateScratchRegister();
+         generateRegRegInstruction(MOVRegReg(),  node, tempSrcReg, srcReg, cg);
 
-         if (!comp->getOptions()->isVariableHeapBaseForBarrierRange0())
+         uintptr_t chb = comp->getOptions()->getHeapBaseForBarrierRange0();
+         // asum chb is align to 2
+         uintptr_t halfchb = chb >> 1;
+
+         if (TR::Compiler->target.is64Bit() && !TR::Compiler->om.nativeAddressesCanChangeSize() && !IS_32BIT_SIGNED(chb) && IS_32BIT_SIGNED(halfchb))
             {
-            TR::Register *tempReg = srm->findOrCreateScratchRegister();
-            generateRegRegInstruction(MOVRegReg(),  node, tempReg, owningObjectReg, cg);
-            uintptr_t chb = comp->getOptions()->getHeapBaseForBarrierRange0();
-            // asum chb is align to 2
-            uintptr_t halfchb = chb >> 1;
-
-            if (TR::Compiler->target.is64Bit() && !TR::Compiler->om.nativeAddressesCanChangeSize() && !IS_32BIT_SIGNED(chb) && IS_32BIT_SIGNED(halfchb))
-               {
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               }
-            else if (TR::Compiler->target.is64Bit() && (!IS_32BIT_SIGNED(chb) || TR::Compiler->om.nativeAddressesCanChangeSize()))
-               {
-               TR::Register *chbReg = srm->findOrCreateScratchRegister();
-               generateRegImm64Instruction(MOV8RegImm64, node, chbReg, chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               generateRegRegInstruction(SUBRegReg(), node, tempReg, chbReg, cg);
-               srm->reclaimScratchRegister(chbReg);
-               }
-            else
-               {
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               }
-            TR::MemoryReference *vhsMR1 =
-                  generateX86MemoryReference(cg->getVMThreadRegister(), offsetof(J9VMThread, heapSizeForBarrierRange0), cg);
-            generateRegMemInstruction(CMPRegMem(), node, tempReg, vhsMR1, cg);
-            generateLabelInstruction(JAE1, node, labelAfterBranchToSnippet, cg);
+            generateRegImmInstruction(SUBRegImm4(), node, tempSrcReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+            generateRegImmInstruction(SUBRegImm4(), node, tempSrcReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+            }
+         else if (TR::Compiler->target.is64Bit() && (!IS_32BIT_SIGNED(chb) || TR::Compiler->om.nativeAddressesCanChangeSize()))
+            {
+            TR::Register *chbReg = srm->findOrCreateScratchRegister();
+            generateRegImm64Instruction(MOV8RegImm64, node, chbReg, chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
+            generateRegRegInstruction(SUBRegReg(), node, tempSrcReg, chbReg, cg);
+            srm->reclaimScratchRegister(chbReg);
             }
          else
             {
-            // Since srcReg is NULL, only check whether the owning object is in tenure
-            generateMemRegInstruction(CMPMemReg(is64Bit), node,
-                  generateX86MemoryReference(cg->getVMThreadRegister(),
-                        offsetof(J9VMThread, lowTenureAddress), cg),
-                  owningObjectReg, cg);
-            generateLabelInstruction(JA1, node, labelAfterBranchToSnippet,
-                  cg);
-            generateMemRegInstruction(CMPMemReg(is64Bit), node,
-                  generateX86MemoryReference(cg->getVMThreadRegister(),
-                        offsetof(J9VMThread, highTenureAddress), cg),
-                  owningObjectReg, cg);
-            generateLabelInstruction(JBE1, node, labelAfterBranchToSnippet,
-                  cg);
+            generateRegImmInstruction(SUBRegImm4(), node, tempSrcReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
             }
+         TR::MemoryReference *vhsMR1 =
+               generateX86MemoryReference(cg->getVMThreadRegister(), offsetof(J9VMThread, heapSizeForBarrierRange0), cg);
+         generateRegMemInstruction(CMPRegMem(), node, tempSrcReg, vhsMR1, cg);
+         generateLabelInstruction(JB1, node, labelAfterBranchToSnippet, cg);
 
          // Now performing check for remembered
          int32_t byteOffset = byteOffsetForMask(J9_OBJECT_HEADER_REMEMBERED_MASK_FOR_TEST, cg);
@@ -14037,55 +14016,11 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
          branchOp=JE4;
          }
 
-      if (branchToSnippetIfOld)
+      if (branchToSnippet)
          {
          bool is64Bit = TR::Compiler->target.is64Bit(); // On compressed refs, owningObjectReg is already uncompressed, and the vmthread fields are 64 bits
          labelAfterBranchToSnippet = generateLabelSymbol(cg);
-
-         if (!comp->getOptions()->isVariableHeapBaseForBarrierRange0())
-            {
-            TR::Register *tempReg = srm->findOrCreateScratchRegister();
-            generateRegRegInstruction(MOVRegReg(),  node, tempReg, owningObjectReg, cg);
-            uintptr_t chb = comp->getOptions()->getHeapBaseForBarrierRange0();
-            // asum chb is align to 2
-            uintptr_t halfchb = chb >> 1;
-
-            if (TR::Compiler->target.is64Bit() && !TR::Compiler->om.nativeAddressesCanChangeSize() && !IS_32BIT_SIGNED(chb) && IS_32BIT_SIGNED(halfchb))
-               {
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)halfchb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               }
-            else if (TR::Compiler->target.is64Bit() && (!IS_32BIT_SIGNED(chb) || TR::Compiler->om.nativeAddressesCanChangeSize()))
-               {
-               TR::Register *chbReg = srm->findOrCreateScratchRegister();
-               generateRegImm64Instruction(MOV8RegImm64, node, chbReg, chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               generateRegRegInstruction(SUBRegReg(), node, tempReg, chbReg, cg);
-               srm->reclaimScratchRegister(chbReg);
-               }
-            else
-               {
-               generateRegImmInstruction(SUBRegImm4(), node, tempReg, (int32_t)chb, cg, TR_HEAP_BASE_FOR_BARRIER_RANGE);
-               }
-            TR::MemoryReference *vhsMR1 =
-               generateX86MemoryReference(cg->getVMThreadRegister(), offsetof(J9VMThread, heapSizeForBarrierRange0), cg);
-            generateRegMemInstruction(CMPRegMem(), node, tempReg, vhsMR1, cg);
-            branchOp = JB4;
-            }
-         else
-            {
-            // Since srcReg is NULL, only check whether the owning object is in tenure
-            generateMemRegInstruction(CMPMemReg(is64Bit), node,
-                  generateX86MemoryReference(cg->getVMThreadRegister(),
-                        offsetof(J9VMThread, lowTenureAddress), cg),
-                  owningObjectReg, cg);
-            generateLabelInstruction(JA1, node, labelAfterBranchToSnippet,
-                  cg);
-            generateMemRegInstruction(CMPMemReg(is64Bit), node,
-                  generateX86MemoryReference(cg->getVMThreadRegister(),
-                        offsetof(J9VMThread, highTenureAddress), cg),
-                  owningObjectReg, cg);
-            branchOp = JA4;
-            }
+         branchOp = JMP4;
          }
 
       TR::X86WriteBarrierSnippet *snippet = generateWriteBarrierSnippet(node, gcModeForSnippet, owningObjectReg, srcReg, NULL, doneLabel, cg);
