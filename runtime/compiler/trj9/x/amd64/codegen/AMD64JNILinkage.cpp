@@ -987,7 +987,7 @@ void TR::AMD64JNILinkage::releaseVMAccess(TR::Node *callNode)
 
    cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
                  TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/OutlineReleaseVMAccess/%s/(%s)/%d/%d",
+                                           "OutlineReleaseVMAccess/%s/(%s)/%d/%d",
                                            callNode->getOpCode().getName(),
                                            comp()->signature(),
                                            callNode->getByteCodeInfo().getCallerIndex(),
@@ -1156,7 +1156,7 @@ void TR::AMD64JNILinkage::releaseVMAccessAtomicFree(TR::Node *callNode)
 
    cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
                  TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/OutlineReleaseVMAccess/%s/(%s)/%d/%d",
+                                           "OutlineReleaseVMAccess/%s/(%s)/%d/%d",
                                            callNode->getOpCode().getName(),
                                            comp()->signature(),
                                            callNode->getByteCodeInfo().getCallerIndex(),
@@ -1516,15 +1516,6 @@ TR::Register *TR::AMD64JNILinkage::buildDirectJNIDispatch(TR::Node *callNode)
       passReceiver        = true;
       passThread          = false;
       }
-
-   cg()->generateDebugCounter(comp(),
-                 TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/%s/(%s)/%d/%d",
-                                           callNode->getOpCode().getName(),
-                                           comp()->signature(),
-                                           callNode->getByteCodeInfo().getCallerIndex(),
-                                           callNode->getByteCodeInfo().getByteCodeIndex()),
-                 1, TR::DebugCounter::Cheap);
 
    populateJNIDispatchInfo();
 
