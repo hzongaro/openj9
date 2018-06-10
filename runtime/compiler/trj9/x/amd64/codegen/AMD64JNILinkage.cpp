@@ -975,13 +975,24 @@ void TR::AMD64JNILinkage::releaseVMAccess(TR::Node *callNode)
       }
    generateLabelInstruction(JNE4, callNode, longReleaseSnippetLabel, cg());
 
-   cg()->addSnippet(
-      new (trHeapMemory()) TR::X86HelperCallSnippet(
-         cg(),
-         callNode,
-         longReleaseRestartLabel,
-         longReleaseSnippetLabel,
-         comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol())));
+   TR::SymbolReference *releaseVMAccRef =
+      comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol());
+
+   TR::Node *outlineCallNode = TR::Node::createWithSymRef(callNode, TR::icall, 0, releaseVMAccRef);
+
+   TR_OutlinedInstructions *outlinedLongRelease =
+         new (trHeapMemory()) TR_OutlinedInstructions(outlineCallNode, TR::icall,
+                                    NULL, longReleaseSnippetLabel, NULL, cg());
+   cg()->getOutlinedInstructionsList().push_front(outlinedLongRelease);
+
+   cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
+                 TR::DebugCounter::debugCounterName(comp(),
+                                           "OutlineReleaseVMAccess/%s/(%s)/%d/%d",
+                                           callNode->getOpCode().getName(),
+                                           comp()->signature(),
+                                           callNode->getByteCodeInfo().getCallerIndex(),
+                                           callNode->getByteCodeInfo().getByteCodeIndex()),
+                 1, TR::DebugCounter::Cheap);
 
    mask = fej9->constReleaseVMAccessMask();
 
@@ -1494,15 +1505,6 @@ TR::Register *TR::AMD64JNILinkage::buildDirectJNIDispatch(TR::Node *callNode)
       passReceiver        = true;
       passThread          = false;
       }
-
-   cg()->generateDebugCounter(callNode,
-                 TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/%s/(%s)/%d/%d",
-                                           callNode->getOpCode().getName(),
-                                           comp()->signature(),
-                                           callNode->getByteCodeInfo().getCallerIndex(),
-                                           callNode->getByteCodeInfo().getByteCodeIndex()),
-                 1, TR::DebugCounter::Cheap);
 
    populateJNIDispatchInfo();
 
