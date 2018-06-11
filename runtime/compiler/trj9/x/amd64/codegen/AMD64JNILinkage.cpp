@@ -975,24 +975,13 @@ void TR::AMD64JNILinkage::releaseVMAccess(TR::Node *callNode)
       }
    generateLabelInstruction(JNE4, callNode, longReleaseSnippetLabel, cg());
 
-   TR::SymbolReference *releaseVMAccRef =
-      comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol());
-
-   TR::Node *outlineCallNode = TR::Node::createWithSymRef(callNode, TR::icall, 0, releaseVMAccRef);
-
-   TR_OutlinedInstructions *outlinedLongRelease =
-         new (trHeapMemory()) TR_OutlinedInstructions(outlineCallNode, TR::icall,
-                                    NULL, longReleaseSnippetLabel, longReleaseRestartLabel, cg());
-   cg()->getOutlinedInstructionsList().push_front(outlinedLongRelease);
-
-   cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
-                 TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/OutlineReleaseVMAccess/%s/(%s)/%d/%d",
-                                           callNode->getOpCode().getName(),
-                                           comp()->signature(),
-                                           callNode->getByteCodeInfo().getCallerIndex(),
-                                           callNode->getByteCodeInfo().getByteCodeIndex()),
-                 1, TR::DebugCounter::Cheap);
+   cg()->addSnippet(
+      new (trHeapMemory()) TR::X86HelperCallSnippet(
+         cg(),
+         callNode,
+         longReleaseRestartLabel,
+         longReleaseSnippetLabel,
+         comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol())));
 
    mask = fej9->constReleaseVMAccessMask();
 
@@ -1144,24 +1133,13 @@ void TR::AMD64JNILinkage::releaseVMAccessAtomicFree(TR::Node *callNode)
    generateRegImmInstruction(CMP4RegImm4, callNode, scratchReg1, J9_PUBLIC_FLAGS_VM_ACCESS, cg());
    generateLabelInstruction(JNE4, callNode, longReleaseSnippetLabel, cg());
 
-   TR::SymbolReference *releaseVMAccRef =
-      comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol());
-
-   TR::Node *outlineCallNode = TR::Node::createWithSymRef(callNode, TR::icall, 0, releaseVMAccRef);
-
-   TR_OutlinedInstructions *outlinedLongRelease =
-         new (trHeapMemory()) TR_OutlinedInstructions(outlineCallNode, TR::icall,
-                                    NULL, longReleaseSnippetLabel, longReleaseRestartLabel, cg());
-   cg()->getOutlinedInstructionsList().push_front(outlinedLongRelease);
-
-   cg()->generateDebugCounter(outlinedLongRelease->getFirstInstruction(),
-                 TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/OutlineReleaseVMAccess/%s/(%s)/%d/%d",
-                                           callNode->getOpCode().getName(),
-                                           comp()->signature(),
-                                           callNode->getByteCodeInfo().getCallerIndex(),
-                                           callNode->getByteCodeInfo().getByteCodeIndex()),
-                 1, TR::DebugCounter::Cheap);
+   cg()->addSnippet(
+      new (trHeapMemory()) TR::X86HelperCallSnippet(
+         cg(),
+         callNode,
+         longReleaseRestartLabel,
+         longReleaseSnippetLabel,
+         comp()->getSymRefTab()->findOrCreateReleaseVMAccessSymbolRef(comp()->getMethodSymbol())));
 
    int32_t numDeps = 1;
    TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions(numDeps, numDeps, cg());
@@ -1516,15 +1494,6 @@ TR::Register *TR::AMD64JNILinkage::buildDirectJNIDispatch(TR::Node *callNode)
       passReceiver        = true;
       passThread          = false;
       }
-
-   cg()->generateDebugCounter(callNode,
-                 TR::DebugCounter::debugCounterName(comp(),
-                                           "JNICallee/%s/(%s)/%d/%d",
-                                           callNode->getOpCode().getName(),
-                                           comp()->signature(),
-                                           callNode->getByteCodeInfo().getCallerIndex(),
-                                           callNode->getByteCodeInfo().getByteCodeIndex()),
-                 1, TR::DebugCounter::Cheap);
 
    populateJNIDispatchInfo();
 
