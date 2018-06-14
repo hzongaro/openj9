@@ -118,32 +118,6 @@ public static class SubClassTest extends ClassTest{
 	}
 
 /**
- * @tests java.lang.Class - protecting access to sun.misc.Unsafe
- */
-@Test
-public void test_hideUnsafe() {
-	try {
-		jdk.internal.misc.Unsafe.class.getDeclaredMethod("getUnsafe");
-		AssertJUnit.assertTrue("Found getUnsafe via getDeclaredMethod", false);
-	} catch (NoSuchMethodException e) {
-	}
-
-	try {
-		jdk.internal.misc.Unsafe.class.getMethod("getUnsafe");
-		AssertJUnit.assertTrue("Found getUnsafe via getMethod", false);
-	} catch (NoSuchMethodException e) {
-	}
-
-	for (Method method : jdk.internal.misc.Unsafe.class.getDeclaredMethods()) {
-		AssertJUnit.assertFalse("Found getUnsafe via getDeclaredMethods", method.getName().equals("getUnsafe"));
-	}
-
-	for (Method method : jdk.internal.misc.Unsafe.class.getMethods()) {
-		AssertJUnit.assertFalse("Found getUnsafe via getMethods", method.getName().equals("getUnsafe"));
-	}
-}
-
-/**
  * @tests java.lang.Class#forName(java.lang.String)
  */
 @Test
@@ -379,6 +353,72 @@ public void test_getMethods_subtest2() {
 	java.security.AccessController.doPrivileged(action);
 }
 
+static class ParentClass {
+	public static void methodPublicStatic() {}
+	public void methodPublicInstance() {}
+	static void methodPkgPrivateStatic() {}
+	void methodPkgPrivateInstance() {}
+	private static void methodPrivateStatic() {}
+	private void methodPrivateInstance() {}
+}
+
+static class ChildClass extends ParentClass {
+	public static void methodPublicStatic() {}
+	public void methodPublicInstance() {}
+	static void methodPkgPrivateStatic() {}
+	void methodPkgPrivateInstance() {}
+	private static void methodPrivateStatic() {}
+	private void methodPrivateInstance() {}
+}
+
+static interface SuperInterface {
+	void methodPublicInterface(); 
+	public static void methodPublicStatic() {};
+}
+
+static interface SubInterface extends SuperInterface {
+	void methodPublicInterface(); 
+	public static void methodPublicStatic() {};
+	default void defaultMethodPublicInterface() {}
+}
+
+static class ClassImplInterface implements SubInterface {
+	public void methodPublicInterface() {}
+	public static void methodPublicStatic() {};
+	public void defaultMethodPublicInterface() {}
+}
+
+@Test
+public void test_getMethods_subtest3() {
+	final Method[] methods = ChildClass.class.getMethods();
+	for (Method method : methods) {
+		final Class<?> declaringClass = method.getDeclaringClass();
+		if (declaringClass.equals(ParentClass.class)) {
+			Assert.fail("Should not return Method " + method.getName() + " declared in class " + declaringClass.getName());
+		}
+	}
+}
+@Test
+public void test_getMethods_subtest4() {
+	final Method[] methods = SubInterface.class.getMethods();
+	for (Method method : methods) {
+		final Class<?> declaringClass = method.getDeclaringClass();
+		if (declaringClass.equals(SuperInterface.class)) {
+			Assert.fail("Should not return Method " + method.getName() + " declared in class " + declaringClass.getName());
+		}
+	}
+}
+@Test
+public void test_getMethods_subtest5() {
+	final Method[] methods = ClassImplInterface.class.getMethods();
+	for (Method method : methods) {
+		final Class<?> declaringClass = method.getDeclaringClass();
+		if (declaringClass.equals(SuperInterface.class) || declaringClass.equals(SubInterface.class)) {
+			Assert.fail("Should not return Method " + method.getName() + " declared in class " + declaringClass.getName());
+		}
+	}
+}
+
 static String[] concatenateObjectMethods(String methodList[]) {
 	final String[] jlobjectMethods = new String[] {
 			objectClass+".equals(java.lang.Object)boolean",
@@ -562,7 +602,7 @@ public void test_getClasses() {
 	if (classes.length != 15) {
 		for (int i=0; i<classes.length; i++)
 			logger.debug("classes[" + i + "]: " + classes[i]);
-		Assert.fail("Incorrect class array returned");
+		Assert.fail("Incorrect class array returned: expected 15 but returned " + classes.length);
 	}
 }
 
@@ -775,13 +815,13 @@ public void test_getConstructors() {
  */
 @Test
 public void test_getDeclaredClasses() {
-	int len = 60;
+	int len = 65;
 	// Test for method java.lang.Class [] java.lang.Class.getDeclaredClasses()
 	Class[] declaredClasses = Test_Class.class.getDeclaredClasses();
 	if (declaredClasses.length != len) {
 		for (int i=0; i<declaredClasses.length; i++)
 			logger.debug("declared[" + i + "]: " + declaredClasses[i]);
-		Assert.fail("Incorrect class array returned");
+		Assert.fail("Incorrect class array returned: expected 65 but returned " + declaredClasses.length);
 	}
 }
 
@@ -1133,7 +1173,7 @@ public void test_getModifiers_classTypes() {
 		0x0009, // public static
 		0x0011, // public final
 		0x0019, // public final static
-		0x0008, // static
+		0x0000, //
 		0x0410, // static
 		0x0400, // abstract
 		0x1001, // public synthetic
@@ -1204,9 +1244,19 @@ public void test_getResource() {
 	try {
 		java.net.URL res = Object.class.getResource("Object.class");
 		AssertJUnit.assertTrue("Object.class should not be found", res == null);
-    } finally {
-        System.setSecurityManager(null);
-    }
+	} finally {
+		System.setSecurityManager(null);
+	}
+	
+	String name = "/org/openj9/resources/openj9tr_Foo.c";
+	
+	// find resource from object
+	AssertJUnit.assertTrue("directory of this class can be found",
+			Test_Class.class.getResource(name) != null);
+	
+	// find resource from array of objects
+	AssertJUnit.assertTrue("directory of array of this class can be found",
+			Test_Class[].class.getResource(name) != null);
 }
 
 /**
@@ -1238,6 +1288,9 @@ public void test_getResourceAsStream() {
 		clazz.getResourceAsStream(name) == null);
 	AssertJUnit.assertTrue("the file " + name + " can be found in the root directory",
 		clazz.getResourceAsStream("/" + name) != null);
+	// find resource from array of objects
+	AssertJUnit.assertTrue("the file " + name + " can be found in the root directory where the class is an array",
+			Test_Class[].class.getResourceAsStream("/" + name) != null);
 
 	try {
 		clazz = Class.forName("java.lang.Object");

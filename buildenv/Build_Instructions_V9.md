@@ -154,6 +154,8 @@ bash configure --with-freemarker-jar=/root/freemarker.jar
 ```
 :warning: You must give an absolute path to freemarker.jar
 
+:pencil: If you require a heap size greater than 57GB, enable a noncompressedrefs build with the `--with-noncompressedrefs` option during this step.
+
 ### 4. Build
 :penguin:
 Now you're ready to build OpenJDK V9 with OpenJ9:
@@ -257,6 +259,8 @@ bash configure --with-freemarker-jar=/<my_home_dir>/freemarker.jar \
 ```
 where `<my_home_dir>` is the location where you stored **freemarker.jar** and `<cups_include_path>` is the absolute path to CUPS. For example `/opt/freeware/include`.
 
+:pencil: If you require a heap size greater than 57GB, enable a noncompressedrefs build with the `--with-noncompressedrefs` option during this step.
+
 ### 4. build
 :blue_book:
 Now you're ready to build OpenJDK with OpenJ9:
@@ -335,6 +339,14 @@ wget http://download.savannah.gnu.org/releases/freetype/freetype-2.5.3.tar.gz
 - Before installing Visual Studio, change the permissions on the installation file by running `chmod u+x vs2013.exe`.
 - Install Visual Studio by running the file `vs2013.exe`.
 
+Not all of the shared libraries that are included with Visual Studio are registered during installation.
+In particular, the `msdia120.dll` libraries must be registered manually.
+To do so, execute the following from a command prompt:
+```
+regsvr32 "C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\msdia120.dll"
+regsvr32 "C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\amd64\msdia120.dll"
+```
+
 - To unpack the Freemarker and Freetype compressed files, run:
 ```
 tar -xzf freemarker.tgz freemarker-2.3.8/lib/freemarker.jar --strip=2
@@ -369,6 +381,8 @@ bash configure --disable-warnings-as-errors \
 ```
 
 :pencil: Modify the paths for freemarker and freetype if you manually downloaded and unpacked these dependencies into different directories. If Java 8 is not available on the path, add the `--with-boot-jdk=<path_to_jdk8>` configuration option.
+
+:pencil: If you require a heap size greater than 57GB, enable a noncompressedrefs build with the `--with-noncompressedrefs` option during this step.
 
 ### 4. build
 :ledger:

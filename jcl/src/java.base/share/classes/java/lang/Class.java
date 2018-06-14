@@ -214,6 +214,24 @@ public final class Class<T> implements java.io.Serializable, GenericDeclaration,
 	private static boolean reflectCacheDebug;
 	private static boolean reflectCacheAppOnly = true;
 
+	/*
+	 * This {@code ClassReflectNullPlaceHolder} class is created to indicate the cached class value is
+	 * initialized to null rather than the default value null ;e.g. {@code cachedDeclaringClass}
+	 * and {@code cachedEnclosingClass}. The reason default value has to be null is that
+	 * j.l.Class instances are created by the VM only rather than Java, and
+	 * any instance field with non-null default values have to be set by VM natives.
+	 */
+	private static final class ClassReflectNullPlaceHolder {}
+
+	private transient Class<?>[] cachedInterfaces;
+	private static long cachedInterfacesOffset = -1;
+
+	private transient Class<?> cachedDeclaringClass;
+	private static long cachedDeclaringClassOffset = -1;
+
+	private transient Class<?> cachedEnclosingClass;
+	private static long cachedEnclosingClassOffset = -1;
+
 	private static Annotation[] EMPTY_ANNOTATION_ARRAY = new Annotation[0];
 	
 	static MethodHandles.Lookup implLookup;
@@ -282,6 +300,27 @@ private void checkNonSunProxyMemberAccess(SecurityManager security, ClassLoader 
 			security.checkPackageAccess(packageName);
 		}
 	}
+}
+
+private long getFieldOffset(String fieldName) {
+	try {
+		Field field = Class.class.getDeclaredField(fieldName);
+		return getUnsafe().objectFieldOffset(field);
+	} catch (NoSuchFieldException e) {
+		throw newInternalError(e);
+	}
+}
+
+/**
+ * This helper method atomically writes the given {@code fieldValue} to the
+ * field specified by the {@code fieldOffset}
+ */
+private void writeFieldValue(long fieldOffset, Object fieldValue) {
+	/*[IF Sidecar19-SE]*/
+	getUnsafe().putObjectRelease(this, fieldOffset, fieldValue);
+	/*[ELSE]*/
+	getUnsafe().putOrderedObject(this, fieldOffset, fieldValue);
+	/*[ENDIF]*/
 }
 
 private static void forNameAccessCheck(final SecurityManager sm, final Class<?> callerClass, final Class<?> foundClass) {
@@ -1158,13 +1197,28 @@ private native Method[] getDeclaredMethodsImpl();
 /**
  * Answers the class which declared the class represented
  * by the receiver. This will return null if the receiver
- * is a member of another class.
+ * is not a member of another class.
  *
  * @return		the declaring class of the receiver.
  */
 @CallerSensitive
 public Class<?> getDeclaringClass() {
-	Class<?> declaringClass = getDeclaringClassImpl();
+	if (cachedDeclaringClassOffset == -1) {
+		cachedDeclaringClassOffset = getFieldOffset("cachedDeclaringClass"); //$NON-NLS-1$
+	}
+	if (cachedDeclaringClass == null) {
+		Class<?> localDeclaringClass = getDeclaringClassImpl();
+		if (localDeclaringClass == null) {
+			localDeclaringClass = ClassReflectNullPlaceHolder.class;
+		}
+		writeFieldValue(cachedDeclaringClassOffset, localDeclaringClass);
+	}
+
+	/**
+	 * ClassReflectNullPlaceHolder.class means the value of cachedDeclaringClass is null
+	 * @see ClassReflectNullPlaceHolder.class
+	 */
+	Class<?> declaringClass = cachedDeclaringClass == ClassReflectNullPlaceHolder.class ? null : cachedDeclaringClass;
 	if (declaringClass == null) {
 		return declaringClass;
 	}
@@ -1303,9 +1357,15 @@ private native Field[] getFieldsImpl();
  * @return		{@code Class<?>[]}
  *					the interfaces the receiver claims to implement.
  */
-public Class<?>[] getInterfaces()
-{
-	return J9VMInternals.getInterfaces(this);
+public Class<?>[] getInterfaces() {
+	if (cachedInterfacesOffset == -1) {
+		cachedInterfacesOffset = getFieldOffset("cachedInterfaces"); //$NON-NLS-1$
+	}
+	if (cachedInterfaces == null) {
+		writeFieldValue(cachedInterfacesOffset, J9VMInternals.getInterfaces(this));
+	}
+	Class<?>[] newInterfaces = cachedInterfaces.length == 0 ? cachedInterfaces: cachedInterfaces.clone();
+	return newInterfaces;
 }
 
 /**
@@ -1566,9 +1626,26 @@ private HashMap<MethodInfo, MethodInfo> getMethodSet(
 			/* if we are here, this is the target class, so return static and virtual methods */
 			boolean scanInterfaces = false;
 			for (Method m: methods) {
+				Class<?> mDeclaringClass = m.getDeclaringClass();
 				MethodInfo mi = new MethodInfo(m);
-				myMethods.put(mi, mi);
-				if (m.getDeclaringClass().isInterface()) {
+				MethodInfo prevMI = myMethods.put(mi, mi);
+				if (prevMI != null) {
+					/* As per Java spec:
+					 * For methods with same signature (name, parameter types) and return type,
+					 * only the most specific method should be selected. 
+					 * Method N is more specific than M if:
+					 * N is declared by a class and M is declared by an interface; or
+					 * N and M are both declared by either classes or interfaces and N's
+					 * declaring type is the same as or a subtype of M's declaring type.
+					 */
+					Class<?> prevMIDeclaringClass = prevMI.me.getDeclaringClass();
+					if ((mDeclaringClass.isInterface() && !prevMIDeclaringClass.isInterface())
+						|| (mDeclaringClass.isAssignableFrom(prevMIDeclaringClass))
+					) {
+						myMethods.put(prevMI, prevMI);
+					}
+				}
+				if (mDeclaringClass.isInterface()) {
 					scanInterfaces = true;
 					/* The vTable may contain one declaration of an interface method with multiple declarations. */
 					if (null == methodFilter) {
@@ -1589,7 +1666,7 @@ private HashMap<MethodInfo, MethodInfo> getMethodSet(
 					continue;
 				}
 				MethodInfo mi = new MethodInfo(m);
-				myMethods.put(mi, mi);				
+				myMethods.put(mi, mi);
 			}
 			addInterfaceMethods(infoCache, null, myMethods);
 		}
@@ -2087,8 +2164,13 @@ private String toResourceName(String resName) {
 	// Turn package name into a directory path
 	if (resName.length() > 0 && resName.charAt(0) == '/')
 		return resName.substring(1);
+	
+	Class<?> thisObject = this;
+	while (thisObject.isArray()) {
+		thisObject = thisObject.getComponentType();
+	}
 
-	String qualifiedClassName = getName();
+	String qualifiedClassName = thisObject.getName();
 	int classIndex = qualifiedClassName.lastIndexOf('.');
 	if (classIndex == -1) return resName; // from a default package
 	return qualifiedClassName.substring(0, classIndex + 1).replace('.', '/') + resName;
@@ -2149,7 +2231,7 @@ public String toGenericString() {
 	
 	// Build generic string
 	result.append(Modifier.toString(modifiers));
-	if (result.lengthInternal() > 0) {
+	if (result.length() > 0) {
 		result.append(' ');
 	}
 	result.append(kindOfType);
@@ -3180,7 +3262,21 @@ private native Class<?> getEnclosingObjectClass();
 public Class<?> getEnclosingClass() throws SecurityException {
 	Class<?> enclosingClass = getDeclaringClass();
 	if (enclosingClass == null) {
-		enclosingClass = getEnclosingObjectClass();
+		if (cachedEnclosingClassOffset == -1) {
+			cachedEnclosingClassOffset = getFieldOffset("cachedEnclosingClass"); //$NON-NLS-1$
+		}
+		if (cachedEnclosingClass == null) {
+			Class<?> localEnclosingClass = getEnclosingObjectClass();
+			if (localEnclosingClass == null){
+				localEnclosingClass = ClassReflectNullPlaceHolder.class;
+			}
+			writeFieldValue(cachedEnclosingClassOffset, localEnclosingClass);
+		}
+		/**
+		 * ClassReflectNullPlaceHolder.class means the value of cachedEnclosingClass is null
+		 * @see ClassReflectNullPlaceHolder.class
+		 */
+		enclosingClass = cachedEnclosingClass == ClassReflectNullPlaceHolder.class ? null: cachedEnclosingClass;
 	}
 	if (enclosingClass != null) {
 		SecurityManager security = System.getSecurityManager();

@@ -610,7 +610,7 @@ freeJavaVM(J9JavaVM * vm)
 #endif
 
 	/* Remove the predefinedHandlerWrapper. */
-	j9sig_set_async_signal_handler(predefinedHandlerWrapper, vm, 0);
+	j9sig_set_single_async_signal_handler(predefinedHandlerWrapper, vm, 0, NULL);
 
 	/* Unload before trace engine exits */
 	UT_MODULE_UNLOADED(J9_UTINTERFACE_FROM_VM(vm));
@@ -1288,7 +1288,8 @@ initializeClassPath(J9JavaVM *vm, char *classPath, U_8 classPathSeparator, U_16 
 	if (0 == classPathEntryCount) {
 		*classPathEntries = NULL;
 	} else {
-		UDATA classPathSize = (sizeof(J9ClassPathEntry) * classPathEntryCount) + classPathLength + classPathEntryCount; // classPathEntryCount is for number of null characters
+		/* classPathEntryCount is for number of null characters */
+		UDATA classPathSize = (sizeof(J9ClassPathEntry) * classPathEntryCount) + classPathLength + classPathEntryCount;
 		J9ClassPathEntry *cpEntries = j9mem_allocate_memory(classPathSize, OMRMEM_CATEGORY_VM);
 
 	        if (NULL == cpEntries) {
@@ -1728,13 +1729,13 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 							parseErrorOption = VMOPT_XSCMX;
 							goto _memParseError;
 						}
-						if (OPTION_OK != (parseError = setMemoryOptionToOptElse(vm, &(piConfig->sharedClassCacheSize), VMOPT_XXSHARED_CACHE_HARD_LIMIT_EQUALS, J9_SHARED_CLASS_CACHE_DEFAULT_SIZE, FALSE))) {
+						if (OPTION_OK != (parseError = setMemoryOptionToOptElse(vm, &(piConfig->sharedClassCacheSize), VMOPT_XXSHARED_CACHE_HARD_LIMIT_EQUALS, 0, FALSE))) {
 							parseErrorOption = VMOPT_XXSHARED_CACHE_HARD_LIMIT_EQUALS;
 							goto _memParseError;
 						}
 					} else {
 						piConfig->sharedClassSoftMaxBytes = -1;
-						if (OPTION_OK != (parseError = setMemoryOptionToOptElse(vm, &(piConfig->sharedClassCacheSize), VMOPT_XSCMX, J9_SHARED_CLASS_CACHE_DEFAULT_SIZE, FALSE))) {
+						if (OPTION_OK != (parseError = setMemoryOptionToOptElse(vm, &(piConfig->sharedClassCacheSize), VMOPT_XSCMX, 0, FALSE))) {
 							parseErrorOption = VMOPT_XSCMX;
 							goto _memParseError;
 						}
@@ -1849,7 +1850,7 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 				}
 
 				if (J9_ARE_ANY_BITS_SET(vm->vmRuntimeStateListener.idleTuningFlags, J9_IDLE_TUNING_GC_ON_IDLE | J9_IDLE_TUNING_COMPACT_ON_IDLE)) {
-					vm->vmRuntimeStateListener.minIdleWaitTime = 180000; // in msecs
+					vm->vmRuntimeStateListener.minIdleWaitTime = 180000; /* in msecs */
 					vm->vmRuntimeStateListener.idleMinFreeHeap = 0;
 				}
 
@@ -1869,7 +1870,7 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 						goto _memParseError;
 					}
 
-					vm->vmRuntimeStateListener.minIdleWaitTime = (U_32)value * 1000; // convert to msecs
+					vm->vmRuntimeStateListener.minIdleWaitTime = (U_32)value * 1000; /* convert to msecs */
 				}
 
 				if ((argIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XXIDLETUNINGMINFREEHEAPONIDLE_EQUALS, NULL)) >= 0) {
@@ -6231,13 +6232,14 @@ shutDownHookWrapper(struct J9PortLibrary* portLibrary, U_32 gpType, void* gpInfo
  * Invoke jdk.internal.misc.Signal.dispatch(int number) in Java 9 and
  * onwards. Invoke sun.misc.Signal.dispatch(int number) in Java 8.
  *
- * @param vmThread pointer to a J9VMThread
- * @param signal integer value of the signal
+ * @param[in] vmThread pointer to a J9VMThread
+ * @param[in] signal integer value of the signal
  *
  * @return void
  */
 static void
-signalDispatch(J9VMThread *vmThread, I_32 signal) {
+signalDispatch(J9VMThread *vmThread, I_32 signal)
+{
 	J9JavaVM *vm = vmThread->javaVM;
 	J9NameAndSignature nas = {0};
 	I_32 args[] = {signal};
@@ -6265,16 +6267,17 @@ signalDispatch(J9VMThread *vmThread, I_32 signal) {
  * in omrsignal.c once registered using j9sig_set_*async_signal_handler
  * for a specific signal.
  *
- * @param portLibrary the port library
- * @param gpType port library signal flag
- * @param gpInfo GPF information (will be NULL in this case)
- * @param userData user data (will be a pointer to J9JavaVM in this case)
+ * @param[in] portLibrary the port library
+ * @param[in] gpType port library signal flag
+ * @param[in] gpInfo GPF information (will be NULL in this case)
+ * @param[in] userData user data (will be a pointer to J9JavaVM in this case)
  *
  * @return 0 on success and non-zero on failure
  *
  */
 static UDATA
-predefinedHandlerWrapper(struct J9PortLibrary *portLibrary, U_32 gpType, void *gpInfo, void *userData) {
+predefinedHandlerWrapper(struct J9PortLibrary *portLibrary, U_32 gpType, void *gpInfo, void *userData)
+{
 	J9JavaVM *vm = (J9JavaVM *)userData;
 	J9JavaVMAttachArgs attachArgs = {0};
 	J9VMThread *vmThread = NULL;
@@ -6323,7 +6326,8 @@ predefinedHandlerWrapper(struct J9PortLibrary *portLibrary, U_32 gpType, void *g
 }
 
 IDATA
-registerPredefinedHandler(J9JavaVM *vm, U_32 signal, void **oldOSHandler) {
+registerPredefinedHandler(J9JavaVM *vm, U_32 signal, void **oldOSHandler)
+{
 	IDATA rc = 0;
 	U_32 portlibSignalFlag = 0;
 
@@ -6334,6 +6338,24 @@ registerPredefinedHandler(J9JavaVM *vm, U_32 signal, void **oldOSHandler) {
 		rc = j9sig_set_single_async_signal_handler(predefinedHandlerWrapper, vm, portlibSignalFlag, oldOSHandler);
 	} else {
 		Trc_VM_registerPredefinedHandler_invalidPortlibSignalFlag(portlibSignalFlag);
+	}
+
+	return rc;
+}
+
+IDATA
+registerOSHandler(J9JavaVM *vm, U_32 signal, void *newOSHandler, void **oldOSHandler)
+{
+	IDATA rc = 0;
+	U_32 portlibSignalFlag = 0;
+
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	portlibSignalFlag = j9sig_map_os_signal_to_portlib_signal(signal);
+	if (0 != portlibSignalFlag) {
+		rc = j9sig_register_os_handler(portlibSignalFlag, newOSHandler, oldOSHandler);
+	} else {
+		Trc_VM_registerOSHandler_invalidPortlibSignalFlag(portlibSignalFlag);
 	}
 
 	return rc;
@@ -6468,56 +6490,46 @@ isPPC64bit() {
 	if (J9_ADDRMODE_64 != sysconf(_SC_AIX_KERNEL_BITMODE)) {
 		return FALSE;
 	}
-#endif /* AIXPPC */
-
-#if defined(LINUXPPC)
-#define CPU_NAME_SIZE 120
-	FILE * fp ;
-	char buffer[CPU_NAME_SIZE];
-	char *line_p;
+#else /* AIXPPC */
 	char *cpu_name = NULL;
-	char *position_l, *position_r;
-
-	fp = fopen("/proc/cpuinfo","r");
+	FILE *fp = fopen("/proc/cpuinfo", "r");
 
 	if (NULL == fp) {
 		return TRUE;
 	}
 
-	line_p = buffer;
-
 	while (!feof(fp)) {
-		fgets(line_p, CPU_NAME_SIZE, fp);
-		position_l = strstr(line_p, "cpu");
-		if (position_l) {
+#define CPU_NAME_SIZE 120
+		char buffer[CPU_NAME_SIZE];
+		char *position_l = NULL;
+		char *position_r = NULL;
+		if (NULL == fgets(buffer, CPU_NAME_SIZE, fp)) {
+			break;
+		}
+#undef CPU_NAME_SIZE
+		position_l = strstr(buffer, "cpu");
+		if (NULL != position_l) {
 			position_l = strchr(position_l, ':');
-			if (position_l == NULL) {
-				cpu_name = NULL; //setting cpu_name to null to denote default case
+			if (NULL == position_l) {
+				/* leave cpu_name NULL to denote default case */
 				break;
 			}
-			position_l++;
-			while (*(position_l) == ' ') {
-				position_l++;
-			}
+			do {
+				++position_l;
+			} while (' ' == *position_l);
 
-			position_r = strchr(line_p, '\n');
-			if (position_r == NULL) {
-				cpu_name = NULL; //setting cpu_name to null to denote default case
+			position_r = strchr(position_l, '\n');
+			if (NULL == position_r) {
+				/* leave cpu_name NULL to denote default case */
 				break;
 			}
-			while (*(position_r-1) == ' ') {
-				position_r--;
-			}
-
-			if (position_l >= position_r) {
-				cpu_name = NULL; //setting cpu_name to null to denote default case
-				break;
+			while (' ' == *(position_r - 1)) {
+				--position_r;
 			}
 
 			/* localize the cpu name */
 			cpu_name = position_l;
 			*position_r = '\000';
-
 			break;
 		}
 	}
@@ -6533,8 +6545,7 @@ isPPC64bit() {
 	if (0 == j9_cmdla_strnicmp(cpu_name, "82xx", 4))             return FALSE;
 	if (0 == j9_cmdla_strnicmp(cpu_name, "750FX", 5))            return FALSE;
 	if (0 == j9_cmdla_strnicmp(cpu_name, "604", 3))              return FALSE;
-#undef CPU_NAME_SIZE
-#endif /* LINUXPPC */
+#endif /* AIXPPC */
 
 	return TRUE;
 }

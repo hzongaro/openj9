@@ -138,11 +138,14 @@ UDATA getUserExtendedPrivateAreaMemoryType();
 
 extern "C" {
 extern J9MemoryManagerFunctions MemoryManagerFunctions;
-extern void initialiseVerboseFunctionTableWithDummies(J9MemoryManagerVerboseInterface *table);
+extern void initializeVerboseFunctionTableWithDummies(J9MemoryManagerVerboseInterface *table);
 
 static void hookValidatorVMThreadCrash(J9HookInterface * * hookInterface, UDATA eventNum, void * eventData, void * userData);
 static bool gcInitializeVMHooks(MM_GCExtensionsBase *extensions);
 static void gcCleanupVMHooks(MM_GCExtensionsBase *extensions);
+
+static const char * displayXmxOrMaxRAMPercentage(IDATA* memoryParameters);
+static const char * displayXmsOrInitialRAMPercentage(IDATA* memoryParameters);
 
 /**
  * Initialize the threads mutator information (RS pointers, reference list pointers etc) for GC/MM purposes.
@@ -304,7 +307,7 @@ gcCleanupHeapStructures(J9JavaVM * vm)
  * Initialized passive and active heap components
  */
 IDATA
-j9gc_initialize_heap(J9JavaVM *vm, UDATA heapBytesRequested)
+j9gc_initialize_heap(J9JavaVM *vm, IDATA *memoryParameterTable, UDATA heapBytesRequested)
 {
 	MM_GCExtensions *extensions = MM_GCExtensions::getExtensions(vm);
 	MM_EnvironmentBase env(vm->omrVM);
@@ -448,7 +451,7 @@ j9gc_initialize_heap(J9JavaVM *vm, UDATA heapBytesRequested)
 	globalCollector = extensions->configuration->createGlobalCollector(&env);
 	if (NULL == globalCollector) {
 		if(MM_GCExtensionsBase::HEAP_INITIALIZATION_FAILURE_REASON_METRONOME_DOES_NOT_SUPPORT_4BIT_SHIFT == extensions->heapInitializationFailureReason) {
-			j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_GC_OPTION_OVERFLOW, "-Xmx");
+			j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_GC_OPTION_OVERFLOW, displayXmxOrMaxRAMPercentage(memoryParameterTable));
 		}
 		loadInfo->fatalErrorStr = (char *)j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_GC_FAILED_TO_INSTANTIATE_GLOBAL_GARBAGE_COLLECTOR, "Failed to instantiate global garbage collector.");
 		goto error_no_memory;
@@ -902,6 +905,44 @@ setConfigurationSpecificMemoryParameters(J9JavaVM *javaVM, IDATA* memoryParamete
  *
  * Determine which memory parameter to display to the user in the event of an error.
  * @param memoryParameters array of parameter values
+ * @return pointer to "-Xmx" or "-XX:MaxRAMPercentage"
+ */
+static const char *
+displayXmxOrMaxRAMPercentage(IDATA* memoryParameters)
+{
+	if ((-1 != memoryParameters[opt_maxRAMPercent])
+		&& (memoryParameters[opt_Xmx] == memoryParameters[opt_maxRAMPercent])
+	) {
+		return "-Xmx (as set by -XX:MaxRAMPercentage)";
+	} else {
+		return "-Xmx";
+	}
+}
+
+/**
+ * Verify memory parameters.
+ *
+ * Determine which memory parameter to display to the user in the event of an error.
+ * @param memoryParameters array of parameter values
+ * @return pointer to "-Xms" or "-XX:InitialRAMPercentage"
+ */
+static const char *
+displayXmsOrInitialRAMPercentage(IDATA* memoryParameters)
+{
+	if ((-1 != memoryParameters[opt_initialRAMPercent])
+		&& (memoryParameters[opt_Xms] == memoryParameters[opt_initialRAMPercent])
+	) {
+		return "-Xms (as set by -XX:InitialRAMPercentage)";
+	} else {
+		return "-Xms";
+	}
+}
+
+/**
+ * Verify memory parameters.
+ *
+ * Determine which memory parameter to display to the user in the event of an error.
+ * @param memoryParameters array of parameter values
  * @return pointer to "-Xmn" or "-Xmns"
  */
 const char *
@@ -1034,7 +1075,7 @@ gcInitializeXmxXmdxVerification(J9JavaVM *javaVM, IDATA* memoryParameters, bool 
 #endif /* defined(J9ZOS39064) */
 
 	if (extensions->memoryMax > (extensions->heapCeiling - J9GC_COMPRESSED_POINTER_NULL_REGION_SIZE)) {
-		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_GC_OPTION_OVERFLOW, "-Xmx");
+		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_GC_OPTION_OVERFLOW, displayXmxOrMaxRAMPercentage(memoryParameters));
 		return JNI_ERR;
 	}
 #endif /* defined (J9VM_GC_COMPRESSED_POINTERS) */
@@ -1042,12 +1083,12 @@ gcInitializeXmxXmdxVerification(J9JavaVM *javaVM, IDATA* memoryParameters, bool 
 	/* Verify Xmx is too small */
 	if (extensions->memoryMax < minimumSizeValue) {
 		if (NULL == memoryOption1) {
-			memoryOption1 = "-Xmx";
+			memoryOption1 = displayXmxOrMaxRAMPercentage(memoryParameters);
 			memoryOption2 = NULL;
 			goto _subSpaceTooSmallForValue;
 		} else {
 			if (opt_XmxSet) {
-				subSpaceTooLargeOption = "-Xmx";
+				subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 				goto _subSpaceTooLarge;
 			}
 			goto _subSpaceTooLargeForHeap;
@@ -1071,7 +1112,7 @@ gcInitializeXmxXmdxVerification(J9JavaVM *javaVM, IDATA* memoryParameters, bool 
 			memoryOption1 = "-Xmdx";
 			memoryOption2 = NULL;
 			if (opt_XmxSet) {
-				subSpaceTooLargeOption = "-Xmx";
+				subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 				goto _subSpaceTooLarge;
 			}
 			goto _subSpaceTooLargeForHeap;
@@ -1180,8 +1221,8 @@ independentMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 	 * Can not verify minimum values until Xmns/Xmos have been verified.
 	 */
 	if (opt_XmxSet) {
-		maximumXmdxValueParameter = "-Xmx";
-		maximumXmsValueParameter = "-Xmx";
+		maximumXmdxValueParameter = displayXmxOrMaxRAMPercentage(memoryParameters);
+		maximumXmsValueParameter = displayXmxOrMaxRAMPercentage(memoryParameters);
 	}
 
 	if (opt_XmdxSet) {
@@ -1210,7 +1251,7 @@ independentMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 		}
 
 		if (extensions->initialMemorySize > maximumXmsValue) {
-			memoryOption = "-Xms";
+			memoryOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 			if (maximumXmsValueParameter) {
 				subSpaceTooLargeOption = maximumXmsValueParameter;
 				goto _subSpaceTooLarge;
@@ -1220,7 +1261,7 @@ independentMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 
 		/* When comparing to maximum boundary use the Xms value */
 		maximumXmsValue = extensions->initialMemorySize;
-		maximumXmsValueParameter = "-Xms";
+		maximumXmsValueParameter = displayXmsOrInitialRAMPercentage(memoryParameters);
 	}
 
 	/* verify -Xsoftmx is set between -Xms and -Xmx */
@@ -1399,11 +1440,11 @@ independentMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 
 	if (opt_XmsSet && (extensions->initialMemorySize < XmsMinimumValue)) {
 		if (NULL == memoryOption) {
-			memoryOption = "-Xms";
+			memoryOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 			minimumSizeValue = XmsMinimumValue; /* display min size */
 			goto _subSpaceTooSmallForValue;
 		} else {
-			subSpaceTooLargeOption = "-Xms";
+			subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 			goto _subSpaceTooLarge;
 		}
 	}
@@ -1543,7 +1584,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 		assume0(extensions->initialMemorySize <= extensions->maxSizeDefaultMemorySpace);
 
 		maximumXmsValue = extensions->initialMemorySize;
-		maximumXmsValueParameter = "-Xms";
+		maximumXmsValueParameter = displayXmsOrInitialRAMPercentage(memoryParameters); 
 		break;
 
 	case XMDX:
@@ -1567,7 +1608,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 		}
 
 		maximumXmsValue = extensions->initialMemorySize;
-		maximumXmsValueParameter = "-Xms";
+		maximumXmsValueParameter = displayXmsOrInitialRAMPercentage(memoryParameters);
 		break;
 
 	case NONE:
@@ -1578,7 +1619,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 
 		maximumXmsValue = extensions->memoryMax;
 		if (opt_XmxSet) {
-			maximumXmsValueParameter = "-Xmx";
+			maximumXmsValueParameter = displayXmxOrMaxRAMPercentage(memoryParameters);
 		}
 		break;
 
@@ -1622,7 +1663,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 			 */
 			if (extensions->oldSpaceSize != extensions->initialMemorySize) {
 				memoryOption = displayXmoOrXmos(memoryParameters);
-				memoryOption2 = "-Xms";
+				memoryOption2 = displayXmsOrInitialRAMPercentage(memoryParameters);
 				goto _subSpaceNotEqualError;
 			}
 			break;
@@ -1658,7 +1699,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 
 			if (opt_XmoxSet && (extensions->oldSpaceSize > extensions->maxOldSpaceSize)) {
 				memoryOption = displayXmoOrXmox(memoryParameters);
-				subSpaceTooSmallOption = "-Xms";
+				subSpaceTooSmallOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 				goto _subSpaceTooSmall;
 			}
 			break;
@@ -1758,7 +1799,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 			if (opt_XmsSet && ((extensions->oldSpaceSize + extensions->newSpaceSize) != extensions->initialMemorySize)) {
 				memoryOption = displayXmoOrXmos(memoryParameters);
 				memoryOption2 =  displayXmnOrXmns(memoryParameters);
-				subSpaceTooLargeOption = "-Xms";
+				subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 				goto _subSpaceCombinationNotEqual;
 			}
 			break;
@@ -1781,21 +1822,21 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 				/* Verify not too small */
 				if (candidateXmnsValue < newSpaceSizeMinimum) {
 					memoryOption = displayXmoOrXmos(memoryParameters);
-					subSpaceTooLargeOption = "-Xms";
+					subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooLarge;
 				}
 
 				/* Ensure Xmns <= Xmnx */
 				if (opt_XmnxSet && (candidateXmnsValue > extensions->maxNewSpaceSize)) {
 					memoryOption = displayXmnOrXmnx(memoryParameters);
-					subSpaceTooSmallOption = "-Xms";
+					subSpaceTooSmallOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooSmall;
 				}
 
 				/* Enforce Xms = Xmns + Xmos */
 				if ((extensions->oldSpaceSize + candidateXmnsValue) != extensions->initialMemorySize) {
 					memoryOption = displayXmoOrXmos(memoryParameters);
-					subSpaceTooLargeOption = "-Xms";
+					subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooLarge;
 				}
 			} else {
@@ -1854,21 +1895,21 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 				/* Verify not too small */
 				if (candidateXmosValue < oldSpaceSizeMinimum) {
 					memoryOption = displayXmnOrXmns(memoryParameters);
-					subSpaceTooLargeOption = "-Xms";
+					subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooLarge;
 				}
 
 				/* Ensure Xmos <= Xmox */
 				if (opt_XmoxSet && (candidateXmosValue > extensions->maxOldSpaceSize)) {
 					memoryOption = displayXmoOrXmox(memoryParameters);
-					subSpaceTooSmallOption = "-Xms";
+					subSpaceTooSmallOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooSmall;
 				}
 
 				/* Enforce Xms = Xmns + Xmos */
 				if ((candidateXmosValue + extensions->newSpaceSize) != extensions->initialMemorySize) {
 					memoryOption = displayXmnOrXmns(memoryParameters);
-					subSpaceTooLargeOption = "-Xms";
+					subSpaceTooLargeOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceTooLarge;
 				}
 			} else {
@@ -1966,7 +2007,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 					 */
 					memoryOption = "-Xmox";
 					memoryOption2 = "-Xmnx";
-					subSpaceTooSmallOption = "-Xms";
+					subSpaceTooSmallOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 					goto _subSpaceCombinationTooSmall;
 				}
 			} else {
@@ -2032,7 +2073,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 				extensions->initialMemorySize = combinedXmosXmnsSize;
 			} else {
 				assume0(0); /* Previous stage checked Xms > minConfiguration */
-				memoryOption = "-Xms";
+				memoryOption = displayXmsOrInitialRAMPercentage(memoryParameters);
 				minimumSizeValue = extensions->absoluteMinimumOldSubSpaceSize + (2*extensions->absoluteMinimumNewSubSpaceSize); /* smallest configuration */
 				goto _subSpaceTooSmallForValue;
 			}
@@ -2077,7 +2118,7 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 					goto _subSpaceCombinationTooLarge;
 				}
 				if (opt_XmxSet) {
-					subSpaceTooLargeOption = "-Xmx";
+					subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 					goto _subSpaceCombinationTooLarge;
 				}
 				goto _subSpaceCombinationTooLargeForHeap;
@@ -2164,17 +2205,17 @@ combinationMemoryParameterVerification(J9JavaVM *javaVM, IDATA* memoryParameters
 		/* first, the error checking */
 		if (!isLessThanEqualOrUnspecifiedAgainstFixed(&extensions->userSpecifiedParameters._Xmn, mx)) {
 			memoryOption = "-Xmn";
-			subSpaceTooLargeOption = "-Xmx";
+			subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 			goto _subSpaceTooLarge;
 		}
 		if (!isLessThanEqualOrUnspecifiedAgainstFixed(&extensions->userSpecifiedParameters._Xmns, mx)) {
 			memoryOption = "-Xmns";
-			subSpaceTooLargeOption = "-Xmx";
+			subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 			goto _subSpaceTooLarge;
 		}
 		if (!isLessThanEqualOrUnspecifiedAgainstFixed(&extensions->userSpecifiedParameters._Xmnx, mx)) {
 			memoryOption = "-Xmnx";
-			subSpaceTooLargeOption = "-Xmx";
+			subSpaceTooLargeOption = displayXmxOrMaxRAMPercentage(memoryParameters);
 			goto _subSpaceTooLarge;
 		}
 		if (!isLessThanEqualOrUnspecifiedAgainstOption(&extensions->userSpecifiedParameters._Xmns, &extensions->userSpecifiedParameters._Xmnx)) {
@@ -2546,6 +2587,45 @@ setDefaultConfigOptions(MM_GCExtensions *extensions, bool scavenge, bool concurr
 #endif /* defined(J9VM_GC_LARGE_OBJECT_AREA) */
 }
 
+void
+setConfigOptionsForNoGc(MM_GCExtensions *extensions)
+{
+	/* noScavenger noConcurrentMark noConcurrentSweep, noLOA */
+#if defined(J9VM_GC_MODRON_SCAVENGER)
+	extensions->configurationOptions._forceOptionScavenge  = true;
+	extensions->scavengerEnabled = false;
+#endif /* defined(J9VM_GC_MODRON_SCAVENGER) */
+#if defined (OMR_GC_MODRON_CONCURRENT_MARK)
+	extensions->configurationOptions._forceOptionConcurrentMark = true;
+	extensions->concurrentMark = false;
+#endif /* defined (OMR_GC_MODRON_CONCURRENT_MARK) */
+#if defined(J9VM_GC_CONCURRENT_SWEEP)
+	extensions->configurationOptions._forceOptionConcurrentSweep = true;
+	extensions->concurrentSweep = false;
+#endif /* defined(J9VM_GC_CONCURRENT_SWEEP) */
+#if defined(J9VM_GC_LARGE_OBJECT_AREA)
+	extensions->configurationOptions._forceOptionLargeObjectArea = true;
+	extensions->largeObjectArea = false;
+#endif /* defined(J9VM_GC_LARGE_OBJECT_AREA) */
+	/* 1 gcThread */
+	extensions->gcThreadCountForced = true;
+	extensions->gcThreadCount = 1;
+
+	extensions->packetListSplit = 1;
+	extensions->cacheListSplit = 1;
+	extensions->splitFreeListSplitAmount = 1;
+	extensions->objectListFragmentCount = 1;
+
+	/* disable excessiveGC */
+	extensions->excessiveGCEnabled._wasSpecified = true;
+	extensions->excessiveGCEnabled._valueSpecified = false;
+	/* disable estimate fragmentation */
+	extensions->estimateFragmentation = 0;
+	extensions->processLargeAllocateStats = false;
+	/* disable system gc */
+	extensions->disableExplicitGC = true;
+}
+
 /**
  * Create proper configuration for SE based on options
  * @param env pointer to Environment
@@ -2671,6 +2751,14 @@ configurateGCWithPolicyAndOptions(OMR_VM* omrVM)
 		result = MM_ConfigurationIncrementalGenerational::newInstance(&env);
 		break;
 
+	case gc_policy_nogc:
+		extensions->gcModeString = "-Xgcpolicy:nogc";
+		omrVM->gcPolicy = J9_GC_POLICY_NOGC;
+		/* noScavenge, noConcurrentMark, noConcurrentSweep, noLOA */
+		setConfigOptionsForNoGc(extensions);
+		result = configurateGCWithPolicyAndOptionsStandard(&env);
+		break;
+
 	case gc_policy_undefined:
 	default:
 		/* Undefined or unknown GC policy */
@@ -2734,12 +2822,23 @@ gcInitializeDefaults(J9JavaVM* vm)
 		goto error;
 	}
 
-	initialiseVerboseFunctionTableWithDummies(&extensions->verboseFunctionTable);
+	initializeVerboseFunctionTableWithDummies(&extensions->verboseFunctionTable);
 
 	if (JNI_OK != gcParseCommandLineAndInitializeWithValues(vm, memoryParameterTable)) {
 		loadInfo->fatalErrorStr = (char *)j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_GC_FAILED_TO_INITIALIZE_PARSING_COMMAND_LINE, "Failed to initialize, parsing command line.");
 		goto error;
 	}
+
+	if ((-1 == memoryParameterTable[opt_Xms]) && (-1 != memoryParameterTable[opt_initialRAMPercent])) {
+		extensions->initialMemorySize = (uintptr_t)(((double)extensions->usablePhysicalMemory / 100.0) * extensions->initialRAMPercent);
+		/* Update memory parameter table to appear that -Xms was specified */
+		memoryParameterTable[opt_Xms] = memoryParameterTable[opt_initialRAMPercent];
+	}
+	if ((-1 == memoryParameterTable[opt_Xmx]) && (-1 != memoryParameterTable[opt_maxRAMPercent])) {
+		extensions->memoryMax = (uintptr_t)(((double)extensions->usablePhysicalMemory / 100.0) * extensions->maxRAMPercent);
+		/* Update memory parameter table to appear that -Xmx was specified */
+		memoryParameterTable[opt_Xmx] = memoryParameterTable[opt_maxRAMPercent];
+	}	
 
 	if (gc_policy_metronome == extensions->configurationOptions._gcPolicy) {
 		/* Heap is segregated; take into account segregatedAllocationCache. */
@@ -2818,7 +2917,7 @@ gcInitializeDefaults(J9JavaVM* vm)
 		}
 
 		/* Try to initialize basic heap structures with the memory parameters we currently have */
-		if (JNI_OK == j9gc_initialize_heap(vm, extensions->memoryMax)) {
+		if (JNI_OK == j9gc_initialize_heap(vm, memoryParameterTable, extensions->memoryMax)) {
 			break;
 		}
 
