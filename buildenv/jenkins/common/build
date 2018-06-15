@@ -58,7 +58,21 @@ def get_sources_with_authentication() {
 }
 
 def get_sources() {
-    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: "${OPENJDK_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CheckoutOption', timeout: 30],[$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false, timeout: 30]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: "${USER_CREDENTIALS_ID}", url: "${OPENJDK_REPO}"]]]
+    checkout changelog: false,
+            poll: false,
+            scm: [$class: 'GitSCM',
+                branches: [[name: "${OPENJDK_BRANCH}"]],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [[$class: 'CheckoutOption', timeout: 30],
+                            [$class: 'CloneOption',
+                                depth: 0,
+                                noTags: false,
+                                reference: "${OPENJDK_REFERENCE_REPO}",
+                                shallow: false,
+                                timeout: 30]],
+                submoduleCfg: [],
+                userRemoteConfigs: [[credentialsId: "${USER_CREDENTIALS_ID}",
+                                    url: "${OPENJDK_REPO}"]]]
 
     // Check if this build is a PR
     if (params.ghprbGhRepository) {
@@ -205,7 +219,7 @@ def build() {
     stage('Compile') {
         timestamps {
             sh "bash ./configure --with-freemarker-jar='$FREEMARKER' --with-boot-jdk='$BOOT_JDK' $EXTRA_CONFIGURE_OPTIONS"
-            sh "make all"
+            sh "make $EXTRA_MAKE_OPTIONS all"
         }
     }
     stage('Java Version') {
@@ -218,13 +232,8 @@ def build() {
 def archive() {
     stage('Archive') {
         timestamps {
-            // Do not archive test material in PR jobs, only "Build" jobs
-            // https://github.com/eclipse/openj9/issues/1114
-            // ghprbPullId is the PullRequest ID which only shows up in Pull Requests
-            if (!params.ghprbPullId) {
-                sh "tar -zcvf ${TEST_PREFIX}`git -C openj9 rev-parse --short HEAD`${TEST_SUFFIX} openj9/test/"
-                archiveArtifacts artifacts: "**/${TEST_PREFIX}*${TEST_SUFFIX}", fingerprint: true, onlyIfSuccessful: true
-            }
+            sh "tar -zcvf ${TEST_PREFIX}`git -C openj9 rev-parse --short HEAD`${TEST_SUFFIX} openj9/test/"
+            archiveArtifacts artifacts: "**/${TEST_PREFIX}*${TEST_SUFFIX}", fingerprint: true, onlyIfSuccessful: true
             sh "tar -C build/$RELEASE/images/ -zcvf ${SDK_PREFIX}`date +%Y%d%m%H%M`${SDK_SUFFIX} ${JDK_FOLDER}"
             archiveArtifacts artifacts: "**/${SDK_PREFIX}*${SDK_SUFFIX}", fingerprint: true, onlyIfSuccessful: true
         }
@@ -240,11 +249,24 @@ def build_all() {
 
     // Typically called by Build jobs and Compile only PRs
     timeout(time: 6, unit: 'HOURS') {
-        add_node_to_description()
-        get_source()
-        build()
-        archive()
-        git_clean()
+        try {
+            add_node_to_description()
+            get_source()
+            build()
+            // Do not archive in compile only pr jobs
+            // ghprbPullId is the PullRequest ID which only shows up in Pull Requests
+            if (!params.ghprbPullId) {
+                archive()
+            }
+        } finally {
+            try {
+		cleanWs()
+	    } catch(e) {
+		echo e.toString()
+		echo e.printStackTrace()
+		sh "ps -ef"
+	    }
+        }
     }
 }
 

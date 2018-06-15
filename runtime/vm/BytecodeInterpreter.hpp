@@ -37,6 +37,7 @@
 #include "ut_j9vm.h"
 #include "vm_internal.h"
 #include "jni.h"
+#define FFI_BUILDING /* Needed on Windows to link libffi statically */ 
 #include "ffi.h"
 #include "jitregmap.h"
 #include "j2sever.h"
@@ -6091,12 +6092,15 @@ retry:
 		valueAddress = J9STATICADDRESS(flagsAndClass, valueOffset);
 #if defined(DO_HOOKS)
 		if (J9_EVENT_IS_HOOKED(_vm->hookInterface, J9HOOK_VM_GET_STATIC_FIELD)) {
-			updateVMStruct(REGISTER_ARGS);
-			ALWAYS_TRIGGER_J9HOOK_VM_GET_STATIC_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, valueAddress);
-			VMStructHasBeenUpdated(REGISTER_ARGS);
-			if (immediateAsyncPending()) {
-				rc = GOTO_ASYNC_CHECK;
-				goto done;
+			J9Class *fieldClass = (J9Class*)(classAndFlags & ~(UDATA)J9StaticFieldRefFlagBits);
+			if (J9_ARE_ANY_BITS_SET(fieldClass->classFlags, J9ClassHasWatchedFields)) {
+				updateVMStruct(REGISTER_ARGS);
+				ALWAYS_TRIGGER_J9HOOK_VM_GET_STATIC_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, fieldClass, valueAddress);
+				VMStructHasBeenUpdated(REGISTER_ARGS);
+				if (immediateAsyncPending()) {
+					rc = GOTO_ASYNC_CHECK;
+					goto done;
+				}
 			}
 		}
 #endif
@@ -6179,12 +6183,15 @@ retry:
 		valueAddress = J9STATICADDRESS(flagsAndClass, valueOffset);
 #if defined(DO_HOOKS)
 		if (J9_EVENT_IS_HOOKED(_vm->hookInterface, J9HOOK_VM_PUT_STATIC_FIELD)) {
-			updateVMStruct(REGISTER_ARGS);
-			ALWAYS_TRIGGER_J9HOOK_VM_PUT_STATIC_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, valueAddress, _sp);
-			VMStructHasBeenUpdated(REGISTER_ARGS);
-			if (immediateAsyncPending()) {
-				rc = GOTO_ASYNC_CHECK;
-				goto done;
+			J9Class *fieldClass = (J9Class*)(classAndFlags & ~(UDATA)J9StaticFieldRefFlagBits);
+			if (J9_ARE_ANY_BITS_SET(fieldClass->classFlags, J9ClassHasWatchedFields)) {
+				updateVMStruct(REGISTER_ARGS);
+				ALWAYS_TRIGGER_J9HOOK_VM_PUT_STATIC_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, fieldClass, valueAddress, _sp);
+				VMStructHasBeenUpdated(REGISTER_ARGS);
+				if (immediateAsyncPending()) {
+					rc = GOTO_ASYNC_CHECK;
+					goto done;
+				}
 			}
 		}
 #endif
@@ -6249,22 +6256,24 @@ retry:
 			if (NULL == objectref) {
 				rc = THROW_NPE;
 			} else {
-				bool isVolatile = (0 != (flags & J9AccVolatile));
 #if defined(DO_HOOKS)
 				if (J9_EVENT_IS_HOOKED(_vm->hookInterface, J9HOOK_VM_GET_FIELD)) {
-					updateVMStruct(REGISTER_ARGS);
-					ALWAYS_TRIGGER_J9HOOK_VM_GET_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, objectLocation, valueOffset);
-					VMStructHasBeenUpdated(REGISTER_ARGS);
-					if (immediateAsyncPending()) {
-						rc = GOTO_ASYNC_CHECK;
-						goto done;
+					if (J9_ARE_ANY_BITS_SET(J9OBJECT_CLAZZ(_currentThread, objectref)->classFlags, J9ClassHasWatchedFields)) {
+						updateVMStruct(REGISTER_ARGS);
+						ALWAYS_TRIGGER_J9HOOK_VM_GET_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, objectLocation, valueOffset);
+						VMStructHasBeenUpdated(REGISTER_ARGS);
+						if (immediateAsyncPending()) {
+							rc = GOTO_ASYNC_CHECK;
+							goto done;
+						}
+						objectref = *objectLocation;
 					}
-					objectref = *objectLocation;
 				}
 #endif
 
 				{
 					UDATA const newValueOffset = valueOffset + J9_OBJECT_HEADER_SIZE;
+					bool isVolatile = (0 != (flags & J9AccVolatile));
 					if (flags & J9FieldSizeDouble) {
 						_sp += (slotsToPop - 2);
 						*(U_64*)_sp = _objectAccessBarrier.inlineMixedObjectReadU64(_currentThread, objectref, newValueOffset, isVolatile);
@@ -6337,13 +6346,16 @@ retry:
 #if defined(DO_HOOKS)
 		if (J9_EVENT_IS_HOOKED(_vm->hookInterface, J9HOOK_VM_PUT_FIELD)) {
 			j9object_t  *objAddress = (j9object_t*)_sp + ((flags & J9FieldSizeDouble) ? 2 : 1);
-			if (NULL != *objAddress) {
-				updateVMStruct(REGISTER_ARGS);
-				ALWAYS_TRIGGER_J9HOOK_VM_PUT_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, objAddress, valueOffset, _sp);
-				VMStructHasBeenUpdated(REGISTER_ARGS);
-				if (immediateAsyncPending()) {
-					rc = GOTO_ASYNC_CHECK;
-					goto done;
+			j9object_t objectref = *objAddress;
+			if (NULL != objectref) {
+				if (J9_ARE_ANY_BITS_SET(J9OBJECT_CLAZZ(_currentThread, objectref)->classFlags, J9ClassHasWatchedFields)) {
+					updateVMStruct(REGISTER_ARGS);
+					ALWAYS_TRIGGER_J9HOOK_VM_PUT_FIELD(_vm->hookInterface, _currentThread, _literals, _pc - _literals->bytecodes, objAddress, valueOffset, _sp);
+					VMStructHasBeenUpdated(REGISTER_ARGS);
+					if (immediateAsyncPending()) {
+						rc = GOTO_ASYNC_CHECK;
+						goto done;
+					}
 				}
 			}
 		}
@@ -8287,14 +8299,14 @@ public:
 		JUMP_TABLE_ENTRY(JBinvokehandlegeneric),
 		JUMP_TABLE_ENTRY(JBinvokestaticsplit),
 		JUMP_TABLE_ENTRY(JBinvokespecialsplit),
-		JUMP_TABLE_ENTRY(JBunimplemented),
-		JUMP_TABLE_ENTRY(JBunimplemented),
-		JUMP_TABLE_ENTRY(JBunimplemented),
-		JUMP_TABLE_ENTRY(JBunimplemented),
 		JUMP_TABLE_ENTRY(JBreturnC),
 		JUMP_TABLE_ENTRY(JBreturnS),
 		JUMP_TABLE_ENTRY(JBreturnB),
 		JUMP_TABLE_ENTRY(JBreturnZ),
+		JUMP_TABLE_ENTRY(JBunimplemented),
+		JUMP_TABLE_ENTRY(JBunimplemented),
+		JUMP_TABLE_ENTRY(JBunimplemented),
+		JUMP_TABLE_ENTRY(JBunimplemented),
 		JUMP_TABLE_ENTRY(JBretFromNative0),
 		JUMP_TABLE_ENTRY(JBretFromNative1),
 		JUMP_TABLE_ENTRY(JBretFromNativeF),

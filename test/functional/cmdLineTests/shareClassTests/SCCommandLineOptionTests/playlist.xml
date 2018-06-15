@@ -23,6 +23,7 @@
 -->
 
 <playlist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../TestConfig/playlist.xsd">
+	<!-- Exclude it on windows for issue https://github.com/eclipse/openj9/issues/1814 -->
 	<test>
 		<testCaseName>cmdLineTester_SCCommandLineOptionTests</testCaseName>
 		<variations>
@@ -41,6 +42,7 @@
 	-nonZeroExitWhenError \
 	-outputLimit 300; \
 	$(TEST_STATUS)</command>
+		<platformRequirements>^os.win</platformRequirements>
 		<levels>
 			<level>sanity</level>
 		</levels>
