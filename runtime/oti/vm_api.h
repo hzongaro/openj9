@@ -1584,14 +1584,27 @@ setBootLoaderModulePatchPaths(J9JavaVM * javaVM, J9Module * j9module, const char
  * @brief Register jvminit.c::predefinedHandlerWrapper using j9sig_set_*async_signal_handler
  * for the specified signal
  *
- * @param vm pointer to a J9JavaVM
- * @param signal integer value of the signal
- * @param oldOSHandler points to the old signal handler function
+ * @param[in] vm pointer to a J9JavaVM
+ * @param[in] signal integer value of the signal
+ * @param[out] oldOSHandler points to the old signal handler function
  *
  * @return 0 on success and non-zero on failure
  */
 IDATA
 registerPredefinedHandler(J9JavaVM *vm, U_32 signal, void **oldOSHandler);
+
+/**
+ * @brief Register a signal handler function with the OS for the specified signal.
+ *
+ * @param[in] vm pointer to a J9JavaVM
+ * @param[in] signal integer value of the signal
+ * @param[in] newOSHandler address to the new signal handler function which will be registered
+ * @param[out] oldOSHandler points to the old signal handler function
+ *
+ * @return 0 on success and non-zero on failure
+ */
+IDATA
+registerOSHandler(J9JavaVM *vm, U_32 signal, void *newOSHandler, void **oldOSHandler);
 
 /* ---------------- romutil.c ---------------- */
 
@@ -2157,7 +2170,7 @@ fieldOffsetsStartDo(J9JavaVM *vm, J9ROMClass *romClass, J9Class *superClazz, J9R
 
 /**
 * @brief Iterate over fields of the specified class in JVMTI order.
-* @param state[in/out]  the walk state that was initialised via fieldOffsetsStartDo()
+* @param state[in/out]  the walk state that was initialized via fieldOffsetsStartDo()
 * @return J9ROMFieldOffsetWalkResult *
 */
 J9ROMFieldOffsetWalkResult *
@@ -2176,7 +2189,7 @@ fullTraversalFieldOffsetsStartDo(J9JavaVM *vm, J9Class *clazz, J9ROMFullTraversa
 
 /**
 * @brief Fully traverse the fields of the specified class and its superclasses.
-* @param state[in/out]  the walk state that was initialised via fullTraversalFieldOffsetsStartDo()
+* @param state[in/out]  the walk state that was initialized via fullTraversalFieldOffsetsStartDo()
 * @return J9ROMFieldShape *
 */
 J9ROMFieldShape *
@@ -4171,6 +4184,12 @@ typedef struct J9ThreadEnv {
 /* FlushProcessWriteBuffers.cpp */
 
 void flushProcessWriteBuffers(J9JavaVM *vm);
+
+/* throwexception.c */
+void
+throwNativeOOMError(JNIEnv *env, U_32 moduleName, U_32 messageNumber);
+void
+throwNewJavaIoIOException(JNIEnv *env, const char *message);
 
 #ifdef __cplusplus
 }

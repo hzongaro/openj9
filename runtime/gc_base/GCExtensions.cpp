@@ -231,35 +231,27 @@ void
 MM_GCExtensions::computeDefaultMaxHeap(MM_EnvironmentBase *env)
 {
 	OMRPORT_ACCESS_FROM_OMRPORT(env->getPortLibrary());
-	uint64_t cgroupMemory = 0;
 
 	MM_GCExtensionsBase::computeDefaultMaxHeap(env);
 
 	if (OMR_CGROUP_SUBSYSTEM_MEMORY == omrsysinfo_cgroup_are_subsystems_enabled(OMR_CGROUP_SUBSYSTEM_MEMORY)) {
-/* A very rough estimate of the minimum amount of memory required by the JVM excluding
- * the heap. The size is a conservative estimate, attempting to leave room for the JVM's
- * internal requirements given that one compilation thread can use up to 256M.
- */
-#define OPENJ9_IN_CGROUP_NATIVE_FOOTPRINT_EXCLUDING_HEAP ((U_64)512 * 1024 * 1024)
-
-		int32_t rc = omrsysinfo_cgroup_get_memlimit(&cgroupMemory);
-		if (0 == rc) {
+		if (omrsysinfo_cgroup_is_memlimit_set()) {
 			/* If running in a cgroup with memory limit > 1G, reserve at-least 512M for JVM's internal requirements
 			 * like JIT compilation etc, and extend default max heap memory to at-most 75% of cgroup limit.
+			 * The value reserved for JVM's internal requirements excludes heap. This value is a conservative
+			 * estimate of the JVM's internal requirements, given that one compilation thread can use up to 256M.
 			 */
-			memoryMax = (uintptr_t)OMR_MAX((int64_t)(cgroupMemory / 2), (int64_t)(cgroupMemory - OPENJ9_IN_CGROUP_NATIVE_FOOTPRINT_EXCLUDING_HEAP));
-			memoryMax = (uintptr_t)OMR_MIN(memoryMax, (cgroupMemory / 4) * 3);
-		}
-
+#define OPENJ9_IN_CGROUP_NATIVE_FOOTPRINT_EXCLUDING_HEAP ((U_64)512 * 1024 * 1024)
+			memoryMax = (uintptr_t)OMR_MAX((int64_t)(usablePhysicalMemory / 2), (int64_t)(usablePhysicalMemory - OPENJ9_IN_CGROUP_NATIVE_FOOTPRINT_EXCLUDING_HEAP));
+			memoryMax = (uintptr_t)OMR_MIN(memoryMax, (usablePhysicalMemory / 4) * 3);
 #undef OPENJ9_IN_CGROUP_NATIVE_FOOTPRINT_EXCLUDING_HEAP
+		}
 	}
 
 #if defined(OMR_ENV_DATA64)
 	if (J2SE_VERSION((J9JavaVM *)getOmrVM()->_language_vm) >= J2SE_19) {
-		uint64_t usableMemory = omrsysinfo_get_addressable_physical_memory();
-
-		/* extend java default max memory to 25% of physical RAM */
-		memoryMax = OMR_MAX(memoryMax, usableMemory / 4);
+		/* extend java default max memory to 25% of usable RAM */
+		memoryMax = OMR_MAX(memoryMax, usablePhysicalMemory / 4);
 	}
 
 	/* limit maxheapsize up to MAXIMUM_HEAP_SIZE_RECOMMENDED_FOR_3BIT_SHIFT_COMPRESSEDREFS, then can set 3bit compressedrefs as the default */
