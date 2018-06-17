@@ -13868,8 +13868,8 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       TR_X86OpCodes branchOp;
       TR_WriteBarrierKind gcModeForSnippet = gcMode;
 
-      bool skipSnippetIfSrcOld = false;
-      bool skipSnippetIfDestNotOld = false;
+      bool skipSnippetIfSrcNotOld = false;
+      bool skipSnippetIfDestOld = false;
       bool skipSnippetIfDestRemembered = false;
 
       TR::LabelSymbol *labelAfterBranchToSnippet = NULL;
@@ -13974,12 +13974,11 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
 
       if (skipSnippetIfSrcNotOld || skipSnippetIfDestOld)
          {
-         // Sanity check:  exactly one of skipSnippetIfSrcNotOld and skipSnippetIfDestOld must be true
-         TR_ASSERT((!skipSnippetIfSrcNotOld && skipSnippetIfDestOld) || (skipSnippetIfSrcNotOld && !skipSnippetIfDestOld));
+         TR_ASSERT((!skipSnippetIfSrcNotOld || !skipSnippetIfDestOld), "At most one of skipSnippetIfSrcNotOld and skipSnippetIfDestOld can be true");
          TR_ASSERT(srcReg, "Expected to have a source register for wrtbari");
          bool is64Bit = TR::Compiler->target.is64Bit(); // On compressed refs, owningObjectReg is already uncompressed, and the vmthread fields are 64 bits
          bool checkDest = skipSnippetIfDestOld;   // Otherwise, check the src value
-         bool skipSnippetIfOld = skipSnippetIfDestOld;   // Otherwise, skip if the checked value is not old
+         bool skipSnippetIfOld = skipSnippetIfDestOld;   // Otherwise, skip if the checked value (source or destination) is not old
          labelAfterBranchToSnippet = generateLabelSymbol(cg);
          TR::Register *tempReg = srm->findOrCreateScratchRegister();
          generateRegRegInstruction(MOVRegReg(),  node, tempReg, checkDest ? owningObjectReg : srcReg, cg);
