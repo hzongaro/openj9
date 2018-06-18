@@ -13975,7 +13975,8 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       if (skipSnippetIfSrcNotOld || skipSnippetIfDestOld)
          {
          TR_ASSERT((!skipSnippetIfSrcNotOld || !skipSnippetIfDestOld), "At most one of skipSnippetIfSrcNotOld and skipSnippetIfDestOld can be true");
-         TR_ASSERT(srcReg, "Expected to have a source register for wrtbari");
+         TR_ASSERT(skipSnippetIfDestOld || (srcReg != NULL), "Expected to have a source register for wrtbari");
+
          bool is64Bit = TR::Compiler->target.is64Bit(); // On compressed refs, owningObjectReg is already uncompressed, and the vmthread fields are 64 bits
          bool checkDest = skipSnippetIfDestOld;   // Otherwise, check the src value
          bool skipSnippetIfOld = skipSnippetIfDestOld;   // Otherwise, skip if the checked value (source or destination) is not old
