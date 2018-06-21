@@ -14037,7 +14037,7 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       if (labelAfterBranchToSnippet)
          generateLabelInstruction(LABEL, node, labelAfterBranchToSnippet, cg);
 
-TR_assert(!doInternalControlFlow, "Didn't expect not to have internal control flow");
+TR_ASSERT(!doInternalControlFlow, "Didn't expect not to have internal control flow");
       generateLabelInstruction(JMP4, node, doneLabel, cg);
       generateLabelInstruction(LABEL, node, dbgCounterLabel, cg);
       cg->generateDebugCounter(
