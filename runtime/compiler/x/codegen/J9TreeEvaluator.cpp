@@ -14093,18 +14093,18 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
       generateLabelInstruction(branchOp, node, snippet->getSnippetLabel(), snippet->getDependencies(), cg);
       if (labelAfterBranchToSnippet)
          generateLabelInstruction(LABEL, node, labelAfterBranchToSnippet, cg);
-      }
 
-   generateLabelInstruction(JMP4, node, doneLabel, cg);
-   generateLabelInstruction(LABEL, node, dbgCounterLabel, cg);
-   cg->generateDebugCounter(
-             TR::DebugCounter::debugCounterName(comp,
-                                    "wrtbariHelperCalls/%s/(%s)/%d/%d",
-                                    node->getOpCode().getName(),
-                                    comp->signature(),
-                                    node->getByteCodeInfo().getCallerIndex(),
-                                    node->getByteCodeInfo().getByteCodeIndex()),
-             1, TR::DebugCounter::Undetermined);
+      generateLabelInstruction(JMP4, node, doneLabel, cg);
+      generateLabelInstruction(LABEL, node, dbgCounterLabel, cg);
+      cg->generateDebugCounter(
+                TR::DebugCounter::debugCounterName(comp,
+                                       "wrtbariHelperCalls/%s/(%s)/%d/%d",
+                                       node->getOpCode().getName(),
+                                       comp->signature(),
+                                       node->getByteCodeInfo().getCallerIndex(),
+                                       node->getByteCodeInfo().getByteCodeIndex()),
+                1, TR::DebugCounter::Undetermined);
+      }
 
    int32_t numPostConditions = 2 + srm->numAvailableRegisters();
 
