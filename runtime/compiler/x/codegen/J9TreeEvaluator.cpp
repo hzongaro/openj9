@@ -13547,7 +13547,6 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
    // PR98283: it is not acceptable to emit a label symbol twice so always generate a new label here
    // we can clean up the API later in a less risky manner
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *dbgCounterLabel = generateLabelSymbol(cg);
 
    TR::LabelSymbol *cardMarkDoneLabel = NULL;
 
@@ -13951,7 +13950,7 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
             }
 
          TR::X86WriteBarrierSnippet *snippet =
-            generateWriteBarrierSnippet(node, TR_WrtbarCardMarkAndOldCheck, owningObjectReg, srcReg, NULL, dbgCounterLabel, cg);
+            generateWriteBarrierSnippet(node, TR_WrtbarCardMarkAndOldCheck, owningObjectReg, srcReg, NULL, doneLabel, cg);
          generateLabelInstruction(JNE4, node, snippet->getSnippetLabel(), snippet->getDependencies(), cg);
 
          // If the destination object is old and not remembered then process the remembered
@@ -14089,21 +14088,10 @@ void J9::X86::TreeEvaluator::VMwrtbarWithoutStoreEvaluator(
             }
          }
 
-      TR::X86WriteBarrierSnippet *snippet = generateWriteBarrierSnippet(node, gcModeForSnippet, owningObjectReg, srcReg, NULL, dbgCounterLabel, cg);
+      TR::X86WriteBarrierSnippet *snippet = generateWriteBarrierSnippet(node, gcModeForSnippet, owningObjectReg, srcReg, NULL, doneLabel, cg);
       generateLabelInstruction(branchOp, node, snippet->getSnippetLabel(), snippet->getDependencies(), cg);
       if (labelAfterBranchToSnippet)
          generateLabelInstruction(LABEL, node, labelAfterBranchToSnippet, cg);
-
-      generateLabelInstruction(JMP4, node, doneLabel, cg);
-      generateLabelInstruction(LABEL, node, dbgCounterLabel, cg);
-      cg->generateDebugCounter(
-                TR::DebugCounter::debugCounterName(comp,
-                                       "wrtbariHelperCalls/%s/(%s)/%d/%d",
-                                       node->getOpCode().getName(),
-                                       comp->signature(),
-                                       node->getByteCodeInfo().getCallerIndex(),
-                                       node->getByteCodeInfo().getByteCodeIndex()),
-                1, TR::DebugCounter::Undetermined);
       }
 
    int32_t numPostConditions = 2 + srm->numAvailableRegisters();
