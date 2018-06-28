@@ -226,6 +226,10 @@ void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR
          }
       else if (opCode == TR::BNDCHKwithSpineCHK)
          {
+//TODO:  Temporary work-around to avoid removing BNDCHKwithSpineCHKs for
+//       methods in com/ibm/ws/sib/msgstore, as we still seem to be getting
+//       arraylets there unexpectedly
+//TODO: <block-to-remove>
 const char *filterPkg = "com/ibm/ws/sib/msgstore";
 TR_ByteCodeInfo& nodeBCI = node->getByteCodeInfo();
 
@@ -235,12 +239,15 @@ const char * inlinedResolvedSig =
                    ? comp()->getInlinedResolvedMethod(nodeBCI.getCallerIndex())
                            ->signature(trMemory())
                    : NULL;
+//TODO: </block-to-remove>
 
          if (currentTreeTopIsProtectedByOSR
+//TODO: <block-to-remove>
 && strncmp(filterPkg, currMethodSig, strlen(filterPkg)) != 0
 && (inlinedResolvedSig == NULL
        || strncmp(filterPkg, inlinedResolvedSig, strlen(filterPkg)) != 0)
-             /* TODO: add conditiont ot est array type for arraylets having been generated */
+//TODO: </block-to-remove>
+             /* TODO: add conditiontot est array type for arraylets having been generated */
              && performTransformation(comp(), "O^O SpineCHK REMOVAL: converting BNDCHKwithSpineCHK n%dn to BNDCHK\n", node->getGlobalIndex()))
             {
             // BNDCHK: child1: arraylength, child2: index
