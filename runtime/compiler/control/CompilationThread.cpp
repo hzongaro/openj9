@@ -7300,7 +7300,7 @@ TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrary *portLib, void * 
                // Disable NextGenHCR during Startup Phase
                if (jitConfig->javaVM->phase != J9VM_PHASE_NOT_STARTUP)
                   {
-                  options->setOption(TR_DisableNextGenHCR);
+                  //options->setOption(TR_DisableNextGenHCR);
                   }
 
                // Do not allow switching to profiling if this is a big app
