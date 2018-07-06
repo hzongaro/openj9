@@ -222,6 +222,7 @@ void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR
             TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/SpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
             }
          }
+#if 0
       else if (opCode == TR::BNDCHKwithSpineCHK)
          {
          if (currentTreeTopIsProtectedByOSR
@@ -242,6 +243,7 @@ void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR
             TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/BNDCHKwithSpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
             }
          }
+#endif
       else if (!currentTreeTopIsProtectedByOSR && comp()->isPotentialOSRPointWithSupport(tt))
          {
          currentTreeTopIsProtectedByOSR = true;
