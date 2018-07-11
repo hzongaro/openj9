@@ -124,7 +124,8 @@ int32_t TR_OSRGuardInsertion::perform()
       {
       for (TR::TreeTop *tt = comp()->getStartTree(); tt != NULL; tt = tt->getNextTreeTop())
          {
-         if (tt->getNode()->getOpCodeValue() == TR::SpineCHK)
+         if (tt->getNode()->getOpCodeValue() == TR::SpineCHK
+                || tt->getNode()->getOpCodeValue() == TR::BNDCHKWithSpineCHK)
             {
             chksToRemove = true;
             }
