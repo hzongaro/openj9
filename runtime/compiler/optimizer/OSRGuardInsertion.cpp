@@ -222,10 +222,22 @@ void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR
             TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/SpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
             }
          }
-#if 0
       else if (opCode == TR::BNDCHKwithSpineCHK)
          {
+const char *filterPkg = "com/ibm/ws/sib/msgstore";
+TR_ByteCodeInfo& nodeBCI = node->getByteCodeInfo();
+
+const char * currMethodSig = comp()->getCurrentMethod()->signature(trMemory());
+const char * inlinedResolvedSig =
+                (nodeBCI.getCallerIndex() >= 0)
+                   ? comp()->getInlinedResolvedMethod(nodeBCI.getCallerIndex())
+                           ->signature(trMemory())
+                   : NULL;
+
          if (currentTreeTopIsProtectedByOSR
+&& strncmp(filterPkg, currMethodSig, strlen(filterPkg)) != 0
+&& (inlinedResolveSig == NULL
+       || strncmp(filterPkg, inlinedResolvedSig, strlen(filterPkg)) != 0)
              /* TODO: add conditiont ot est array type for arraylets having been generated */
              && performTransformation(comp(), "O^O SpineCHK REMOVAL: converting BNDCHKwithSpineCHK n%dn to BNDCHK\n", node->getGlobalIndex()))
             {
@@ -243,7 +255,6 @@ void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR
             TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/BNDCHKwithSpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
             }
          }
-#endif
       else if (!currentTreeTopIsProtectedByOSR && comp()->isPotentialOSRPointWithSupport(tt))
          {
          currentTreeTopIsProtectedByOSR = true;
