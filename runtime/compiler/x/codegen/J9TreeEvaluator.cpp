@@ -759,13 +759,11 @@ static void genSuperClassInstanceOfTest(TR::Node        *node,
 
       if (endLabel != NULL)
          {
-         outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, testerReg, callHelper,
-                                                                               endLabel, false, cg);
+         outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, testerReg, callHelper, endLabel, cg);
          }
       else
          {
-         outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, testerReg, callHelper,
-                                                                               restartLabel, false, cg);
+         outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, testerReg, callHelper, restartLabel, cg);
          }
 
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
@@ -874,12 +872,9 @@ static void genSuperClassInstanceOfTest(TR::Node        *node,
          generateLabelInstruction(JNE4, node, trueLabel, cg);
          TR::LabelSymbol *slowPathLabel = generateLabelSymbol(cg);
          generateLabelInstruction(JMP4, node, slowPathLabel, cg);
-         TR_OutlinedInstructions *slowPath = new (cg->trHeapMemory()) TR_OutlinedInstructions(slowPathLabel, cg);
-         cg->getOutlinedInstructionsList().push_front(slowPath);
-         slowPath->swapInstructionListsWithCompilation();
 
          // outlined code
-         generateLabelInstruction(LABEL, node, slowPathLabel, cg);
+         TR_OutlinedInstructionsGenerator og(slowPathLabel, node, cg);
          TR::Register    *eaxReg = cg->allocateRegister();
          generateRegImmInstruction(MOVRegImm4(), node, eaxReg, -1, cg);
          TR::RegisterDependencyConditions *deps = generateRegisterDependencyConditions((uint8_t)1, (uint8_t)1, cg);
@@ -892,9 +887,6 @@ static void genSuperClassInstanceOfTest(TR::Node        *node,
          generateLabelInstruction(JNE4, node, trueLabel, cg);
          generateMemRegInstruction(SMemReg(), node, generateX86MemoryReference(instanceOfClazzSnippet, cg), castClassReg, cg);
          generateLabelInstruction(JMP4, node, trueLabel, cg);
-
-         // back to mainline code
-         slowPath->swapInstructionListsWithCompilation();
          }
       else
          {
@@ -3545,13 +3537,6 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
 
    generateLabelInstruction(JE4, node, nullTargetLabel, cg);
 
-   TR_OutlinedInstructions *nullStorePath = NULL;
-   if (!isRealTimeGC && isNonRTWriteBarrierRequired)
-      {
-      nullStorePath = new (cg->trHeapMemory()) TR_OutlinedInstructions(nullTargetLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(nullStorePath);
-      }
-
    // -------------------------------------------------------------------------
    //
    // Generate up-front array store checks to avoid calling out to the helper.
@@ -3580,7 +3565,7 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
          }
 
       TR_OutlinedInstructions *outlinedASCHelperCall =
-         new (cg->trHeapMemory()) TR_OutlinedInstructions(helperCallNode, TR::call, NULL, oolASCLabel, restartLabel, false, cg);
+         new (cg->trHeapMemory()) TR_OutlinedInstructions(helperCallNode, TR::call, NULL, oolASCLabel, restartLabel, cg);
       cg->getOutlinedInstructionsList().push_front(outlinedASCHelperCall);
 
       static char *alwaysDoOOLASCc = feGetEnv("TR_doOOLASC");
@@ -3665,7 +3650,6 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
       {
       if (generateWriteBarrier)
          {
-         assert(nullStorePath);
          assert(isNonRTWriteBarrierRequired);
          assert(tempMR);
 
@@ -3675,8 +3659,7 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
 
          // Perform the NULL store that was bypassed earlier by the write barrier.
          //
-         nullStorePath->swapInstructionListsWithCompilation();
-         generateLabelInstruction(NULL, LABEL, nullTargetLabel, cg)->setNode(node);
+         TR_OutlinedInstructionsGenerator og(nullTargetLabel, node, cg);
 
          tempMR2 = generateX86MemoryReference(*tempMR, 0, cg);
 
@@ -3686,14 +3669,11 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
             generateMemRegInstruction(SMemReg(), node, tempMR2, sourceRegister, cg);
 
          generateLabelInstruction(JMP4, node, doneLabel, cg);
-         nullStorePath->swapInstructionListsWithCompilation();
          }
       else
          {
          // No write barrier emitted.  Evaluate the store here.
          //
-
-         assert(!nullStorePath);
          assert(!isNonRTWriteBarrierRequired);
          assert(doneLabel == nullTargetLabel);
 
@@ -4649,8 +4629,7 @@ TR::Register *J9::X86::TreeEvaluator::VMcheckcastEvaluator(TR::Node          *no
    TR::LabelSymbol *callHelper = generateLabelSymbol(cg);
    if (!(testCache && inlinedHelpers))
       {
-      TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::call, NULL,
-                                                                                 callHelper, fallThru, false, cg );
+      TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::call, NULL, callHelper, fallThru, cg );
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
       cg->generateDebugCounter(
          outlinedHelperCall->getFirstInstruction(),
@@ -5105,8 +5084,7 @@ TR::Register *J9::X86::TreeEvaluator::VMifInstanceOfEvaluator(TR::Node          
          TR::LabelSymbol *restartLabel = generateLabelSymbol(cg);
          if (!inlinedHelpers && !performReferenceArrayTestInline)
             {
-            TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(instanceofNode, TR::icall, helperTargetReg, callHelper,
-                                                                                                           restartLabel, false, cg);
+            TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(instanceofNode, TR::icall, helperTargetReg, callHelper, restartLabel, cg);
             cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
             cg->generateDebugCounter(
                outlinedHelperCall->getFirstInstruction(),
@@ -5481,8 +5459,7 @@ J9::X86::TreeEvaluator::VMinstanceOfEvaluator(
 
       if (!inlinedHelpers && !performReferenceArrayTestInline)
          {
-         TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, targetReg, callHelper,
-                                                                                                        restartLabel, false, cg);
+         TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory()) TR_OutlinedInstructions(node, TR::icall, targetReg, callHelper, restartLabel, cg);
          cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
          cg->generateDebugCounter(
             outlinedHelperCall->getFirstInstruction(),
@@ -5717,11 +5694,7 @@ void J9::X86::TreeEvaluator::asyncGCMapCheckPatching(TR::Node *node, TR::CodeGen
       //generateLabelInstruction(CALLImm4, node, gcMapPatchingLabel, cg);
       generatePatchableCodeAlignmentInstruction(TR::X86PatchableCodeAlignmentInstruction::CALLImm4AtomicRegions, generateLabelInstruction(CALLImm4, node, gcMapPatchingLabel, cg), cg);
 
-      TR_OutlinedInstructions *gcMapPatching = new (cg->trHeapMemory()) TR_OutlinedInstructions(gcMapPatchingLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(gcMapPatching);
-      gcMapPatching->swapInstructionListsWithCompilation();
-
-      generateLabelInstruction(NULL, LABEL, gcMapPatchingLabel, cg)->setNode(node);
+      TR_OutlinedInstructionsGenerator og(gcMapPatchingLabel, node, cg);
 
       generateLabelInstruction(LABEL, node, outlinedStartLabel, cg);
       //Load the address that we are going to patch and clean up the stack
@@ -5777,7 +5750,6 @@ void J9::X86::TreeEvaluator::asyncGCMapCheckPatching(TR::Node *node, TR::CodeGen
       cg->stopUsingRegister(patchValReg);
       cg->stopUsingRegister(tempReg);
       generateLabelInstruction(LABEL, node, outlinedEndLabel, cg);
-      gcMapPatching->swapInstructionListsWithCompilation();
       }
   else
       {
@@ -5807,11 +5779,7 @@ void J9::X86::TreeEvaluator::asyncGCMapCheckPatching(TR::Node *node, TR::CodeGen
       TR::Instruction *callInst =  generatePatchableCodeAlignmentInstruction(TR::X86PatchableCodeAlignmentInstruction::CALLImm4AtomicRegions, generateLabelInstruction(CALLImm4, node, gcMapPatchingLabel, cg), cg);
       TR::X86VFPSaveInstruction *vfpSaveInst = generateVFPSaveInstruction(callInst->getPrev(), cg);
 
-      TR_OutlinedInstructions *gcMapPatching = new (cg->trHeapMemory()) TR_OutlinedInstructions(gcMapPatchingLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(gcMapPatching);
-      gcMapPatching->swapInstructionListsWithCompilation();
-
-      generateLabelInstruction(NULL, LABEL, gcMapPatchingLabel, cg)->setNode(node);
+      TR_OutlinedInstructionsGenerator og(gcMapPatchingLabel, node, cg);
 
       generateLabelInstruction(LABEL, node, outlinedStartLabel, cg);
       //Load the address that we are going to patch and clean up the stack
@@ -5871,7 +5839,6 @@ void J9::X86::TreeEvaluator::asyncGCMapCheckPatching(TR::Node *node, TR::CodeGen
       cg->stopUsingRegister(lowExistingValReg);
       cg->stopUsingRegister(highExistingValReg);
       generateLabelInstruction(LABEL, node, outlinedEndLabel, cg);
-      gcMapPatching->swapInstructionListsWithCompilation();
      }
   }
 
@@ -5902,11 +5869,8 @@ void J9::X86::TreeEvaluator::inlineRecursiveMonitor(TR::Node          *node,
    outlinedStartLabel->setStartInternalControlFlow();
    outlinedEndLabel->setEndInternalControlFlow();
 
-   TR_OutlinedInstructions *recursiveMonitorEnter = new (cg->trHeapMemory()) TR_OutlinedInstructions(inlineRecursiveSnippetLabel, cg);
-   cg->getOutlinedInstructionsList().push_front(recursiveMonitorEnter);
-   recursiveMonitorEnter->swapInstructionListsWithCompilation();
+   TR_OutlinedInstructionsGenerator og(inlineRecursiveSnippetLabel, node, cg);
 
-   generateLabelInstruction(NULL, LABEL, inlineRecursiveSnippetLabel, cg)->setNode(node);
    generateLabelInstruction(LABEL, node, outlinedStartLabel, cg);
    TR::Register *lockWordReg = cg->allocateRegister();
    TR::Register *lockWordMaskedReg = cg->allocateRegister();
@@ -5944,7 +5908,6 @@ void J9::X86::TreeEvaluator::inlineRecursiveMonitor(TR::Node          *node,
    deps->addPostCondition(vmThreadReg, TR::RealRegister::ebp, cg);
    deps->stopAddingConditions();
    generateLabelInstruction(LABEL, node, outlinedEndLabel, deps, cg);
-   recursiveMonitorEnter->swapInstructionListsWithCompilation();
    }
 
 void J9::X86::TreeEvaluator::transactionalMemoryJITMonitorEntry(TR::Node           *node,
@@ -5963,11 +5926,8 @@ void J9::X86::TreeEvaluator::transactionalMemoryJITMonitorEntry(TR::Node        
       outlinedStartLabel->setStartInternalControlFlow();
       outlinedEndLabel->setEndInternalControlFlow();
 
-      TR_OutlinedInstructions *txJITMonitorEntry = new (cg->trHeapMemory()) TR_OutlinedInstructions(txJITMonitorEntryLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(txJITMonitorEntry);
-      txJITMonitorEntry->swapInstructionListsWithCompilation();
+      TR_OutlinedInstructionsGenerator og(txJITMonitorEntryLabel, node, cg);
 
-      generateLabelInstruction(NULL, LABEL, txJITMonitorEntryLabel, cg)->setNode(node);
       TR::Register *counterReg = cg->allocateRegister();
       generateRegImmInstruction(MOV4RegImm4, node, counterReg, 1024, cg);
       TR::LabelSymbol *spinLabel = outlinedStartLabel;
@@ -5987,7 +5947,6 @@ void J9::X86::TreeEvaluator::transactionalMemoryJITMonitorEntry(TR::Node        
       generateLabelInstruction(LABEL, node, outlinedEndLabel, cg);
 
       cg->stopUsingRegister(counterReg);
-      txJITMonitorEntry->swapInstructionListsWithCompilation();
    }
 
 TR::Register *
@@ -6439,7 +6398,7 @@ void J9::X86::TreeEvaluator::generateValueTracingCode(
    TR::Register      *valueReg,
    TR::CodeGenerator *cg)
    {
-   if (!TR::Options::getCmdLineOptions()->getOption(TR_EnableValueTracing))
+   if (!cg->comp()->getOption(TR_EnableValueTracing))
       return;
    // the code requires that the caller has vmThread in EBP as well as
    // that the caller has already setup internal control flow
@@ -6468,7 +6427,7 @@ void J9::X86::TreeEvaluator::generateValueTracingCode(
    TR::Register      *valueRegLow,
    TR::CodeGenerator *cg)
    {
-   if (!TR::Options::getCmdLineOptions()->getOption(TR_EnableValueTracing))
+   if (!cg->comp()->getOption(TR_EnableValueTracing))
       return;
 
    // the code requires that the caller has vmThread in EBP as well as
@@ -6671,14 +6630,12 @@ TR::Register *J9::X86::TreeEvaluator::VMmonexitEvaluator(TR::Node          *node
 
 
    // leaving main-line code path
-      // create the outlined path that decrements the count
-      TR_OutlinedInstructions *decCountPath = new (cg->trHeapMemory()) TR_OutlinedInstructions(decCountLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(decCountPath);
-      decCountPath->swapInstructionListsWithCompilation();
-         generateLabelInstruction(NULL, LABEL,      decCountLabel, cg)->setNode(node);
-         generateMemInstruction(        DECMem(cg), node, generateX86MemoryReference(unlockedReg, fej9->getMonitorEntryCountOffset(), cg), cg);
-         generateLabelInstruction(      JMP4,       node, fallThru, cg);
-      decCountPath->swapInstructionListsWithCompilation();
+   // create the outlined path that decrements the count
+      {
+      TR_OutlinedInstructionsGenerator og(decCountLabel, node, cg);
+      generateMemInstruction(  DECMem(cg), node, generateX86MemoryReference(unlockedReg, fej9->getMonitorEntryCountOffset(), cg), cg);
+      generateLabelInstruction(JMP4,       node, fallThru, cg);
+      }
 
    // back to main-line code path
 
@@ -9709,7 +9666,7 @@ J9::X86::TreeEvaluator::VMarrayStoreCHKEvaluator(
       // --------------------------------------------
 
 
-      if (!(TR::Options::getCmdLineOptions()->getOption(TR_DisableArrayStoreCheckOpts)) && node->getArrayComponentClassInNode() )
+      if (!(comp->getOption(TR_DisableArrayStoreCheckOpts)) && node->getArrayComponentClassInNode() )
          {
          TR_OpaqueClassBlock *arrayComponentClass = (TR_OpaqueClassBlock *) node->getArrayComponentClassInNode();
          if (TR::Compiler->target.is64Bit())
@@ -10264,7 +10221,7 @@ addFPXMMDependencies(
 
 #define J9TIME_NANOSECONDS_PER_SECOND ((I_64) 1000000000)
 
-#ifndef LINUX
+#if defined(WINDOWS)
 bool getWindowsNanoMultiplier(uint32_t &multiplier)
    {
    LARGE_INTEGER freq;
@@ -10291,7 +10248,7 @@ bool getWindowsNanoMultiplier(uint32_t &multiplier)
 
    return true;
    }
-#endif
+#endif /* WINDOWS */
 
 #if defined(TR_TARGET_64BIT)
 static bool
@@ -10305,7 +10262,7 @@ inlineNanoTime(
    if (debug("traceInlInlining"))
       diagnostic("nanoTime called by %s\n", comp->signature());
 
-#if !defined(LINUX)
+#if defined(WINDOWS)
    static uint32_t multiplier=1;
    //if (!getWindowsNanoMultiplier(multiplier))
    //   return false;
@@ -10314,7 +10271,7 @@ inlineNanoTime(
    // get the multiplier since because of CPU power states the frequency reported will vary
    // and the timestamp will be caclulated incorrectly.
    return false;
-#endif
+#endif /* WINDOWS */
 
    if (fej9->supportsFastNanoTime())
       {  // Fully Inlined Version
@@ -10335,7 +10292,7 @@ inlineNanoTime(
          resultAddress = NULL;
          }
 
-#if defined(LINUX)
+#if defined(LINUX) || defined(OSX)
       TR::SymbolReference *gtod = comp->getSymRefTab()->findOrCreateRuntimeHelper(TR_AMD64clockGetTime,false,false,false);
       TR::Node *timevalNode = TR::Node::createWithSymRef(node, TR::loadaddr, 0, cg->getNanoTimeTemp());
       TR::Node *clockSourceNode = TR::Node::create(node, TR::iconst, 0, CLOCK_MONOTONIC);
@@ -10352,7 +10309,7 @@ inlineNanoTime(
       TR::Register *testreg = linkage->buildDirectDispatch(callNode, false);
 #endif
 
-#if defined(LINUX)
+#if defined(LINUX) || defined(OSX)
 
       TR::Register *result  = cg->allocateRegister();
       TR::Register *reg     = cg->allocateRegister();
@@ -10374,7 +10331,7 @@ inlineNanoTime(
       cg->stopUsingRegister(reg);
 
 
-#else
+#elif defined(WINDOWS)
       TR::LabelSymbol *tickCountLabel    = generateLabelSymbol(cg);
       TR::LabelSymbol *StartLabel        = generateLabelSymbol(cg);
       TR::LabelSymbol *reStartLabel    = generateLabelSymbol(cg);
@@ -10453,7 +10410,7 @@ inlineNanoTime(
    TR::Register *vmThreadReg = cg->getVMThreadRegister();
    TR::Register *temp2 = 0;
 
-#if !defined(LINUX)
+#if defined(WINDOWS)
    static uint32_t multiplier=1;
    //if (!getWindowsNanoMultiplier(multiplier))
    //   return false;
@@ -10463,7 +10420,7 @@ inlineNanoTime(
    // and the timestamp will be caclulated incorrectly.
    return false;
 
-#endif
+#endif /* WINDOWS */
 
    if (fej9->supportsFastNanoTime())
       {
@@ -10472,9 +10429,9 @@ inlineNanoTime(
          {
          resultAddress = cg->evaluate(node->getFirstChild());
          generateRegInstruction(PUSHReg,  node, resultAddress, cg);
-         #ifdef LINUX
+         #if defined(LINUX) || defined (OSX)
          generateImmInstruction(PUSHImm4, node, CLOCK_MONOTONIC, cg);
-         #endif
+         #endif /* defined(LINUX) || defined(OSX) */
          }
       else
          {
@@ -10483,17 +10440,17 @@ inlineNanoTime(
 
          generateRegImmInstruction(SUB4RegImms, node, espReal, 8, cg);
 
-         #ifdef LINUX
+         #if defined(LINUX) || defined(OSX)
          resultAddress = cg->allocateRegister();
          generateRegRegInstruction(MOV4RegReg, node, resultAddress, espReal, cg); // save away esp before the push
          generateRegInstruction(PUSHReg,  node, resultAddress, cg);
          generateImmInstruction(PUSHImm4, node, CLOCK_MONOTONIC, cg);
          cg->stopUsingRegister(resultAddress);
          resultAddress = espReal;
-         #else
+         #elif defined(WINDOWS)
          resultAddress = espReal;
          generateRegInstruction(PUSHReg,  node, resultAddress, cg);
-         #endif
+         #endif /* defined(LINUX) || defined(OSX) */
          }
 
       // Force the FP register stack to be spilled.
@@ -10541,7 +10498,7 @@ inlineNanoTime(
 
       generateLabelInstruction(JE4, node, tickCountLabel, cg);
 
-      #elif defined (LINUX)
+      #elif defined(LINUX) || defined(OSX)
 
       // Build register dependencies and call the method in the system library
       // directly. Since this is a "C"-style call, ebx, esi and edi are preserved
@@ -10600,7 +10557,7 @@ inlineNanoTime(
       cg->stopUsingRegister(reglow);
 
 
-      #endif
+      #endif /* defined(LINUX) || defined(OSX) */
 
       TR::Register *lowReg = cg->allocateRegister();
       TR::Register *highReg = cg->allocateRegister();
@@ -10731,91 +10688,6 @@ inlineNanoTime(
    return true;
    }
 #endif
-
-enum TR_InlinedMathFunctions
-   {
-   TR_Abs_I = 0,
-   TR_Abs_L = 1,
-   };
-
-static bool
-inlineSimpleMathFunction(
-      TR_InlinedMathFunctions func,
-      TR::Node *node,
-      TR::CodeGenerator *cg)
-   {
-   switch(func)
-      {
-      case TR_Abs_I:
-         {
-         TR::Node *firstChild = node->getFirstChild();
-         TR::Register *resultReg = cg->allocateRegister(), *firstReg, *tempReg;
-
-         if (firstChild->getOpCode().isLoadConst())
-            {
-            int32_t value = firstChild->getInt();
-            if (value<0) value = -value;
-
-            generateRegImmInstruction(MOV4RegImm4, node, resultReg, value, cg);
-            node->setRegister(resultReg);
-            cg->decReferenceCount(firstChild);
-            }
-         else
-            {
-            firstReg = cg->evaluate(firstChild);
-            generateRegRegInstruction(MOV4RegReg, node, resultReg, firstReg, cg);
-            if (!firstChild->isNonNegative())
-               {
-                  tempReg = cg->allocateRegister();
-               generateRegRegInstruction(MOV4RegReg, node, tempReg, resultReg, cg);
-               generateRegImmInstruction(SAR4RegImm1, node, tempReg, sizeof(int32_t)*8-1, cg);
-               generateRegRegInstruction(XOR4RegReg, node, resultReg, tempReg, cg);
-               generateRegRegInstruction(SUB4RegReg, node, resultReg, tempReg, cg);
-               cg->stopUsingRegister(tempReg);
-               }
-
-            node->setRegister(resultReg);
-            cg->decReferenceCount(firstChild);
-            }
-
-         return true;
-         }
-
-      case TR_Abs_L:
-         {
-         if (TR::Compiler->target.is32Bit())
-            return false;
-
-         TR::Node *firstChild = node->getFirstChild();
-         TR::Register *resultReg = cg->allocateRegister(), *firstReg, *tempReg;
-
-         firstReg = cg->evaluate(firstChild);
-         generateRegRegInstruction(MOV8RegReg, node, resultReg, firstReg, cg);
-
-         if (!firstChild->isNonNegative())
-            {
-               tempReg = cg->allocateRegister();
-            generateRegRegInstruction(MOV8RegReg, node, tempReg, resultReg, cg);
-            generateRegImmInstruction(SAR8RegImm1, node, tempReg, sizeof(int64_t)*8-1, cg);
-            generateRegRegInstruction(XOR8RegReg, node, resultReg, tempReg, cg);
-            generateRegRegInstruction(SUB8RegReg, node, resultReg, tempReg, cg);
-            cg->stopUsingRegister(tempReg);
-            }
-
-         node->setRegister(resultReg);
-         cg->decReferenceCount(firstChild);
-
-         return true;
-         }
-
-      default:
-         {
-         TR_ASSERT(0,"Undefined simple math function");
-         return false;
-         }
-      }
-   return false;
-   }
 
 static bool
 inlineMathSQRT(
@@ -11900,16 +11772,6 @@ bool J9::X86::TreeEvaluator::VMinlineCallEvaluator(
             return inlineMathSQRT(node, cg);
             }
 
-         case TR::java_lang_Math_abs_I:
-            {
-            return inlineSimpleMathFunction(TR_Abs_I, node, cg);
-            }
-
-         case TR::java_lang_Math_abs_L:
-            {
-            return inlineSimpleMathFunction(TR_Abs_L, node, cg);
-            }
-
          case TR::java_lang_Long_reverseBytes:
          case TR::java_lang_Integer_reverseBytes:
          case TR::java_lang_Short_reverseBytes:
@@ -12284,7 +12146,7 @@ void J9::X86::TreeEvaluator::VMwrtbarRealTimeWithoutStoreEvaluator(
             TR::DebugCounter::debugCounterName(comp, "helperCalls/%s/(%s)/%d/%d", node->getOpCode().getName(), comp->signature(), node->getByteCodeInfo().getCallerIndex(), node->getByteCodeInfo().getByteCodeIndex()),
             1, TR::DebugCounter::Cheap);
 
-      if (TR::Options::getCmdLineOptions()->getOption(TR_CountWriteBarriersRT))
+      if (comp->getOption(TR_CountWriteBarriersRT))
          {
          TR::MemoryReference *barrierCountMR = generateX86MemoryReference(cg->getVMThreadRegister(), offsetof(J9VMThread, debugEventData6), cg);
          generateMemInstruction(INCMem(TR::Compiler->target.is64Bit()), node, barrierCountMR, cg);
@@ -13526,8 +13388,6 @@ J9::X86::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *c
 
       case TR::java_lang_Math_sqrt:
       case TR::java_lang_StrictMath_sqrt:
-      case TR::java_lang_Math_abs_L:
-      case TR::java_lang_Math_abs_I:
       case TR::java_lang_Long_reverseBytes:
       case TR::java_lang_Integer_reverseBytes:
       case TR::java_lang_Short_reverseBytes:

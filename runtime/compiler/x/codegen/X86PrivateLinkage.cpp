@@ -1698,7 +1698,7 @@ void TR::X86CallSite::computeProfiledTargets()
        (callNode->getSymbolReference() != comp()->getSymRefTab()->findObjectNewInstanceImplSymbol()) &&
        callNode->getOpCode().isIndirect())
       {
-      if (!TR::Options::getCmdLineOptions()->getOption(TR_DisableInterpreterProfiling) &&
+      if (!comp()->getOption(TR_DisableInterpreterProfiling) &&
           TR_ValueProfileInfoManager::get(comp()))
          {
          TR::Node *callNode = getCallNode();
@@ -1771,7 +1771,11 @@ void TR::X86CallSite::computeProfiledTargets()
 
 
       TR_AddressInfo *addressInfo = static_cast<TR_AddressInfo*>(TR_ValueProfileInfoManager::getProfiledValueInfo(callNode, comp(), AddressInfo));
+#if defined(OSX)
+      uint64_t topValue;
+#else
       uintptr_t topValue;
+#endif /* OSX */
       float missRatio = 0.0;
       if (addressInfo && addressInfo->getTopValue(topValue) > 0 && topValue && !comp()->getPersistentInfo()->isObsoleteClass((void*)topValue, fej9) &&
           addressInfo->getTopProbability() >= getMinProfiledCallFrequency())
