@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2000, 2017 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -157,8 +157,8 @@ class Candidate : public TR_Link<Candidate>
    bool isProfileOnly()              {return _flags.testAny(ProfileOnly);}
 
    bool usesStackTrace()             {return _flags.testAny(UsesStackTrace);}
-   bool isArgToCall(int32_t depth)   {return _argToCallFlags.testAny(1<<depth);}
-   bool isNonThisArgToCall(int32_t depth) {return _nonThisArgToCallFlags.testAny(1<<(depth));}
+   bool isArgToCall(int32_t depth)   {return (_flags.getValue(CallArgFlagsMask) & (1<<depth)) != 0;}
+   bool isNonThisArgToCall(int32_t depth) {return (_flags.getValue(CallNonThisArgFlagsMask) & (1<<(depth+8))) != 0;}
    bool forceLocalAllocation()       { return _flags.testAny(ForceLocalAllocation);}
 
    void setForceLocalAllocation(bool v = true)       {_flags.set(ForceLocalAllocation, v);}
@@ -173,8 +173,8 @@ class Candidate : public TR_Link<Candidate>
    void setProfileOnly(bool v = true)                {_flags.set(ProfileOnly, v); }
 
    void setUsesStackTrace(bool v = true)             {_flags.set(UsesStackTrace, v);}
-   void setArgToCall(int32_t depth, bool v = true)   {_argToCallFlags.set(1<<depth, v); if (v == true) _argToCall = true;}
-   void setNonThisArgToCall(int32_t depth, bool v = true)   {_nonThisArgToCallFlags.set(1<<depth, v);}
+   void setArgToCall(int32_t depth, bool v = true)   {_flags.set(1<<depth, v); if (v == true) _argToCall = true;}
+   void setNonThisArgToCall(int32_t depth, bool v = true)   {_flags.set(1<<(depth+8), v);}
 
 
    TR::Node *getStringCopyNode() {return _stringCopyNode; }
@@ -284,8 +284,6 @@ class Candidate : public TR_Link<Candidate>
      TR_ScratchList<TR::TreeTop> _virtualCallSitesToBeFixed;
      TR_ScratchList<TR_ColdBlockEscapeInfo>   _coldBlockEscapeInfo;
      flags32_t                  _flags;
-     flags16_t                  _nonThisArgToCallFlags;
-     flags16_t                  _argToCallFlags;
 
      enum // flag bits
          {
@@ -320,6 +318,15 @@ class Candidate : public TR_Link<Candidate>
          ForceLocalAllocation         = 0x00100000,
 
          CallsStringCopy              = 0x00200000,
+
+         // Bit mask for which call depths this candidate is not a 'this' arg to.
+         //
+         CallNonThisArgFlagsMask             = 0x0000FF00,
+
+         // Bit mask for which call depths this candidate is an arg to.
+         //
+         CallArgFlagsMask             = 0x000000FF,
+         LastFlagBit                  = 0
          };
    };
 
@@ -461,6 +468,7 @@ class TR_EscapeAnalysis : public TR::Optimization
    bool     checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candidate *candidate, bool isImmediateUse);
    bool     checkOverlappingLoopAllocation(TR::Node *useNode, Candidate *candidate);
    bool     checkOverlappingLoopAllocation(TR::Node *node, TR::Node *useNode, TR::Node *allocNode, rcount_t &numReferences);
+   void     collectAliasesOfAllocations(TR::Node *node, TR::Node *allocNode, bool trackAliases);
    bool     usesValueNumber(Candidate *candidate, int32_t valueNumber);
    Candidate *findCandidate(int32_t valueNumber);
 
@@ -568,6 +576,8 @@ class TR_EscapeAnalysis : public TR::Optimization
    TR_BitVector              *_notOptimizableLocalStringObjectsValueNumbers;
    TR_BitVector              *_blocksWithFlushOnEntry;
    TR_BitVector              *_visitedNodes;
+   TR_BitVector              *_aliasesOfAllocNode;
+   TR_BitVector              *_aliasesOfAllocNode2;
    TR_ValueNumberInfo        *_valueNumberInfo;
    TR_LinkHead<Candidate>     _candidates;
    TR_Array<TR::Node*>        *_parms;
