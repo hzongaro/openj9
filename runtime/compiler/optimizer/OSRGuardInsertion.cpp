@@ -39,6 +39,62 @@ static bool generatesFear(TR::Compilation *comp, TR_FearPointAnalysis &fearAnaly
    return fearAnalysis._blockAnalysisInfo[block->getNumber()]->get(0);
    }
 
+int32_t TR_OSRGuardInsertion::perform()
+   {
+   static char *disableOSRGuards = feGetEnv("TR_DisableOSRGuards");
+
+   // Currently, OSR guard insertion is only needed when in the OSR HCR mode
+   if (disableOSRGuards || !comp()->isOSRTransitionTarget(TR::postExecutionOSR))
+      {
+      if (trace())
+         traceMsg(comp(), "HCR Guards are only removed when in OSR HCR mode - skipping\n");
+      return 0;
+      }
+
+   // Even under NextGenHCR, OSR may have been disabled for this compilation at runtime
+   if (!comp()->supportsInduceOSR())
+      {
+      if (trace())
+         traceMsg(comp(), "OSR induce is not supported during this compilation - skipping\n");
+      return 0;
+      }
+
+   // Detect if there are no HCR guards
+   TR::list<TR_VirtualGuard*> &virtualGuards = comp()->getVirtualGuards();
+   auto guard = virtualGuards.begin();
+   for (; guard != virtualGuards.end(); ++guard)
+      {
+      if ((*guard)->getKind() == TR_HCRGuard || (*guard)->mergedWithHCRGuard())
+         break;
+      }
+   if (guard == virtualGuards.end())
+      {
+      if (trace())
+         traceMsg(comp(), "No HCR guards to be removed - skipping\n");
+      return 0;
+      } 
+
+   TR_BitVector fearGeneratingNodes(comp()->getNodeCount(), trMemory(), stackAlloc);
+   removeHCRGuards(fearGeneratingNodes);
+   // Future fear generating optimizations
+
+   if (fearGeneratingNodes.isEmpty())
+      {
+      if (trace())
+         traceMsg(comp(), "No fear generating nodes - skipping\n");
+      comp()->getFlowGraph()->invalidateStructure();
+      return 0;
+      }
+
+   return insertOSRGuards(fearGeneratingNodes);
+   }
+
+const char *
+TR_OSRGuardInsertion::optDetailString() const throw()
+   {
+   return "O^O OSR GUARD INS: ";
+   }
+
 /*
  * Generate a region which contains all blocks to serve as the structure in the upcoming data flows.
  * This reduces the compile time overhead, as the structural analysis won't improve analysis times for
@@ -85,58 +141,8 @@ TR_Structure *fakeRegion(TR::Compilation *comp)
    return region;
    }
 
-int32_t TR_OSRGuardInsertion::perform()
+void TR_OSRGuardInsertion::removeHCRGuards(TR_BitVector &fearGeneratingNodes)
    {
-   static char *disableOSRGuards = feGetEnv("TR_DisableOSRGuards");
-
-   // Currently, OSR guard insertion is only needed when in the OSR HCR mode
-   if (disableOSRGuards || !comp()->isOSRTransitionTarget(TR::postExecutionOSR))
-      {
-      if (trace())
-         traceMsg(comp(), "HCR Guards are only removed when in OSR HCR mode - skipping\n");
-      return 0;
-      }
-
-   // Even under NextGenHCR, OSR may have been disabled for this compilation at runtime
-   if (!comp()->supportsInduceOSR())
-      {
-      if (trace())
-         traceMsg(comp(), "OSR induce is not supported during this compilation - skipping\n");
-      return 0;
-      }
-
-   // Detect if there are no HCR guards
-   TR::list<TR_VirtualGuard*> &virtualGuards = comp()->getVirtualGuards();
-   auto guard = virtualGuards.begin();
-   for (; guard != virtualGuards.end(); ++guard)
-      {
-      if ((*guard)->getKind() == TR_HCRGuard || (*guard)->mergedWithHCRGuard())
-         break;
-      }
-   bool guardsToRemove = guard != virtualGuards.end();
-   bool chksToRemove = false;
-   static char *disableOSRForArraylets = feGetEnv("TR_DisableOSRForArraylets");
-   if (!guardsToRemove 
-       && disableOSRForArraylets == NULL
-       && TR::Compiler->om.canGenerateArraylets()
-       /* add a check on the size of the regions - can't be too small or the opt isn't worth it*/)
-      {
-      for (TR::TreeTop *tt = comp()->getStartTree(); tt != NULL; tt = tt->getNextTreeTop())
-         {
-         if (tt->getNode()->getOpCodeValue() == TR::SpineCHK)
-            {
-            chksToRemove = true;
-            }
-         }
-      }
-   if (!guardsToRemove && !chksToRemove)
-      {
-      if (trace())
-         traceMsg(comp(), "Nothing to remove - skipping all analysis\n");
-      return 0;
-      }
-
-   TR_BitVector fearGeneratingNodes(comp()->getNodeCount(), trMemory(), stackAlloc);
    bool requiresAnalysis = comp()->getMethodSymbol()->hasOSRProhibitions();
    for (uint32_t i = 0; !requiresAnalysis && i < comp()->getNumInlinedCallSites(); ++i)
        {
@@ -151,119 +157,6 @@ int32_t TR_OSRGuardInsertion::perform()
    comp()->getFlowGraph()->setStructure(structure);
    TR_HCRGuardAnalysis *guardAnalysis = requiresAnalysis ? new (comp()->allocator()) TR_HCRGuardAnalysis(comp(), optimizer(), structure) : NULL;
 
-   if (!guardsToRemove)
-      {
-      if (trace())
-         traceMsg(comp(), "No HCR guards to be removed - skipping\n");
-      }
-   else
-      {
-      removeHCRGuards(fearGeneratingNodes, guardAnalysis);
-      }
-
-   if (!TR::Compiler->om.canGenerateArraylets() || (!guardsToRemove && !chksToRemove))
-      {
-      if (trace())
-         traceMsg(comp(), "No SpineCHKs to be removed - skipping\n");
-      }
-   else
-      {
-      removeSpineCHKs(fearGeneratingNodes, guardAnalysis);
-      }
-
-   // Future fear generating optimizations
-
-   if (fearGeneratingNodes.isEmpty())
-      {
-      if (trace())
-         traceMsg(comp(), "No fear generating nodes - skipping\n");
-      comp()->getFlowGraph()->invalidateStructure();
-      return 0;
-      }
-
-   return insertOSRGuards(fearGeneratingNodes);
-   }
-
-const char *
-TR_OSRGuardInsertion::optDetailString() const throw()
-   {
-   return "O^O OSR GUARD INS: ";
-   }
-
-void TR_OSRGuardInsertion::removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR_HCRGuardAnalysis *guardAnalysis)
-   {
-   bool currentTreeTopIsProtectedByOSR = true;
-   TR::Block *block = NULL;
-   for (TR::TreeTop *tt = comp()->getStartTree(); tt != NULL; tt = tt->getNextTreeTop())
-      {
-      TR::Node *node = tt->getNode();
-      TR::ILOpCodes opCode = node->getOpCodeValue();
-      if (opCode == TR::BBStart)
-         {
-         block = tt->getNode()->getBlock();
-         currentTreeTopIsProtectedByOSR = !guardAnalysis || guardAnalysis->_blockAnalysisInfo[block->getNumber()]->isEmpty();
-         }
-      else if (opCode == TR::SpineCHK)
-         {
-         if (currentTreeTopIsProtectedByOSR
-             /* TODO: add condition to test array type for arraylets having been generated */
-             && performTransformation(comp(), "O^O SpineCHK REMOVAL: removing SpineCHK n%dn\n", node->getGlobalIndex()))
-            {
-            TR::TreeTop *prevTree = tt->getPrevTreeTop();
-            anchorAllChildren(node, tt);
-            tt->unlink(true);
-            fearGeneratingNodes.set(prevTree->getNextTreeTop()->getNode()->getGlobalIndex());
-            tt = prevTree;
-            TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/SpineCHK/removed/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
-            // TODO: record type for assumptions
-            }
-         else
-            {
-            TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/SpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
-            }
-         }
-      else if (opCode == TR::BNDCHKwithSpineCHK)
-         {
-const char *filterPkg = "com/ibm/ws/sib/msgstore";
-TR_ByteCodeInfo& nodeBCI = node->getByteCodeInfo();
-
-const char * currMethodSig = comp()->getCurrentMethod()->signature(trMemory());
-const char * inlinedResolvedSig =
-                (nodeBCI.getCallerIndex() >= 0)
-                   ? comp()->getInlinedResolvedMethod(nodeBCI.getCallerIndex())
-                           ->signature(trMemory())
-                   : NULL;
-
-         if (currentTreeTopIsProtectedByOSR
-&& strncmp(filterPkg, currMethodSig, strlen(filterPkg)) != 0
-&& (inlinedResolveSig == NULL
-       || strncmp(filterPkg, inlinedResolvedSig, strlen(filterPkg)) != 0)
-             /* TODO: add conditiont ot est array type for arraylets having been generated */
-             && performTransformation(comp(), "O^O SpineCHK REMOVAL: converting BNDCHKwithSpineCHK n%dn to BNDCHK\n", node->getGlobalIndex()))
-            {
-            // BNDCHK: child1: arraylength, child2: index
-            // BNDCHKwithSpineCHK: child1: load/store, child2: base array, child3: arraylength, child4: index 
-            anchorAllChildren(node, tt);
-            node->removeChild(1);
-            node->removeChild(0);
-            TR::Node::recreateWithSymRef(node, TR::BNDCHK, node->getSymbolReference());
-            TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/BNDCHKwithSpineCHK/removed/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
-            // TODO: record type for assumptions
-            }
-         else
-            {
-            TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "spineCHKSummary/BNDCHKwithSpineCHK/retained/%s/=%d", comp()->getHotnessName(comp()->getMethodHotness()), block->getFrequency()), tt);
-            }
-         }
-      else if (!currentTreeTopIsProtectedByOSR && comp()->isPotentialOSRPointWithSupport(tt))
-         {
-         currentTreeTopIsProtectedByOSR = true;
-         }
-      }
-   }
-
-void TR_OSRGuardInsertion::removeHCRGuards(TR_BitVector &fearGeneratingNodes, TR_HCRGuardAnalysis *guardAnalysis)
-   {
    for (TR::Block *cursor = comp()->getStartBlock(); cursor != NULL; cursor = cursor->getNextBlock())
       {
       TR::TreeTop *lastTree = cursor->getLastRealTreeTop();

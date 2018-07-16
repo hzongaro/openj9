@@ -28,7 +28,6 @@
 #include "control/RecompilationInfo.hpp"
 
 namespace TR { class Block; }
-class TR_HCRGuardAnalysis;
 
 class TR_OSRGuardInsertion : public TR::Optimization
    {
@@ -47,8 +46,7 @@ class TR_OSRGuardInsertion : public TR::Optimization
    private:
    static const uint32_t defaultRematBlockLimit = 3;
 
-   void removeHCRGuards(TR_BitVector &fearGeneratingNodes, TR_HCRGuardAnalysis *guardAnalysis);
-   void removeSpineCHKs(TR_BitVector &fearGeneratingNodes, TR_HCRGuardAnalysis *guardAnalysis);
+   void removeHCRGuards(TR_BitVector &fearGeneratingNodes);
    int32_t insertOSRGuards(TR_BitVector &fearGeneratingNodes);
    void performRemat(TR::TreeTop *osrPoint, TR::TreeTop *osrGuard, TR::TreeTop *rematDest);
    void generateTriggeringRecompilationTrees(TR::TreeTop *osrGuard, TR_PersistentMethodInfo::InfoBits reason);
