@@ -64,11 +64,14 @@ J9::ObjectModel::initialize()
    uintptr_t result = mmf->j9gc_modron_getConfigurationValueForKey(vm,
                                                                    j9gc_modron_configuration_discontiguousArraylets,
                                                                    &value);
+#if 0
    if (result == 1 && value == 1)
       {
       _usesDiscontiguousArraylets = true;
       _arrayLetLeafSize = (int32_t)(vm->memoryManagerFunctions->j9gc_arraylet_getLeafSize(vm));
       _arrayLetLeafLogSize = (int32_t)(vm->memoryManagerFunctions->j9gc_arraylet_getLeafLogSize(vm));
+fprintf(stderr, "_arrayLetLeafSize == %d\n", _arrayLetLeafSize);
+fprintf(stderr, "_arrayLetLeafLogSize == %d\n", _arrayLetLeafLogSize);
       }
    else
       {
@@ -76,6 +79,10 @@ J9::ObjectModel::initialize()
       _arrayLetLeafSize = 0;
       _arrayLetLeafLogSize = 0;
       }
+#endif
+      _usesDiscontiguousArraylets = true;
+      _arrayLetLeafSize = 0;
+      _arrayLetLeafLogSize = 0;
 
    _shouldGenerateReadBarriersForFieldLoads = mmf->j9gc_concurrent_scavenger_enabled(vm);
    _shouldReplaceGuardedLoadWithSoftwareReadBarrier = mmf->j9gc_software_read_barrier_enabled(vm);
