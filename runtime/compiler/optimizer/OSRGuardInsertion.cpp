@@ -33,7 +33,6 @@
 #include "optimizer/HCRGuardAnalysis.hpp"
 #include "optimizer/TransformUtil.hpp"
 #include "ras/DebugCounter.hpp"
-#include <string.h>   // for strlen and strncmp
 
 static bool generatesFear(TR::Compilation *comp, TR_FearPointAnalysis &fearAnalysis, TR::Block *block)
    {
@@ -237,7 +236,7 @@ const char * inlinedResolvedSig =
 
          if (currentTreeTopIsProtectedByOSR
 && strncmp(filterPkg, currMethodSig, strlen(filterPkg)) != 0
-&& (inlinedResolvedSig == NULL
+&& (inlinedResolveSig == NULL
        || strncmp(filterPkg, inlinedResolvedSig, strlen(filterPkg)) != 0)
              /* TODO: add conditiont ot est array type for arraylets having been generated */
              && performTransformation(comp(), "O^O SpineCHK REMOVAL: converting BNDCHKwithSpineCHK n%dn to BNDCHK\n", node->getGlobalIndex()))
