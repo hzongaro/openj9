@@ -155,7 +155,8 @@ bool TR_EscapeAnalysis::isImmutableObject(TR::Node *node)
    if (node->getOpCodeValue() != TR::New)
       return false;
 
-   if (!strncmp("java/lang/Integer", getClassName(node->getFirstChild()), 17))
+   if (!strncmp("java/lang/Integer", getClassName(node->getFirstChild()), 17) ||
+       !strncmp("java/lang/Double", getClassName(node->getFirstChild()), 16))
       return true;
 
 
@@ -209,7 +210,6 @@ int32_t TR_EscapeAnalysis::perform()
       _maxInlinedBytecodeSize = 4000 - nodeCount;
       }
 
-   TR_ASSERT_FATAL(_maxSniffDepth < 16, "The argToCall and nonThisArgToCall flags are 16 bits - a depth limit greater than 16 will not fit in these flags");
    if (getLastRun())
       _maxPassNumber = 0; // Notwithstanding our heursitics, if this is the last run, our max "pass number" is zero (which is the first pass)
 
@@ -506,6 +506,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
    _parms = NULL;
    _localObjectsValueNumbers = NULL;
    _visitedNodes = NULL;
+   _aliasesOfAllocNode = NULL;
+   _aliasesOfAllocNode2 = NULL;
    _notOptimizableLocalObjectsValueNumbers = NULL;
    _notOptimizableLocalStringObjectsValueNumbers = NULL;
 
@@ -521,6 +523,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
       _useDefInfo = optimizer()->getUseDefInfo();
       _blocksWithFlushOnEntry = new (trStackMemory()) TR_BitVector(comp()->getFlowGraph()->getNextNodeNumber(), trMemory(), stackAlloc);
       _visitedNodes = new (trStackMemory()) TR_BitVector(comp()->getNodeCount(), trMemory(), stackAlloc, growable);
+      _aliasesOfAllocNode = new (trStackMemory()) TR_BitVector(comp()->getSymRefCount(), trMemory(), stackAlloc, growable);
+      _aliasesOfAllocNode2 = new (trStackMemory()) TR_BitVector(comp()->getSymRefCount(), trMemory(), stackAlloc, growable);
 
       if (!_useDefInfo)
          {
@@ -1498,7 +1502,7 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
       // Don't convert double-word arrays if platform does not have double-word aligned stacks
       // will handle stack alignment later
       else if (!comp()->cg()->getHasDoubleWordAlignedStack() &&
-                node->getOpCodeValue() == TR::newarray && !comp()->getOption(TR_EnableSIMDLibrary))
+                node->getOpCodeValue() == TR::newarray && !comp()->getOptions()->getOption(TR_EnableSIMDLibrary))
          {
          TR::Node *typeNode = node->getSecondChild();
          if (typeNode->getInt() == 7 || typeNode->getInt() == 11)
@@ -2104,17 +2108,17 @@ bool TR_EscapeAnalysis::checkDefsAndUses(TR::Node *node, Candidate *candidate)
                               traceMsg(comp(), "   Look at other defs for use node %p of candidate %p\n", useNode, candidate->_node);
                            ////_otherDefsForLoopAllocation->set(udIndex);
 
-                           if (!checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node)))
-                              {
-                              if (trace())
-                                 traceMsg(comp(), "   Make [%p] non-local because multiple defs to node [%p]\n", candidate->_node, useNode);
-                              returnValue = false;
-                              }
                            if (!checkOverlappingLoopAllocation(useNode, candidate))
                               {
                               if (trace())
                                  traceMsg(comp(), "   Make [%p] non-local because it overlaps with use [%p]\n", candidate->_node, useNode);
                               /////printf("secs Overlapping loop allocation in %s\n", comp()->signature());
+                              returnValue = false;
+                              }
+                           if (!checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node)))
+                              {
+                              if (trace())
+                                 traceMsg(comp(), "   Make [%p] non-local because multiple defs to node [%p]\n", candidate->_node, useNode);
                               returnValue = false;
                               }
                            }
@@ -2179,10 +2183,14 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
          traceMsg(comp(), "      Look at def node [%p] for use node [%p]\n", defNode, useNode);
 
       bool allnewsonrhs = false;
-      if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)))
+      //if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)))
          {
          if ((defNode->getFirstChild() == candidate->_node) &&
              (_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(useNode)))
+            allnewsonrhs = true;
+         else if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)) &&
+                  (_useDefInfo->getTreeTop(defIndex)->getEnclosingBlock() == candidate->_block) &&
+                  _aliasesOfAllocNode->get(defNode->getSymbolReference()->getReferenceNumber()))
             allnewsonrhs = true;
          else
             {
@@ -2202,13 +2210,58 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
                TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
                TR::Node *firstChild = defNode2->getFirstChild();
                bool rhsIsHarmless = false;
-               for (Candidate *candidate = _candidates.getFirst(); candidate; candidate = candidate->getNext())
+               for (Candidate *candidate2 = _candidates.getFirst(); candidate2; candidate2 = candidate2->getNext())
                   {
-                  if (candidate->_node == firstChild)
+                  if (candidate2->_node == firstChild)
                      {
                      rhsIsHarmless = true;
                      break;
                      }
+
+                 if (!rhsIsHarmless && 
+                    (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(candidate2->_node)))
+                    {
+                    TR::TreeTop *treeTop;
+                    bool trackAliases = false;
+                    _aliasesOfAllocNode2->empty();
+                    _visitedNodes->empty();
+                    for (treeTop = candidate2->_treeTop->getEnclosingBlock()->getEntry(); treeTop; treeTop = treeTop->getNextTreeTop())
+                       {
+                       TR::Node *node = treeTop->getNode();
+                       if (node->getOpCodeValue() == TR::BBEnd)
+                          break;
+
+                       collectAliasesOfAllocations(treeTop->getNode(), candidate2->_node, trackAliases);
+
+                       if (treeTop == candidate2->_treeTop)
+                           trackAliases = true;
+
+                       /*
+                       if (trackAliases)
+                          {
+                          node = node->getStoreNode();
+                          if (node && node->getSymbol()->isAutoOrParm())
+                             {
+                             if (node->getFirstChild() == candidate2->_node)
+                                _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
+                             else if (node->getFirstChild()->getOpCode().isLoadVarDirect() && node->getFirstChild()->getSymbol()->isAutoOrParm() &&
+                                      _aliasesOfAllocNode2->get(node->getFirstChild()->getSymbolReference()->getReferenceNumber()))
+                                _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
+                             else
+                                _aliasesOfAllocNode2->reset(node->getSymbolReference()->getReferenceNumber()); 
+                             }
+                          }
+                       */
+                       }
+
+                    if (/* (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(candidate2->_node)) && */
+                         (_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == candidate2->_block) &&
+                         _aliasesOfAllocNode2->get(defNode2->getSymbolReference()->getReferenceNumber()))
+                       {
+                       rhsIsHarmless = true;
+                       break;
+                       }
+                    }
                   }
 
                if (!rhsIsHarmless)
@@ -2293,14 +2346,18 @@ bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *useNode, Candid
    //
    TR::TreeTop *treeTop;
    _visitedNodes->empty();
-   rcount_t     numReferences = candidate->_node->getReferenceCount()-1;
-   for (treeTop = candidate->_treeTop->getNextTreeTop(); treeTop; treeTop = treeTop->getNextTreeTop())
+   _aliasesOfAllocNode->empty();
+   rcount_t     numReferences = 0; //candidate->_node->getReferenceCount()-1;
+   for (treeTop = candidate->_treeTop->getEnclosingBlock()->getEntry(); treeTop; treeTop = treeTop->getNextTreeTop())
       {
       TR::Node *node = treeTop->getNode();
       if (node->getOpCodeValue() == TR::BBEnd)
          break;
       if (!checkOverlappingLoopAllocation(treeTop->getNode(), useNode, candidate->_node, numReferences))
          return false;
+     if (treeTop == candidate->_treeTop)
+       numReferences = candidate->_node->getReferenceCount();
+
       //if (numReferences == 0)
       //   break;
       }
@@ -2314,7 +2371,21 @@ bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *node, TR::Node 
 
    _visitedNodes->set(node->getGlobalIndex());
 
-   if ((_valueNumberInfo->getValueNumber(node) == _valueNumberInfo->getValueNumber(useNode)) && (node != allocNode))
+   if (node->getOpCode().isStore() && node->getSymbol()->isAutoOrParm())
+      {
+      if (node->getFirstChild() == allocNode)
+         _aliasesOfAllocNode->set(node->getSymbolReference()->getReferenceNumber());
+      else if (!_visitedNodes->get(node->getFirstChild()->getGlobalIndex()) && node->getFirstChild()->getOpCode().isLoadVarDirect() && node->getFirstChild()->getSymbol()->isAutoOrParm() &&
+               _aliasesOfAllocNode->get(node->getFirstChild()->getSymbolReference()->getReferenceNumber()))
+         _aliasesOfAllocNode->set(node->getSymbolReference()->getReferenceNumber());
+      else
+         _aliasesOfAllocNode->reset(node->getSymbolReference()->getReferenceNumber()); 
+      }
+
+   if ((_valueNumberInfo->getValueNumber(node) == _valueNumberInfo->getValueNumber(useNode)) && 
+       (node != allocNode) && 
+       !(node->getOpCode().isLoadVarDirect() && _aliasesOfAllocNode->get(node->getSymbolReference()->getReferenceNumber())) &&
+       (numReferences > 0))
       {
       return false;
       }
@@ -2329,6 +2400,32 @@ bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *node, TR::Node 
          return false;
       }
    return true;
+   }
+
+
+
+void TR_EscapeAnalysis::collectAliasesOfAllocations(TR::Node *node, TR::Node *allocNode, bool collectAliases)
+   {
+   if (_visitedNodes->get(node->getGlobalIndex()))
+      return;
+
+   _visitedNodes->set(node->getGlobalIndex());
+
+   if (collectAliases && node->getOpCode().isStore() && node->getSymbol()->isAutoOrParm())
+      {
+      if (node->getFirstChild() == allocNode)
+         _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
+      else if (!_visitedNodes->get(node->getFirstChild()->getGlobalIndex()) && node->getFirstChild()->getOpCode().isLoadVarDirect() && node->getFirstChild()->getSymbol()->isAutoOrParm() &&
+               _aliasesOfAllocNode2->get(node->getFirstChild()->getSymbolReference()->getReferenceNumber()))
+         _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
+      else
+         _aliasesOfAllocNode2->reset(node->getSymbolReference()->getReferenceNumber()); 
+      }
+
+   for (int32_t i = 0; i < node->getNumChildren(); i++)
+      {
+      collectAliasesOfAllocations(node->getChild(i), allocNode, collectAliases);
+      }
    }
 
 
