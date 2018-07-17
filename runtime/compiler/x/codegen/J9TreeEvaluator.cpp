@@ -3839,6 +3839,9 @@ TR::Register *J9::X86::TreeEvaluator::BNDCHKwithSpineCHKEvaluator(TR::Node *node
    TR::LabelSymbol *boundCheckFailureLabel = generateLabelSymbol(cg);
    TR::X86LabelInstruction *checkInstr = NULL;
 
+// Add debug counter for SpineCHK and BNDCHKwithSpineCHK
+cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "SpineCHK/%s/%s/(%s)/%d/%d", node->getOpCode().getName(), comp()->signature(), node->getByteCodeInfo().getCallerIndex(), node->getByteCodeInfo().getByteCodeIndex())), 1, TR::DebugCounter::Undetermined);
+
    if (needsBoundCheck)
       {
       if (arrayLengthChild->getOpCode().isLoadConst())
