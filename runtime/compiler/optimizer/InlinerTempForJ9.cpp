@@ -4425,9 +4425,11 @@ TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, int by
       {
       if (block)
          {
+#if 0
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/coldCallee/tooManyBytecodes", block->getFirstRealTreeTop());
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/coldCallee/tooManyBytecodes:#bytecodeSize", block->getFirstRealTreeTop(), bytecodeSize);
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/coldCallee/tooManyBytecodes:#excess", block->getFirstRealTreeTop(), bytecodeSize-_methodInColdBlockByteCodeSizeThreshold);
+#endif
          }
       heuristicTrace(tracer(),"### Exceeds Size Threshold because call is cold and has a bytecodeSize %d > _methodInColdBlockByteCodeSizeThreshold %d", bytecodeSize,_methodInColdBlockByteCodeSizeThreshold);
       return true; // exceeds size threshold
@@ -4437,9 +4439,11 @@ TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, int by
       {
       if (block)
          {
+#if 0
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/warmCallee/tooManyBytecodes", block->getFirstRealTreeTop());
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/warmCallee/tooManyBytecodes:#bytecodeSize", block->getFirstRealTreeTop(), bytecodeSize);
          TR::DebugCounter::prependDebugCounter(comp(), "inliner.callSites/failed/warmCallee/tooManyBytecodes:#excess", block->getFirstRealTreeTop(), bytecodeSize - _methodInWarmBlockByteCodeSizeThreshold);
+#endif
          }
 
       if( bytecodeSize <= _methodInWarmBlockByteCodeSizeThreshold )
