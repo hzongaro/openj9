@@ -104,6 +104,12 @@ my %asmtools = (
 	fname => 'asmtools.jar',
 	sha1 => 'd57dfcdd591635d31372cfcc18474a8ca6442171'
 );
+# this is needed for JDK11 and up
+my %jaxb_api = (
+	url => 'http://central.maven.org/maven2/javax/xml/bind/jaxb-api/2.3.0/jaxb-api-2.3.0.jar',
+	fname => 'jaxb-api.jar',
+	sha1 => '99f802e0cb3e953ba3d6e698795c4aeb98d37c48'
+);
 
 # Put all dependent jars hash to array to prepare dowloading
 my @jars_info = (
@@ -114,7 +120,8 @@ my @jars_info = (
 	\%junit4,
 	\%testng,
 	\%jcommander,
-	\%asmtools
+	\%asmtools,
+	\%jaxb_api
 );
 
 print "-------------------------------------------- \n";
@@ -159,7 +166,7 @@ if ( $task eq "default" ) {
 		$digest = $sha->hexdigest ;
 		
 		# sha is different on window machine, skip the check for window or windows with cygwin for now
-		if ($^O =~ /win/) {
+		if ($os ne 'os.win') {
 			if ( $digest ne $jars_info[$i]{sha1}) {
 				print "Expected sha1 is: $jars_info[$i]{sha1}, \n";
 				print "Actual sha1 is  : $digest. \n";
