@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2018, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,48 +19,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-package jit.test.jitt.exceptions;
 
-import jit.test.jitt.*;
-import java.io.*;
-import org.testng.annotations.Test;
-import org.testng.log4testng.Logger;
+#include <jni.h>
 
-@Test(groups = { "level.sanity","component.jit" })
-public class readLineBug extends jit.test.jitt.Test{
-
-private static Logger logger = Logger.getLogger(readLineBug.class);
-
-static void tstmoo(int ia[],String tstString) {
-
-
-		try {
-		     DataInputStream in =
-		        new DataInputStream(new FileInputStream("tstFile"));
-		     String line;
-		     while ((line=in.readLine()) != null) {
-		        logger.debug(line);
-		        }
-		     in.close();
-			 ia[0] = 2;
-		} catch (IOException e){ 
-		    
-		    //e.printStackTrace();
-		}	
-	}//end tstmoo
-	
-
-	@Test
-	public void testreadLineBug() {
-	int ia[] = {0};
-	ia = null;
-		tstmoo(ia,"abc");
-		for (int i = 0; i < sJitThreshold; i++) {
-			tstmoo(ia,"def");
-		}
-		tstmoo(ia,"ghi");
-	}
-
-
+#if J9VM_JCL_SE12
+JNIEXPORT void JNICALL
+JVM_InitializeFromArchive(JNIEnv *env, jclass clz)
+{
+	/* To be implemented via https://github.com/eclipse/openj9/issues/2452 */
 }
-
+#endif /* J9VM_JCL_SE12 */

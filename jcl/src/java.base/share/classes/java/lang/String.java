@@ -42,6 +42,10 @@ import java.util.stream.IntStream;
 import sun.misc.Unsafe;
 /*[ENDIF] Sidecar19-SE*/
 
+/*[IF Java11]*/
+import java.util.stream.Stream;
+/*[ENDIF] Java11*/
+
 /**
  * Strings are objects which represent immutable arrays of characters.
  *
@@ -2563,8 +2567,46 @@ public final class String implements Serializable, Comparable<String>, CharSeque
 		
 		return (result == null) ? this : result;
 	}
-/*[ENDIF]*/
-	
+
+	/**
+	 * Determine if the string contains only white space characters. 
+	 * 
+	 * @return true if the string is empty or contains only white space
+	 * characters, otherwise false.
+	 * 
+	 * @since 11
+	 */
+	public boolean isBlank() {
+		int index;
+
+		if (enableCompression && (null == compressionFlag || coder == LATIN1)) {
+			index = StringLatin1.indexOfNonWhitespace(value);
+		} else {
+			index = StringUTF16.indexOfNonWhitespace(value);
+		}
+		
+		return index >= lengthInternal();
+	}
+
+	/**
+	 * Returns a stream of substrings extracted from this string partitioned by line terminators.
+	 * 
+	 * Line terminators recognized are line feed "\n", carriage return "\r", and carriage return
+	 * followed by line feed "\r\n".
+	 * 
+	 * @return the stream of this string's substrings partitioned by line terminators 
+	 * 
+	 * @since 11
+	 */
+	public Stream<String> lines() {
+		if (enableCompression && (null == compressionFlag || coder == LATIN1)) {
+			return StringLatin1.lines(value);
+		} else {
+			return StringUTF16.lines(value);
+		}
+	}
+/*[ENDIF] Java11*/
+
 	/**
 	 * Copies a range of characters into a new String.
 	 *
