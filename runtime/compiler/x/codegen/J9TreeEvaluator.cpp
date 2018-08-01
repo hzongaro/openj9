@@ -11083,7 +11083,7 @@ inlineMathSQRT(
 // end_label
 static TR::Register* inlineStringHashCode(TR::Node* node, bool isCompressed, TR::CodeGenerator* cg)
    {
-   if (cg->comp()->getOption(TR_DisableSIMDStringHashCode) || TR::Compiler->om.canGenerateArraylets() || !cg->getX86ProcessorInfo().supportsSSE4_1())
+   if (cg->comp()->getOption(TR_DisableSIMDStringHashCode) || (TR::Compiler->om.canGenerateArraylets() && feGetEnv("EnableStringFuncInliningWithArraylets") == NULL)  || !cg->getX86ProcessorInfo().supportsSSE4_1())
       {
       return NULL;
       }
