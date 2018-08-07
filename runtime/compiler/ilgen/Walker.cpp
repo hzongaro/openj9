@@ -2954,7 +2954,7 @@ TR_J9ByteCodeIlGenerator::genArrayBoundsCheck(TR::Node * offset, int32_t width)
          }
       }
 
-   if (comp()->requiresSpineChecks() || (!_methodSymbol->skipBoundChecks() && !canSkipThisBoundCheck))
+   if (!_methodSymbol->skipBoundChecks() && !canSkipThisBoundCheck)
       {
       TR::Node *arrayLength = 0;
       if (!canSkipArrayLengthCalc)
@@ -3013,6 +3013,7 @@ TR_J9ByteCodeIlGenerator::genArrayBoundsCheck(TR::Node * offset, int32_t width)
       if (comp()->requiresSpineChecks() && !_suppressSpineChecks)
          {
          TR::Node *spineChk = TR::Node::create(TR::SpineCHK, 3, offset);
+         spineChk->setSymbolReference(symRefTab()->findOrCreateArrayBoundsCheckSymbolRef(_methodSymbol));
          genTreeTop(spineChk);
          push(spineChk);
          swap();
