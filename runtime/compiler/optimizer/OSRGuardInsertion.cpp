@@ -247,7 +247,7 @@ const char * inlinedResolvedSig =
 && (inlinedResolvedSig == NULL
        || strncmp(filterPkg, inlinedResolvedSig, strlen(filterPkg)) != 0)
 //TODO: </block-to-remove>
-             /* TODO: add conditiontot est array type for arraylets having been generated */
+             /* TODO: add conditiont ot est array type for arraylets having been generated */
              && performTransformation(comp(), "O^O SpineCHK REMOVAL: converting BNDCHKwithSpineCHK n%dn to BNDCHK\n", node->getGlobalIndex()))
             {
             // BNDCHK: child1: arraylength, child2: index
