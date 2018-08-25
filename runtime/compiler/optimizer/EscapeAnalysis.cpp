@@ -2143,6 +2143,18 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
    // them lead back to the allocation. If they do, it means that generations
    // of the allocation from different loop iterations may be alive at the same
    // time, so the allocation must be done from the heap and not the stack.
+   // 
+   // In some limited cases, we can be sure that an object from a prior loop iteration 
+   // was not live at the same time as an object from the next loop iteration without expensive analysis.
+   // One such "special" case is when all defs for uses reached by our candidate for stack allocation 
+   // were fed by allocations; in this case it's easy to see that it was not an object from a prior iteration 
+   // since it is a fresh allocation being done at that program point.
+   //
+   // There is one other special case dealt with in the code below related to a java/lang/Integer cache
+   // where again it's trivial to prove that the value cannot be a candidate allocation from a prior loop iteration
+   // 
+   // There may be other such examples that can be added in the future, e.g. if the value is an already stack allocated 
+   // object from a prior pass of escape analysis, it obviously cannot be a candidate for stack allocation in this pass.
    //
    int32_t useIndex = useNode->getUseDefIndex();
    if (useIndex <= 0)
@@ -2181,6 +2193,19 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
 
       if (trace())
          traceMsg(comp(), "      Look at def node [%p] for use node [%p]\n", defNode, useNode);
+
+      // _aliasesOfAllocNode contains sym refs that are just aliases for a fresh allocation 
+      // i.e. it is just a simple attempt at tracking allocations in cases such as :
+      // ...
+      // a = new A() 
+      // ...
+      // b = a
+      // ...
+      // c = b
+      //
+      // In this case a, b and c will all be considered aliases of an alloc node and so a load of 
+      // any of those sym refs will be treated akin to how the fresh allocation would have been in the below logic
+      //
 
       bool allnewsonrhs = false;
       //if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)))
@@ -2235,23 +2260,6 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
 
                        if (treeTop == candidate2->_treeTop)
                            trackAliases = true;
-
-                       /*
-                       if (trackAliases)
-                          {
-                          node = node->getStoreNode();
-                          if (node && node->getSymbol()->isAutoOrParm())
-                             {
-                             if (node->getFirstChild() == candidate2->_node)
-                                _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
-                             else if (node->getFirstChild()->getOpCode().isLoadVarDirect() && node->getFirstChild()->getSymbol()->isAutoOrParm() &&
-                                      _aliasesOfAllocNode2->get(node->getFirstChild()->getSymbolReference()->getReferenceNumber()))
-                                _aliasesOfAllocNode2->set(node->getSymbolReference()->getReferenceNumber());
-                             else
-                                _aliasesOfAllocNode2->reset(node->getSymbolReference()->getReferenceNumber()); 
-                             }
-                          }
-                       */
                        }
 
                     if (/* (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(candidate2->_node)) && */
@@ -2266,6 +2274,10 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
 
                if (!rhsIsHarmless)
                   {
+                  // Another special case when it is certain that the rhs of the def is not a candidate allocation from a prior iteration
+                  // In this case we are loading a value from an Integer cache anyway and that should be an allocation that has already escaped
+                  // that has nothing to do with the candidate allocation
+                  //
                   if (firstChild->getOpCode().hasSymbolReference() &&
                       firstChild->getSymbol()->isArrayShadowSymbol())
                      {
