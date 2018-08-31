@@ -95,7 +95,7 @@ int32_t TR_DataAccessAccelerator::perform()
        !comp()->getOption(TR_MimicInterpreterFrameShape) &&
 
        // We cannot handle arraylets because hardware intrinsics act on contiguous memory
-       !comp()->generateArraylets()&& !TR::Compiler->om.useHybridArraylets())
+       !comp()->generateArraylets()&& false && !TR::Compiler->om.useHybridArraylets())
      {
 
      // A vector to keep track of variable packed decimal calls
