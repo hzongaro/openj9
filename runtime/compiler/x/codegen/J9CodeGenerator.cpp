@@ -60,7 +60,7 @@ J9::X86::CodeGenerator::CodeGenerator() :
 
    cg->setAheadOfTimeCompile(new (cg->trHeapMemory()) TR::AheadOfTimeCompile(cg));
 
-   if (comp->requiresSpineChecks())
+   if (true || comp->requiresSpineChecks())
       {
       // Spine check code doesn't officially support codegen register rematerialization
       // yet.  Better spill placement interferes with tracking live spills.
