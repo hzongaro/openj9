@@ -431,7 +431,7 @@ int32_t TR_UnsafeFastPath::perform()
                traceMsg(comp(), "VarHandle operation: isArrayOperation %d type %s value %p isVolatile %d on node %p\n", isArrayOperation, J9::DataType::getName(type), value, isVolatile, node);
             }
 
-         bool mightBeArraylets = isArrayOperation && TR::Compiler->om.canGenerateArraylets();
+         bool mightBeArraylets = isArrayOperation && (true || TR::Compiler->om.canGenerateArraylets());
 
          // Skip inlining of helpers for arraylets if unsafe for arraylets is disabled
          static char * disableUnsafeForArraylets = feGetEnv("TR_DisableUnsafeForArraylets");
@@ -498,13 +498,13 @@ int32_t TR_UnsafeFastPath::perform()
                offset->setIsNonNegative(true);
 
                // Index is not used in the non-arraylet case so no need to compute it
-               if (mightBeArraylets)
+               if (false && mightBeArraylets)
                   index = J9::TransformUtil::calculateIndexFromOffsetInContiguousArray(comp(), offset, type);
                }
 
             prepareToReplaceNode(node);
 
-            if (mightBeArraylets)
+            if (false && mightBeArraylets)
                {
                if (trace())
                   traceMsg(comp(), "This is an array operation in arraylets mode with array [" POINTER_PRINTF_FORMAT "] and offset [ " POINTER_PRINTF_FORMAT "], creating a load/store and a spineCHK\n", object, offset);

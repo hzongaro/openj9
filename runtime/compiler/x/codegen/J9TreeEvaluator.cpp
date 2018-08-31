@@ -11080,7 +11080,7 @@ inlineMathSQRT(
 // end_label
 static TR::Register* inlineStringHashCode(TR::Node* node, bool isCompressed, TR::CodeGenerator* cg)
    {
-   if (cg->comp()->getOption(TR_DisableSIMDStringHashCode) || TR::Compiler->om.canGenerateArraylets() || !cg->getX86ProcessorInfo().supportsSSE4_1())
+   if (cg->comp()->getOption(TR_DisableSIMDStringHashCode) || true || TR::Compiler->om.canGenerateArraylets() || !cg->getX86ProcessorInfo().supportsSSE4_1())
       {
       return NULL;
       }
@@ -11376,7 +11376,7 @@ inlineCompareAndSwapNative(
 
    TR_X86OpCodes op;
 
-   if (TR::Compiler->om.canGenerateArraylets() && !node->isUnsafeGetPutCASCallOnNonArray())
+   if ((true || TR::Compiler->om.canGenerateArraylets()) && !node->isUnsafeGetPutCASCallOnNonArray())
       return false;
 
    static char *disableCASInlining = feGetEnv("TR_DisableCASInlining");

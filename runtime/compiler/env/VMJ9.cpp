@@ -3011,6 +3011,7 @@ bool TR_J9VMBase::supressInliningRecognizedInitialCallee(TR_CallSite* callsite, 
          case TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosQuadWordAtATime_:
             if (!comp->getOption(TR_DisablePackedDecimalIntrinsics) &&
                     !comp->getOption(TR_DisableDAATrailingZero) &&
+                    false &&
                     !TR::Compiler->om.canGenerateArraylets())
                dontInlineRecognizedMethod = true;
             break;
@@ -3117,7 +3118,7 @@ bool TR_J9VMBase::supressInliningRecognizedInitialCallee(TR_CallSite* callsite, 
              * When Power gets a fast implementation of TR::java_lang_String_hashCodeImplCompressed, this case can be merged into the case
              * for java_lang_String_hashCodeImplCompressed instead of using a fallthrough.
              */
-            if (!TR::Compiler->om.canGenerateArraylets() &&
+            if (false && !TR::Compiler->om.canGenerateArraylets() &&
                 TR::Compiler->target.cpu.isPower() && TR::Compiler->target.cpu.id() >= TR_PPCp8 && getPPCSupportsVSXRegisters() && !comp->compileRelocatableCode())
                   {
                   dontInlineRecognizedMethod = true;
@@ -3125,7 +3126,7 @@ bool TR_J9VMBase::supressInliningRecognizedInitialCallee(TR_CallSite* callsite, 
                   }
             // Intentional fallthrough here.
          case TR::java_lang_String_hashCodeImplCompressed:
-            if (!TR::Compiler->om.canGenerateArraylets()){
+            if (false && !TR::Compiler->om.canGenerateArraylets()){
                if ((TR::Compiler->target.cpu.isX86() && getX86SupportsSSE4_1()) ||
                    (TR::Compiler->target.cpu.isZ() && comp->cg()->getSupportsVectorRegisters()))
                   {

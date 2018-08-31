@@ -110,7 +110,7 @@ J9::Z::CodeGenerator::CodeGenerator() :
       cg->setSupportsInlineStringCaseConversion();
 
    if (cg->getSupportsVectorRegisters() && !comp->getOption(TR_DisableFastStringIndexOf) &&
-       !TR::Compiler->om.canGenerateArraylets())
+       false && !TR::Compiler->om.canGenerateArraylets())
       {
       cg->setSupportsInlineStringIndexOf();
       }
@@ -4002,7 +4002,7 @@ J9::Z::CodeGenerator::inlineDirectCall(
          if (!methodSymbol->isNative())
             break;
 
-         if ((!TR::Compiler->om.canGenerateArraylets() || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
+         if (((false && !TR::Compiler->om.canGenerateArraylets()) || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwap(node, cg, TR::InstOpCode::CS, IS_NOT_OBJ);
             return true;
@@ -4013,7 +4013,7 @@ J9::Z::CodeGenerator::inlineDirectCall(
          if (!methodSymbol->isNative())
             break;
 
-         if (TR::Compiler->target.is64Bit() && (!TR::Compiler->om.canGenerateArraylets() || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
+         if (TR::Compiler->target.is64Bit() && ((false && !TR::Compiler->om.canGenerateArraylets()) || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwap(node, cg, TR::InstOpCode::CSG, IS_NOT_OBJ);
             return true;
@@ -4026,7 +4026,7 @@ J9::Z::CodeGenerator::inlineDirectCall(
          if (!methodSymbol->isNative())
             break;
 
-         if ((!TR::Compiler->om.canGenerateArraylets() || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
+         if (((false && !TR::Compiler->om.canGenerateArraylets()) || node->isUnsafeGetPutCASCallOnNonArray()) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwap(node, cg, (comp->useCompressedPointers() ? TR::InstOpCode::CS : TR::InstOpCode::getCmpAndSwapOpCode()), IS_OBJ);
             return true;
@@ -4148,14 +4148,14 @@ J9::Z::CodeGenerator::inlineDirectCall(
       case TR::java_lang_String_hashCodeImplDecompressed:
          if (!comp->getOption(TR_DisableSIMDStringHashCode))
             {
-            if (cg->getSupportsVectorRegisters() && !TR::Compiler->om.canGenerateArraylets())
+            if (cg->getSupportsVectorRegisters() && false && !TR::Compiler->om.canGenerateArraylets())
                return resultReg = inlineStringHashCode(node, cg, false);
             }
          break;
 
       case TR::java_lang_String_hashCodeImplCompressed:
          if (!comp->getOption(TR_DisableSIMDStringHashCode)){
-            if (cg->getSupportsVectorRegisters() && !TR::Compiler->om.canGenerateArraylets()){
+            if (cg->getSupportsVectorRegisters() && false && !TR::Compiler->om.canGenerateArraylets()){
                 return resultReg = inlineStringHashCode(node, cg, true);
             }
          }
@@ -4168,7 +4168,7 @@ J9::Z::CodeGenerator::inlineDirectCall(
 
       case TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosQuadWordAtATime_:
          // TODO (Nigel): Is this deprecated? If so can we remove this?
-         if (cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z10) && !comp->getOption(TR_DisableIntrinsics) && !comp->getOption(TR_DisableDAATrailingZero) && !TR::Compiler->om.canGenerateArraylets())
+         if (cg->getS390ProcessorInfo()->supportsArch(TR_S390ProcessorInfo::TR_z10) && !comp->getOption(TR_DisableIntrinsics) && !comp->getOption(TR_DisableDAATrailingZero) && false && !TR::Compiler->om.canGenerateArraylets())
             return resultReg = inlineTrailingZerosQuadWordAtATime(node, cg);
          break;
 

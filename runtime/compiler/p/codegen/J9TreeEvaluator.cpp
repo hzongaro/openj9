@@ -12112,7 +12112,7 @@ J9::Power::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&result
          return true;
 
       case TR::java_lang_String_hashCodeImplDecompressed:
-         if (!TR::Compiler->om.canGenerateArraylets() && TR::Compiler->target.cpu.id() >= TR_PPCp8 && TR::Compiler->target.cpu.getPPCSupportsVSX() && !cg->comp()->compileRelocatableCode())
+         if (false && !TR::Compiler->om.canGenerateArraylets() && TR::Compiler->target.cpu.id() >= TR_PPCp8 && TR::Compiler->target.cpu.getPPCSupportsVSX() && !cg->comp()->compileRelocatableCode())
             {
             resultReg = inlineStringHashcode(node, cg);
             return true;
@@ -12135,7 +12135,7 @@ J9::Power::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&result
         if (!methodSymbol->isNative())
            break;
 
-        if ((node->isUnsafeGetPutCASCallOnNonArray() || !TR::Compiler->om.canGenerateArraylets()) && node->isSafeForCGToFastPathUnsafeCall())
+        if ((node->isUnsafeGetPutCASCallOnNonArray() || (false && !TR::Compiler->om.canGenerateArraylets())) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwap(node, cg, false);
             return true;
@@ -12148,12 +12148,12 @@ J9::Power::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&result
          if (!methodSymbol->isNative())
             break;
 
-         if (TR::Compiler->target.is64Bit() && (node->isUnsafeGetPutCASCallOnNonArray() || !TR::Compiler->om.canGenerateArraylets()) && node->isSafeForCGToFastPathUnsafeCall())
+         if (TR::Compiler->target.is64Bit() && (node->isUnsafeGetPutCASCallOnNonArray() || (false && !TR::Compiler->om.canGenerateArraylets())) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwap(node, cg, true);
             return true;
             }
-         else if ((node->isUnsafeGetPutCASCallOnNonArray() || !TR::Compiler->om.canGenerateArraylets()) && node->isSafeForCGToFastPathUnsafeCall())
+         else if ((node->isUnsafeGetPutCASCallOnNonArray() || (false && !TR::Compiler->om.canGenerateArraylets())) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = inlineAtomicOperation(node, cg, methodSymbol);
             return true;
@@ -12165,7 +12165,7 @@ J9::Power::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&result
          if (!methodSymbol->isNative())
             break;
 
-         if ((node->isUnsafeGetPutCASCallOnNonArray() || !TR::Compiler->om.canGenerateArraylets()) && node->isSafeForCGToFastPathUnsafeCall())
+         if ((node->isUnsafeGetPutCASCallOnNonArray() || (false && !TR::Compiler->om.canGenerateArraylets())) && node->isSafeForCGToFastPathUnsafeCall())
             {
             resultReg = VMinlineCompareAndSwapObject(node, cg);
             return true;

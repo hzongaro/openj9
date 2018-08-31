@@ -2059,7 +2059,7 @@ TR_J9InlinerPolicy::isInlineableJNI(TR_ResolvedMethod *method,TR::Node *callNode
 
    if (method->convertToMethod()->isUnsafeWithObjectArg(comp))
       {
-      if (!TR::Compiler->om.canGenerateArraylets() || (callNode && callNode->isUnsafeGetPutCASCallOnNonArray()))
+      if ((false && !TR::Compiler->om.canGenerateArraylets()) || (callNode && callNode->isUnsafeGetPutCASCallOnNonArray()))
          return true;
       else
          return false;

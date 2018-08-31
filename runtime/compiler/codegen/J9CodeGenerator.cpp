@@ -674,7 +674,7 @@ J9::CodeGenerator::lowerTreesPreChildrenVisit(TR::Node *parent, TR::TreeTop *tre
          // Test for isNative to distinguish between them.
          if ((methodSymbol->getRecognizedMethod() == TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z) &&
                methodSymbol->isNative() &&
-               (!TR::Compiler->om.canGenerateArraylets() || parent->isUnsafeGetPutCASCallOnNonArray()) && parent->isSafeForCGToFastPathUnsafeCall())
+               ((false && !TR::Compiler->om.canGenerateArraylets()) || parent->isUnsafeGetPutCASCallOnNonArray()) && parent->isSafeForCGToFastPathUnsafeCall())
             {
             TR_BitVector childrenToBeLowered(parent->getNumChildren(), self()->comp()->trMemory(), stackAlloc);
             childrenToBeLowered.set(3);
@@ -772,6 +772,7 @@ J9::CodeGenerator::lowerTreeIfNeeded(
    if (!self()->comp()->getOption(TR_DisableUnsafe) &&
        node->getOpCode().isCall() &&
        node->getOpCodeValue() == TR::call &&
+       false &&
        !TR::Compiler->om.canGenerateArraylets() &&
        ((node->getSymbol()->castToMethodSymbol()->getRecognizedMethod() == TR::java_nio_Bits_copyToByteArray) ||
         (node->getSymbol()->castToMethodSymbol()->getRecognizedMethod() == TR::java_nio_Bits_copyFromByteArray)) &&

@@ -81,11 +81,13 @@ J9::X86::CodeGenerator::CodeGenerator() :
    cg->setSupportsNewInstanceImplOpt();
    if (cg->getX86ProcessorInfo().supportsSSE4_1() && 
        !comp->getOption(TR_DisableSIMDStringCaseConv) && 
+       false &&
        !TR::Compiler->om.canGenerateArraylets())
       cg->setSupportsInlineStringCaseConversion();
 
    if (cg->getX86ProcessorInfo().supportsSSSE3() &&
        !comp->getOption(TR_DisableFastStringIndexOf) &&
+       false &&
        !TR::Compiler->om.canGenerateArraylets())
       {
       cg->setSupportsInlineStringIndexOf();

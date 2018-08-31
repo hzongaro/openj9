@@ -208,7 +208,7 @@ bool TR_J9ByteCodeIlGenerator::internalGenIL()
             }
          }
 
-      if (recognizedMethod == TR::com_ibm_jit_JITHelpers_supportsIntrinsicCaseConversion && !TR::Compiler->om.canGenerateArraylets())
+      if (recognizedMethod == TR::com_ibm_jit_JITHelpers_supportsIntrinsicCaseConversion && false && !TR::Compiler->om.canGenerateArraylets())
          {
          if (performTransformation(comp(), "O^O IlGenerator: Generate com/ibm/jit/JITHelpers.supportsIntrinsicCaseConversion\n"))
             {
