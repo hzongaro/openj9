@@ -1190,8 +1190,11 @@ static void populateOSRInfo(TR::Compilation* comp, TR_MethodMetaData* data, uint
    uint32_t offset = 0;
    if (comp->getOption(TR_EnableOSR))
       {
+traceMsg(comp, "In populateOSRInfo - data == %p OSR offset == %x \n", data, osrInfoOffset);
       data->osrInfo = (uint8_t*)data + osrInfoOffset;
+uint32_t sizeOfDataWritten =
       comp->getOSRCompilationData()->writeMetaData((uint8_t*)data->osrInfo);
+traceMsg(comp, "In populateOSRInfo - sizeOfDataWritten == %x\n", sizeOfDataWritten);
       }
    else
       data->osrInfo = NULL;
@@ -1391,6 +1394,7 @@ createMethodMetaData(
       {
       osrInfoOffset = tableSize;
       tableSize += calculateSizeOfOSRInfo(comp);
+traceMsg(comp, "OSRInfoSize == %x\n", tableSize - osrInfoOffset);
       }
 
    int32_t gpuMetaDataOffset = -1;
@@ -1603,6 +1607,7 @@ createMethodMetaData(
          }
       }
 
+traceMsg(comp, "Total tableSize before call to populateOSRInfo == %x\n", tableSize);
    populateOSRInfo(comp, data, osrInfoOffset);
 
    if (comp->getGPUPtxCount() > 0)
