@@ -1185,7 +1185,7 @@ populateBodyInfo(
 
    }
 
-static void populateOSRInfo(TR::Compilation* comp, TR_MethodMetaData* data, uint32_t osrInfoOffset)
+static void populateOSRInfo(TR::Compilation* comp, TR_MethodMetaData* data, uint32_t osrInfoOffset, uint32_t osrInfoSize)
    {
    uint32_t offset = 0;
    if (comp->getOption(TR_EnableOSR))
@@ -1193,7 +1193,7 @@ static void populateOSRInfo(TR::Compilation* comp, TR_MethodMetaData* data, uint
 traceMsg(comp, "In populateOSRInfo - data == %p OSR offset == %x \n", data, osrInfoOffset);
       data->osrInfo = (uint8_t*)data + osrInfoOffset;
 uint32_t sizeOfDataWritten =
-      comp->getOSRCompilationData()->writeMetaData((uint8_t*)data->osrInfo);
+      comp->getOSRCompilationData()->writeMetaData((uint8_t*)data->osrInfo, osrInfoSize);
 traceMsg(comp, "In populateOSRInfo - sizeOfDataWritten == %x\n", sizeOfDataWritten);
       }
    else
@@ -1390,10 +1390,12 @@ createMethodMetaData(
       }
 
    int32_t osrInfoOffset = -1;
+uint32_t osrInfoSize = -1;
    if (comp->getOption(TR_EnableOSR))
       {
       osrInfoOffset = tableSize;
       tableSize += calculateSizeOfOSRInfo(comp);
+osrInfoSize = tableSize - osrInfoOffset;
 traceMsg(comp, "OSRInfoSize == %x\n", tableSize - osrInfoOffset);
       }
 
@@ -1608,7 +1610,7 @@ traceMsg(comp, "OSRInfoSize == %x\n", tableSize - osrInfoOffset);
       }
 
 traceMsg(comp, "Total tableSize before call to populateOSRInfo == %x\n", tableSize);
-   populateOSRInfo(comp, data, osrInfoOffset);
+   populateOSRInfo(comp, data, osrInfoOffset, osrInfoSize);
 
    if (comp->getGPUPtxCount() > 0)
       {
