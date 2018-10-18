@@ -52,8 +52,11 @@ RULE.c=$(eval $(DEF_RULE.c))
 #
 define DEF_RULE.cpp
 $(1): $(2) $(1)$(DEPSUFF) | jit_createdirs
-	if test $$(<F) = OSRData.cpp; then EXTRA_CXX_FLAGS=-qSTRICT_INDUCTION; fi; \
-	$$(CXX_CMD) $$(CXX_FLAGS) $$(EXTRA_CXX_FLAGS) $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$<
+	if test $$(<F) = OSRData.cpp; then \
+	$$(CXX_CMD) $$(CXX_FLAGS) -qSTRICT_INDUCTION $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$< ; \
+	else \
+	$$(CXX_CMD) $$(CXX_FLAGS) $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$< ; \
+	fi
 
 $(1)$(DEPSUFF): ;
 
