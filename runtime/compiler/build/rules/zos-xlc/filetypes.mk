@@ -53,7 +53,8 @@ RULE.c=$(eval $(DEF_RULE.c))
 define DEF_RULE.cpp
 $(1): $(2) $(1)$(DEPSUFF) | jit_createdirs
 	if test $$(<F) = OSRData.cpp; then \
-	$$(CXX_CMD) $$(CXX_FLAGS) -qxyzzy $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$< ; \
+	$$(CXX_CMD) $$(CXX_FLAGS) -qpponly=comments:lines $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$< ; \
+	exit 12; \
 	else \
 	$$(CXX_CMD) $$(CXX_FLAGS) $$(patsubst %,-D%,$$(CXX_DEFINES)) $$(patsubst %,-I'%',$$(CXX_INCLUDES)) -M -MF $$@$$(DEPSUFF) -o $$@ -c $$< ; \
 	fi
