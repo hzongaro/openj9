@@ -142,31 +142,50 @@ TR_EscapeAnalysis::TR_EscapeAnalysis(TR::OptimizationManager *manager)
 
 char *TR_EscapeAnalysis::getClassName(TR::Node *classNode)
    {
-   int32_t  classNameLength;
-   char    *classNameChars = TR::Compiler->cls.classNameChars(comp(), classNode->getSymbolReference(), classNameLength);
-   char   *className       = (char *)trMemory()->allocateStackMemory(classNameLength+1, TR_Memory::EscapeAnalysis);
-   memcpy(className, classNameChars, classNameLength);
-   className[classNameLength] = 0;
+   char *className = NULL;
+
+   if (classNode->getOpCodeValue() == TR::loadaddr)
+      {
+      TR::SymbolReference *symRef = classNode->getSymbolReference();
+
+      if (symRef->getSymbol()->isClassObject())
+         {
+         int32_t  classNameLength;
+         char    *classNameChars = TR::Compiler->cls.classNameChars(comp(), symRef,  classNameLength);
+
+         if (NULL != classNameChars)
+            {
+            className = (char *)trMemory()->allocateStackMemory(classNameLength+1, TR_Memory::EscapeAnalysis);
+            memcpy(className, classNameChars, classNameLength);
+            className[classNameLength] = 0;
+            }
+         }
+      }
    return className;
    }
 
 bool TR_EscapeAnalysis::isImmutableObject(TR::Node *node)
    {
    if (node->getOpCodeValue() != TR::New)
+      {
       return false;
+      }
 
    char *className = getClassName(node->getFirstChild());
 
-   if (!strncmp("java/lang/", className, 10) &&
-          (!strcmp("Integer", &className[10]) ||
-           !strcmp("Long", &className[10]) ||
-           !strcmp("Short", &className[10]) ||
-           !strcmp("Byte", &className[10]) ||
-           !strcmp("Boolean", &className[10]) ||
-           !strcmp("Character", &className[10]) ||
-           !strcmp("Double", &className[10]) ||
-           !strcmp("Float", &className[10])))
+   if (NULL != className &&
+          !strncmp("java/lang/", className, 10) &&
+             (!strcmp("Integer", &className[10]) ||
+              !strcmp("Long", &className[10]) ||
+              !strcmp("Short", &className[10]) ||
+              !strcmp("Byte", &className[10]) ||
+              !strcmp("Boolean", &className[10]) ||
+              !strcmp("Character", &className[10]) ||
+              !strcmp("Double", &className[10]) ||
+              !strcmp("Float", &className[10])))
+      {
       return true;
+      }
 
 
    return false;
@@ -1397,13 +1416,17 @@ void TR_EscapeAnalysis::findCandidates()
          {
          if (node->getOpCodeValue() == TR::New)
             {
-            traceMsg(comp(), "Found [%p] new %s\n", node, getClassName(node->getFirstChild()));
+            const char *className = getClassName(node->getFirstChild());
+            traceMsg(comp(), "Found [%p] new %s\n", node,
+                     className ? className : "<Missing class name>");
             }
          else if (node->getOpCodeValue() == TR::newarray)
             traceMsg(comp(), "Found [%p] newarray of type %d\n", node, node->getSecondChild()->getInt());
          else
             {
-            traceMsg(comp(), "Found [%p] anewarray %s\n", node, getClassName(node->getSecondChild()));
+            const char *className = getClassName(node->getSecondChild());
+            traceMsg(comp(), "Found [%p] anewarray %s\n", node,
+                     className ? className : "<Missing class name>");
             }
          }
 
@@ -1504,7 +1527,10 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
             {
             if (trace())
                {
-               printf("secs Class %s implements Runnable in %s\n", getClassName(classNode), comp()->signature());
+               const char *className = getClassName(classNode->getSecondChild());
+               printf("secs Class %s implements Runnable in %s\n",
+                  className ? className : "<Missing class name>",
+                  comp()->signature());
                traceMsg(comp(), "   Node [%p] failed: class implements the Runnable interface\n", node);
                }
             return NULL;
