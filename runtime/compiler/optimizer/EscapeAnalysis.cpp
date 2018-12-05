@@ -2289,7 +2289,7 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
                    (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(otherAllocNode->_node)))
                   {
                   TR::TreeTop *treeTop;
-                  bool trackAliases = false;
+                  bool collectAliases = false;
                   _aliasesOfOtherAllocNode->empty();
                   _visitedNodes->empty();
                   for (treeTop = otherAllocNode->_treeTop->getEnclosingBlock()->getEntry(); treeTop; treeTop = treeTop->getNextTreeTop())
@@ -2298,10 +2298,23 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
                      if (node->getOpCodeValue() == TR::BBEnd)
                         break;
 
-                     collectAliasesOfAllocations(treeTop->getNode(), otherAllocNode->_node, trackAliases);
+                     // Until we reach otherAllocNode, call visitTree to
+                     // ignore nodes in those trees.  After we've reached
+                     // otherAllocNode, call collectAiasesOfAllocations to
+                     // track its aliases in _aliasesOfOtherAllocNode
+                     if (!collectAliases)
+                        {
+                        visitTree(treeTop->getNode());
+                        }
+                     else
+                        {
+                        collectAliasesOfAllocations(treeTop->getNode(), otherAllocNode->_node);
+                        }
 
                      if (treeTop == otherAllocNode->_treeTop)
-                         trackAliases = true;
+                        {
+                        collectAliases = true;
+                        }
                      }
 
                   if ((_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == otherAllocNode->_block) &&
@@ -2466,8 +2479,7 @@ bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *node, TR::Node 
    }
 
 
-
-void TR_EscapeAnalysis::collectAliasesOfAllocations(TR::Node *node, TR::Node *allocNode, bool collectAliases)
+void TR_EscapeAnalysis::visitTree(TR::Node *node)
    {
    if (_visitedNodes->get(node->getGlobalIndex()))
       {
@@ -2476,9 +2488,22 @@ void TR_EscapeAnalysis::collectAliasesOfAllocations(TR::Node *node, TR::Node *al
 
    _visitedNodes->set(node->getGlobalIndex());
 
-   if (collectAliases
-          && node->getOpCode().isStore()
-          && node->getSymbol()->isAutoOrParm())
+   for (int32_t i = 0; i < node->getNumChildren(); i++)
+      {
+      visitTree(node->getChild(i));
+      }
+   }
+
+void TR_EscapeAnalysis::collectAliasesOfAllocations(TR::Node *node, TR::Node *allocNode)
+   {
+   if (_visitedNodes->get(node->getGlobalIndex()))
+      {
+      return;
+      }
+
+   _visitedNodes->set(node->getGlobalIndex());
+
+   if (node->getOpCode().isStore() && node->getSymbol()->isAutoOrParm())
       {
       if (node->getFirstChild() == allocNode)
          {
@@ -2499,7 +2524,7 @@ void TR_EscapeAnalysis::collectAliasesOfAllocations(TR::Node *node, TR::Node *al
 
    for (int32_t i = 0; i < node->getNumChildren(); i++)
       {
-      collectAliasesOfAllocations(node->getChild(i), allocNode, collectAliases);
+      collectAliasesOfAllocations(node->getChild(i), allocNode);
       }
    }
 
