@@ -2248,11 +2248,23 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
 
       if ((defNode->getFirstChild() == candidate->_node) &&
           (_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(useNode)))
+         {
+         if (trace())
+            {
+            traceMsg(comp(), "      Value numbers match for def node [%p] with use node [%p]\n", defNode, useNode);
+            }
          allnewsonrhs = true;
+         }
       else if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)) &&
                (_useDefInfo->getTreeTop(defIndex)->getEnclosingBlock() == candidate->_block) &&
                _aliasesOfAllocNode->get(defNode->getSymbolReference()->getReferenceNumber()))
+         {
+         if (trace())
+            {
+            traceMsg(comp(), "      Value numbers match for def node [%p] with candidate node [%p], and def node's symref is alias of candidate allocation\n", defNode, candidate->_node);
+            }
          allnewsonrhs = true;
+         }
       else
          {
          allnewsonrhs = true;
@@ -2277,12 +2289,18 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
             TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
             TR::Node *firstChild = defNode2->getFirstChild();
             bool rhsIsHarmless = false;
+
             for (Candidate *otherAllocNode = _candidates.getFirst(); otherAllocNode; otherAllocNode = otherAllocNode->getNext())
                {
                if (otherAllocNode->_node == firstChild)
                   {
                   rhsIsHarmless = true;
                   break;
+                  }
+
+               if (trace())
+                  {
+                  traceMsg(comp(), "         Look at defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode);
                   }
 
                if (!rhsIsHarmless &&
@@ -2320,6 +2338,10 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
                   if ((_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == otherAllocNode->_block) &&
                       _aliasesOfOtherAllocNode->get(defNode2->getSymbolReference()->getReferenceNumber()))
                      {
+                     if (trace())
+                        {
+                        traceMsg(comp(), "      rhs is harmless for defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode);
+                        }
                      rhsIsHarmless = true;
                      break;
                      }
@@ -2350,13 +2372,25 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
 
                      if (fieldName && (fieldNameLen > 0) &&
                          !strncmp(fieldName, "java/lang/Integer$IntegerCache.cache", 36))
+                        {
+                        if (trace())
+                           {
+                           traceMsg(comp(), "         rhs is harmless for defNode2 [%p] access of Integer cache\n", defNode2);
+                           }
+
                         rhsIsHarmless = true;
+                        }
                      }
                   }
                }
 
             if (!rhsIsHarmless)
                {
+               if (trace())
+                  {
+                  traceMsg(comp(), "      rhs not harmless for defNode2 [%p]\n", defNode2);
+                  }
+
                allnewsonrhs = false;
                break;
                }
@@ -2371,22 +2405,22 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
              (defNode->getFirstChild()->getSymbol()->isShadow() &&
              (defNode->getFirstChild()->getSymbol()->isArrayShadowSymbol() ||
               !_localObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode->getFirstChild()->getFirstChild())))))))))
+         {
+         if (_valueNumberInfo->getValueNumber(defNode) != _valueNumberInfo->getValueNumber(useNode))
             {
-            if (_valueNumberInfo->getValueNumber(defNode) != _valueNumberInfo->getValueNumber(useNode))
+            // If the use is outside the loop, make sure that there are stores to temp t on all possible
+            // paths from the allocation to the use (load of temp t). This will ensure that a prior iteration's
+            // allocation is not what is pointed at by temp t when we reach the use of temp t.
+            //
+            if (checkIfUseIsInSameLoopAsDef(_useDefInfo->getTreeTop(defIndex), useNode) ||
+                checkIfUseIsInLoopAndOverlapping(candidate, _useDefInfo->getTreeTop(defIndex), useNode))
                {
-               // If the use is outside the loop, make sure that there are stores to temp t on all possible
-               // paths from the allocation to the use (load of temp t). This will ensure that a prior iteration's
-               // allocation is not what is pointed at by temp t when we reach the use of temp t.
-               //
-               if (checkIfUseIsInSameLoopAsDef(_useDefInfo->getTreeTop(defIndex), useNode) ||
-                   checkIfUseIsInLoopAndOverlapping(candidate, _useDefInfo->getTreeTop(defIndex), useNode))
-                  {
-                  if (trace())
-                     traceMsg(comp(), "         Def node [%p] same as candidate [%p]\n", defNode, candidate->_node);
-                  return false;
-                  }
+               if (trace())
+                  traceMsg(comp(), "         Def node [%p] same as candidate [%p]\n", defNode, candidate->_node);
+               return false;
                }
             }
+         }
 
       if (!seenOtherDef && defNode->getOpCode().isStore() && defNode->getSymbol()->isAutoOrParm())
          {
@@ -4431,7 +4465,10 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                   {
                   if (trace())
                      traceMsg(comp(), "   Normally [%p] would fail because child of call [%p] to %s, but user wants it locally allocated\n",
-                          candidate->_node, node, node->getSymbol()->getMethodSymbol()->getMethod()->signature(trMemory()));
+                          candidate->_node, node,
+                          node->getSymbol()->getMethodSymbol()->getMethod()
+                             ? node->getSymbol()->getMethodSymbol()->getMethod()->signature(trMemory())
+                             : "[Unknown method]");
                   continue;
                   }
                // The sniff could not be done. Remove this candidate.
@@ -4439,7 +4476,10 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
 
               if (trace())
                   traceMsg(comp(), "   Fail [%p] because child of call [%p] to %s\n",
-                          candidate->_node, node, node->getSymbol()->getMethodSymbol()->getMethod()->signature(trMemory()));
+                          candidate->_node, node,
+                          node->getSymbol()->getMethodSymbol()->getMethod()
+                             ? node->getSymbol()->getMethodSymbol()->getMethod()->signature(trMemory())
+                             : "[Unknown method]");
 
                rememoize(candidate);
                _candidates.remove(candidate);
