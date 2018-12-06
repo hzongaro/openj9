@@ -140,7 +140,7 @@ TR_EscapeAnalysis::TR_EscapeAnalysis(TR::OptimizationManager *manager)
 #endif
 
    static char *disableLoopAliasAllocationChecking = feGetEnv("TR_disableEALoopAliasAllocationChecking");
-   _doLoopAllocationAliasChecking = disableLoopAliasAllocationChecking ? false : true;
+   _doLoopAllocationAliasChecking = false; // disableLoopAliasAllocationChecking ? false : true;
    }
 
 char *TR_EscapeAnalysis::getClassName(TR::Node *classNode)
