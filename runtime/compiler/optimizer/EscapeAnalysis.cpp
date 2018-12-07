@@ -1535,7 +1535,7 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
             if (trace())
                {
                const char *className = getClassName(classNode->getSecondChild());
-               printf("secs Class %s implements Runnable in %s\n",
+               traceMsg(comp(), "secs Class %s implements Runnable in %s\n",
                   className ? className : "<Missing class name>",
                   comp()->signature());
                traceMsg(comp(), "   Node [%p] failed: class implements the Runnable interface\n", node);
@@ -4947,7 +4947,8 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                }
             else
                {
-               traceMsg(comp(), "Removing inline finalizable test [%p] for discontiguous candidate [%p]\n", _curTree->getNode(), candidate->_node);
+               if (trace())
+                  traceMsg(comp(), "Removing inline finalizable test [%p] for discontiguous candidate [%p]\n", _curTree->getNode(), candidate->_node);
                removeThisNode = true;
                }
 
@@ -5062,7 +5063,8 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
 
                         if (parent->getOpCode().isCheck() || parent->getOpCodeValue() == TR::compressedRefs)
                            {
-                           traceMsg(comp(), " -> Eliminate %s [%p]\n", parent->getOpCode().getName(), parent);
+                           if (trace())
+                              traceMsg(comp(), " -> Eliminate %s [%p]\n", parent->getOpCode().getName(), parent);
                            TR::Node::recreate(parent, TR::treetop);
                            parent->setFlags(0);
                            }
@@ -6085,7 +6087,9 @@ void TR_EscapeAnalysis::avoidStringCopyAllocation(Candidate *candidate)
    dumpOptDetails(comp(), "%sReplacing new (String) node [%p] with the String that was used in the copy constructor\n",OPT_DETAILS, candidate->_node);
 
    if (trace() || debug ("traceContiguousESC"))
-      printf("secs (%d) String (copy) allocation of size %d found in %s\n", manager()->numPassesCompleted(), candidate->_size, comp()->signature());
+      {
+      traceMsg(comp(), "secs (%d) String (copy) allocation of size %d found in %s\n", manager()->numPassesCompleted(), candidate->_size, comp()->signature());
+      }
 
 
    TR::TreeTop *insertionPoint = candidate->_treeTop;
@@ -6172,7 +6176,9 @@ void TR_EscapeAnalysis::makeContiguousLocalAllocation(Candidate *candidate)
    dumpOptDetails(comp(), "%sMaking %s node [%p] into a local object of size %d\n",OPT_DETAILS, candidate->_node->getOpCode().getName(), candidate->_node, candidate->_size);
 
    if (trace() || debug ("traceContiguousESC"))
-      printf("secs (%d) Contiguous allocation of size %d found in %s\n", manager()->numPassesCompleted(), candidate->_size, comp()->signature());
+      {
+      traceMsg(comp(), "secs (%d) Contiguous allocation of size %d found in %s\n", manager()->numPassesCompleted(), candidate->_size, comp()->signature());
+      }
 
    if (candidate->escapesInColdBlocks())
       candidate->_originalAllocationNode = candidate->_node->duplicateTree();
@@ -6856,7 +6862,8 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
                            }
                         TR::Node *stackStore = TR::Node::createWithSymRef(comp()->il.opCodeForDirectStore(type), 1, 1, heapFieldLoad, field._symRef);
                         TR::TreeTop *stackStoreTree = TR::TreeTop::create(comp(), stackStore, NULL, NULL);
-                        traceMsg(comp(), "Emitting stack store back %p cold %p next %p\n", stackStore, coldBlockTree->getNode(), nextTreeInColdBlock->getNode());
+                        if (trace())
+                           traceMsg(comp(), "Emitting stack store back %p cold %p next %p\n", stackStore, coldBlockTree->getNode(), nextTreeInColdBlock->getNode());
                         coldBlockTree->join(stackStoreTree);
                         stackStoreTree->join(nextTreeInColdBlock);
                         // comp()->useCompressedPointers()
