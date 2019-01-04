@@ -159,18 +159,30 @@ bool TR_EscapeAnalysis::isImmutableObject(TR::Node *node)
 
    char *className = getClassName(node->getFirstChild());
 
-   if (NULL != className &&
-          !strncmp("java/lang/", className, 10) &&
-             (!strcmp("Integer", &className[10]) ||
-              !strcmp("Long", &className[10]) ||
-              !strcmp("Short", &className[10]) ||
-              !strcmp("Byte", &className[10]) ||
-              !strcmp("Boolean", &className[10]) ||
-              !strcmp("Character", &className[10]) ||
-              !strcmp("Double", &className[10]) ||
-              !strcmp("Float", &className[10])))
+   static char *onlyIntegerImmutable = feGetEnv("TR_EAOnlyIntegerImmutable");
+
+   if (NULL == onlyIntegerImmutable)
       {
-      return true;
+      if (NULL != className &&
+             !strncmp("java/lang/", className, 10) &&
+                (!strcmp("Integer", &className[10]) ||
+                 !strcmp("Long", &className[10]) ||
+                 !strcmp("Short", &className[10]) ||
+                 !strcmp("Byte", &className[10]) ||
+                 !strcmp("Boolean", &className[10]) ||
+                 !strcmp("Character", &className[10]) ||
+                 !strcmp("Double", &className[10]) ||
+                 !strcmp("Float", &className[10])))
+         {
+         return true;
+         }
+      }
+   else
+      {
+      if (!strncmp("java/lang/Integer", getClassName(node->getFirstChild()), 17))
+         {
+         return true;
+         }
       }
  
    return false;
