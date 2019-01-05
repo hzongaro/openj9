@@ -1082,6 +1082,10 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
    if (trace())
       printCandidates("Final candidates");
 
+if (trace())
+{
+traceMsg(comp(), "HZ After printing final candidates\n");
+}
    // When we do stack allocation we generate number of stores
    // in the first block of the method, so that we can initialize the
    // stack allocated object correctly. However, if the first block ends up
@@ -1108,6 +1112,10 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
          }
       }
 
+if (trace())
+{
+traceMsg(comp(), "HZ Checking _candidates.isEmpty()\n");
+}
    // Now each remaining candidate is known not to escape the method.
    // All synchronizations on the objects can be removed, and those
    // marked for local allocation can be locally allocated.
@@ -1116,6 +1124,10 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
    //
    if (!_candidates.isEmpty())
       {
+if (trace())
+{
+traceMsg(comp(), "HZ Calling fixupTrees\n");
+}
       fixupTrees();
       cost++;
       }
@@ -4535,6 +4547,10 @@ void TR_EscapeAnalysis::anchorCandidateReference(Candidate *candidate, TR::Node 
 
 void TR_EscapeAnalysis::fixupTrees()
    {
+if (trace())
+{
+traceMsg(comp(), "HZ In fixupTrees\n");
+}
    TR::NodeChecklist visited (comp());
    TR::TreeTop *treeTop, *nextTree;
    for (treeTop = comp()->getStartTree(); treeTop; treeTop = nextTree)
@@ -4587,12 +4603,20 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
    bool                     removeThisNode = false;
    TR::ResolvedMethodSymbol *calledMethod = NULL;
 
+if (trace())
+{
+traceMsg(comp(), "HZ (1)\n");
+}
    // Look for indirect loads or stores for fields of local allocations.
    //
    if (node->getOpCode().isIndirect() &&
        node->getOpCode().isLoadVarOrStore() &&
        !comp()->suppressAllocationInlining())
       {
+if (trace())
+{
+traceMsg(comp(), "HZ (2)\n");
+}
       if (node->getSymbol()->isArrayShadowSymbol() &&
           node->getFirstChild()->getOpCode().isArrayRef())
          child = node->getFirstChild()->getFirstChild();
@@ -4602,11 +4626,19 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
       valueNumber = _valueNumberInfo->getValueNumber(child);
       for (candidate = _candidates.getFirst(); candidate; candidate = candidate->getNext())
          {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.1)\n");
+}
          if (comp()->generateArraylets() && (candidate->_kind != TR::New))
             continue;
 
          bool usesValueNum = usesValueNumber(candidate, valueNumber);
 
+if (trace())
+{
+traceMsg(comp(), "HZ (2.11) - usesValueNumber(%p, %d) == %d\n", candidate, valueNumber, usesValueNum);
+}
          // Check if this is a class load for a finalizable test
          if (usesValueNum &&
              node->getSymbolReference()->getOffset() < (int32_t)comp()->fej9()->getObjectHeaderSizeInBytes() &&
@@ -4614,6 +4646,10 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
              node->getOpCode().isLoadIndirect() &&
              isFinalizableInlineTest(comp(), node->getFirstChild(), _curTree->getNode(), node))
             {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.2)\n");
+}
             // This transformation is optional for candidates that can't be stack-allocated and contiguous allocations,
             // but required for discontiguous allocations because the class field will no longer exist
             if (!candidate->isLocalAllocation() || candidate->isContiguousAllocation())
@@ -4659,8 +4695,16 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
             return false;
             }
 
+if (trace())
+{
+traceMsg(comp(), "HZ (2.29) usesValueNum == %d\n", usesValueNum);
+}
          if (candidate->isLocalAllocation() && usesValueNum)
             {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.3)\n");
+}
             int32_t fieldOffset = node->getSymbolReference()->getOffset();
             if (candidate->_origKind == TR::New)
                {
@@ -4809,6 +4853,10 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                   }
                else // if (!candidate->escapesInColdBlock(_curBlock))
                   {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.9)\n");
+}
                   if (candidate->isContiguousAllocation())
                      removeThisNode |= fixupFieldAccessForContiguousAllocation(node, candidate);
                   else
@@ -5240,6 +5288,8 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
 
 bool TR_EscapeAnalysis::fixupFieldAccessForContiguousAllocation(TR::Node *node, Candidate *candidate)
    {
+if (trace())
+traceMsg(comp(), "In fixupFieldAccessForContiguousAllocation");
    // Ignore stores to the generic int shadow for nodes that are already
    // explicitly initialized. These are the initializing stores and are going to
    // be left as they are (except maybe to insert real field symbol references
@@ -5379,6 +5429,8 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
    int32_t fieldOffset = (candidate->_origKind == TR::New) ?
       comp()->fej9()->getObjectHeaderSizeInBytes() : TR::Compiler->om.contiguousArrayHeaderSizeInBytes();
    TR::DataType fieldType = TR::NoType; // or array element type
+if (trace())
+traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
 
    // If this is a store to the generic int shadow, it is zero-initializing the
    // object. Remember which words are being zero-initialized; only fields that
@@ -7021,7 +7073,7 @@ void TR_EscapeAnalysis::printCandidates(char *title)
    int32_t index = 0;
    for (Candidate *candidate = _candidates.getFirst(); candidate; candidate = candidate->getNext())
       {
-      traceMsg(comp(), "Candidate %d:\n", index++);
+      traceMsg(comp(), "Candidate %d (%p):\n", index++, candidate);
       candidate->print();
       }
    }
