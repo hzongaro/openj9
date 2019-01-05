@@ -138,6 +138,10 @@ TR_EscapeAnalysis::TR_EscapeAnalysis(TR::OptimizationManager *manager)
    /* monitors */
    _removeMonitors           = true;
 #endif
+if (trace())
+{
+traceMsg(comp(), "HZ In TR_EscapeAnalysis::TR_EscapeAnalysis - _inColdBlock == %d\n", _inColdBlock);
+}
    }
 
 char *TR_EscapeAnalysis::getClassName(TR::Node *classNode)
@@ -3370,6 +3374,10 @@ void TR_EscapeAnalysis::checkEscape(TR::TreeTop *firstTree, bool isCold, bool & 
          if (!_parms || !_inColdBlock)
             {
             _inColdBlock = false;
+if (trace())
+{
+traceMsg(comp(), "HZ (1) Setting _inColdBlock false\n");
+}
             if (!_parms)
                _curBlock = node->getBlock();
             if (((_curBlock->isCold() ||
@@ -3378,7 +3386,13 @@ void TR_EscapeAnalysis::checkEscape(TR::TreeTop *firstTree, bool isCold, bool & 
                   (_curBlock->getFrequency() == (MAX_COLD_BLOCK_COUNT+1))) &&
                  !_parms) ||
                 isCold)
+{
                _inColdBlock = true;
+if (trace())
+{
+traceMsg(comp(), "HZ (2) Setting _inColdBlock true\n");
+}
+}
             }
          }
 
@@ -3402,6 +3416,10 @@ void TR_EscapeAnalysis::checkEscape(TR::TreeTop *firstTree, bool isCold, bool & 
          if (!_parms || !_inColdBlock)
             {
             _inColdBlock = false;
+if (trace())
+{
+traceMsg(comp(), "HZ (3) Setting _inColdBlock false\n");
+}
             if (!_parms)
                 _curBlock = node->getBlock();
             if ((_curBlock->isCold() ||
@@ -3409,7 +3427,13 @@ void TR_EscapeAnalysis::checkEscape(TR::TreeTop *firstTree, bool isCold, bool & 
                  //(_curBlock->getHotness(comp()->getFlowGraph()) == deadCold)) &&
                 (_curBlock->getFrequency() == (MAX_COLD_BLOCK_COUNT+1))) &&
                 !_parms)
+{
                 _inColdBlock = true;
+if (trace())
+{
+traceMsg(comp(), "HZ (4) Setting _inColdBlock true\n");
+}
+}
             }
          }
 
@@ -4484,6 +4508,10 @@ int32_t TR_EscapeAnalysis::sniffCall(TR::Node *callNode, TR::ResolvedMethodSymbo
    //////
    /////
    _inColdBlock = inColdBlock;
+if (trace())
+{
+traceMsg(comp(), "HZ (5) Setting _inColdBlock %d\n", _inColdBlock);
+}
    _parms = oldParms;
    --_sniffDepth;
 
