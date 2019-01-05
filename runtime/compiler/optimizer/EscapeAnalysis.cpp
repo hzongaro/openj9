@@ -1667,6 +1667,10 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
 bool TR_EscapeAnalysis::isEscapePointCold(Candidate *candidate, TR::Node *node)
    {
    static const char *disableColdEsc = feGetEnv("TR_DisableColdEscape");
+if (trace())
+{
+traceMsg(comp(), "HZ isEscapePointCold - _inColdBlock == %d; candidate->isInsideALoop() == %d; candidate->_block->getFrequency() == %d; _curBlock->getFrequency() == %d; candidate->_origKind == TR::New == %d\n", _inColdBlock, candidate->isInsideALoop(), candidate->_block->getFrequency(), _curBlock->getFrequency(), candidate->_origKind == TR::New);
+}
    if (!disableColdEsc &&
        (_inColdBlock ||
         (candidate->isInsideALoop() &&
@@ -2851,7 +2855,13 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
    {
    if (_curBlock->isOSRCodeBlock() ||
        _curBlock->isOSRCatchBlock())
+{
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold (1) - false\n");
+}
       return false;
+}
 
    if (isEscapePointCold(candidate, node))
       {
@@ -2866,6 +2876,10 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
 
          if (usesValueNumber(candidate, _valueNumberInfo->getValueNumber(resolvedChildAtTopLevel)))
             {
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold _curBlock == %p\n", _curBlock);
+}
             if (resolvedChildAtTopLevel->getOpCode().isLoadVarDirect() &&
                 (_curBlock != candidate->_block) &&
                 (_curBlock != comp()->getStartBlock()))
@@ -2873,6 +2887,10 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
                bool recognizedCatch = true;
                if (_curBlock->isCatchBlock())
                   {
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold _curBlock->isCatchBlock()\n");
+}
                   TR::Node *firstTree = _curBlock->getEntry()->getNextTreeTop()->getNode();
                   if (!firstTree->getOpCode().isStoreDirect() ||
                       !firstTree->getSymbol()->isAuto() ||
@@ -2905,6 +2923,10 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
             }
          }
 
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold (2.5) - canStoreToHeap == %d\n", canStoreToHeap);
+}
       if (canStoreToHeap)
          {
          candidate->setObjectIsReferenced();
@@ -2920,6 +2942,17 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
          return true;
          }
       }
+else
+{
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold (2.9) - false\n");
+}
+}
+if (trace())
+{
+traceMsg(comp(), "HZ checkIfEscapePointIsCold (3) - false\n");
+}
    return false;
    }
 
