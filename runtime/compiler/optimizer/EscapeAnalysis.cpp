@@ -1325,6 +1325,10 @@ void TR_EscapeAnalysis::findCandidates()
       if (node->getOpCodeValue() == TR::BBStart)
          {
          _curBlock = node->getBlock();
+if (trace())
+{
+traceMsg(comp(), "HZ (1) _curBlock %p from node %p\n", _curBlock, node);
+}
          continue;
          }
 
@@ -3379,7 +3383,13 @@ if (trace())
 traceMsg(comp(), "HZ (1) Setting _inColdBlock false\n");
 }
             if (!_parms)
+{
                _curBlock = node->getBlock();
+if (trace())
+{
+traceMsg(comp(), "HZ (2) _curBlock %p from node %p\n", _curBlock, node);
+}
+}
             if (((_curBlock->isCold() ||
                   _curBlock->isCatchBlock() ||
                   //(_curBlock->getHotness(comp()->getFlowGraph()) == deadCold)) &&
@@ -3421,7 +3431,14 @@ if (trace())
 traceMsg(comp(), "HZ (3) Setting _inColdBlock false\n");
 }
             if (!_parms)
+{
                 _curBlock = node->getBlock();
+if (trace())
+{
+traceMsg(comp(), "HZ (3) _curBlock %p from node %p\n", _curBlock, node);
+}
+}
+
 if (trace())
 {
 traceMsg(comp(), "HZ (3.1) _parms == %p; _curBlock == %p; _curBlock->isCold() == %d; _curBlock->isCatchBlock() == %d; _curBlock->getFrequency == %d, MAX_COLD_BLOCK_COUNT+1 == %d\n", _parms, _curBlock, _curBlock->isCold(), _curBlock->isCatchBlock(), _curBlock->getFrequency(), MAX_COLD_BLOCK_COUNT+1);
@@ -4672,7 +4689,13 @@ traceMsg(comp(), "HZ In fixupTrees\n");
       TR::Node *node = treeTop->getNode();
 
       if (node->getOpCodeValue() == TR::BBStart)
+{
          _curBlock = node->getBlock();
+if (trace())
+{
+traceMsg(comp(), "HZ (4) _curBlock %p from node %p\n", _curBlock, node);
+}
+}
       else if (!visited.contains(node))
          {
          if (fixupNode(node, NULL, visited))
@@ -5542,7 +5565,7 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
       comp()->fej9()->getObjectHeaderSizeInBytes() : TR::Compiler->om.contiguousArrayHeaderSizeInBytes();
    TR::DataType fieldType = TR::NoType; // or array element type
 if (trace())
-traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation\n");
 
    // If this is a store to the generic int shadow, it is zero-initializing the
    // object. Remember which words are being zero-initialized; only fields that
@@ -5561,6 +5584,8 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
 
       if (trace())
          traceMsg(comp(), "Remove explicit new initialization node [%p]\n", node);
+if (trace())
+traceMsg(comp(), "HZ Leaving fixupFieldAccessForNonContiguousAllocation\n");
       return true;
       }
 
@@ -5597,12 +5622,16 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
    //
    if (fieldType == TR::NoType)
       fieldType = TR::Address;
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - fieldOffset == %d; fieldType == %d\n", fieldOffset, fieldType);
 
    // Find or create the auto that is to replace this field reference
    //
    TR::SymbolReference *autoSymRef = NULL;
    for (i = candidate->_fields->size()-1; i >= 0; i--)
       {
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - candidate field offset %d == %d\n", i, candidate->_fields->element(i)._offset);
       if (candidate->_fields->element(i)._offset == fieldOffset)
          {
          autoSymRef = candidate->_fields->element(i)._symRef;
@@ -5610,6 +5639,8 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
          }
       }
 
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - i == %d; autoSymRef == %d\n", i, autoSymRef);
    //TR_ASSERT(i >= 0, "assertion failure");
 
    if (i >= 0)
@@ -5630,6 +5661,8 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
       int elem = candidate->_fields->element(i)._vectorElem;
       if (elem != 0)
          {
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - elem == %d\n", elem);
          fieldOffset = fieldOffset - TR::Symbol::convertTypeToSize(nodeType)*(elem-1);
          autoSymRef = NULL;
          for (i = candidate->_fields->size()-1; i >= 0; i--)
@@ -5640,6 +5673,8 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
                break;
                }
             }
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - i == %d\n", i);
          TR_ASSERT(i >= 0, "element 0 should exist\n");
 
          if (!newOpType.isVector())
@@ -5654,10 +5689,14 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
          autoSymRef->getSymbol()->setBehaveLikeNonTemp();
          candidate->_fields->element(i).rememberFieldSymRef(node, fieldOffset, candidate, this);
          candidate->_fields->element(i)._symRef = autoSymRef;
+if (trace())
+traceMsg(comp(), "HZ Creating temporary autoSymRef == %d\n", autoSymRef);
          }
 
       if (node->getOpCode().isLoadVar())
          {
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - isLoadVar\n", elem);
          node->removeAllChildren();
          conversionOp = TR::ILOpCode::getProperConversion(newOpType, nodeType, false /* !wantZeroExtension */);
 
@@ -5684,6 +5723,8 @@ traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation");
          }
       else
          {
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - !isLoadVar\n", elem);
          conversionOp = TR::ILOpCode::getProperConversion(nodeType, newOpType, false /* !wantZeroExtension */);
 
          TR::Node *valueChild;
