@@ -4123,20 +4123,42 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
       bool oldIgnoreRecursion = ignoreRecursion;
       int32_t bytecodeSize = sniffCall(node, methodSymbol, false, _inColdBlock, ignoreRecursion);
       int32_t originalBytecodeSize = bytecodeSize;
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (1) - originalBytecodeSize == %d\n", originalBytecodeSize);
+}
       for (candidate = _candidates.getFirst(); candidate; candidate = next)
          {
          bool refinedSniff = false;
          next = candidate->getNext();
          bytecodeSize = originalBytecodeSize;
          TR::SymbolReference *symRef = node->getSymbolReference();
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (2) - candidate == %p - isArgToCall(%d) == %d\n", candidate, _sniffDepth, candidate->isArgToCall(_sniffDepth));
+}
          if (candidate->isArgToCall(_sniffDepth))
             {
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3)\n");
+traceMsg(comp(), "HZ candidate->isNonThisArgToCall(%d) == %d\n", _sniffDepth, candidate->isNonThisArgToCall(_sniffDepth));
+traceMsg(comp(), "HZ node == %p; node->getOpCode()->isIndirect() == %d\n", node, node->getOpCode().isIndirect());
+if (thisVN > -1)
+{
+traceMsg(comp(), "HZ usesValueNumber(%p, %d) == %d\n", candidate, thisVN, usesValueNumber(candidate, thisVN));
+}
+}
             if (!candidate->isNonThisArgToCall(_sniffDepth) &&
                 node->getOpCode().isIndirect() &&
                 ((candidate->_node->getOpCodeValue() == TR::New)) &&
                 (thisVN > -1) &&
                 usesValueNumber(candidate, thisVN))
                {
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.1)\n");
+}
                TR_ResolvedMethod *owningMethod = symRef->getOwningMethod(comp());
                TR_ResolvedMethod *resolvedMethod = NULL;
                TR::MethodSymbol *sym = symRef->getSymbol()->castToMethodSymbol();
@@ -4216,11 +4238,19 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                   //printf("bytecodeSize = %d original bytecodeSize = %d method %s\n", bytecodeSize, originalBytecodeSize, resolvedMethod->signature());
                   }
                }
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.2)\n");
+}
 
             if ((bytecodeSize > 0) && (!node->getOpCode().isIndirect() || !node->isTheVirtualCallNodeForAGuardedInlinedCall()) &&
                 (!symRef->isUnresolved() ||
                  !refinedSniff) )
                {
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.3)\n");
+}
                // The sniff was successful.
                // If this is the top-level call site, remember that it
                // references the candidate. If we cannot inline the call site
@@ -4260,12 +4290,20 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                }
             else
                {
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.4)\n");
+}
                // If the escape point is cold, this will not
                // prevent us from stack allocating it. We will compensate
                // for this later
                //
                if (checkIfEscapePointIsCold(candidate, node))
                   continue;
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.5)\n");
+}
 
                // Force
                if(candidate->forceLocalAllocation())
@@ -4277,6 +4315,10 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                   }
                // The sniff could not be done. Remove this candidate.
                //
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (3.6)\n");
+}
 
               if (trace())
                   traceMsg(comp(), "   Fail [%p] because child of call [%p] to %s\n",
@@ -4290,6 +4332,11 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
          //  traceMsg(comp(), "NOT is arg to call at node %p\n", node);
          }
       }
+if (trace())
+{
+traceMsg(comp(), "HZ checkEscapeViaCall (4)\n");
+}
+
    }
 
 int32_t TR_EscapeAnalysis::sniffCall(TR::Node *callNode, TR::ResolvedMethodSymbol *methodSymbol, bool ignoreOpCode, bool isCold, bool & ignoreRecursion)
