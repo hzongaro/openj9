@@ -3422,6 +3422,10 @@ traceMsg(comp(), "HZ (3) Setting _inColdBlock false\n");
 }
             if (!_parms)
                 _curBlock = node->getBlock();
+if (trace())
+{
+traceMsg(comp(), "HZ (3.1) _parms == %p; _curBlock == %p; _curBlock->isCold() == %d; _curBlock->isCatchBlock() == %d; _curBlock->getFrequency == %d, MAX_COLD_BLOCK_COUNT+1 == %d\n", _parms, _curBlock, _curBlock->isCold(), _curBlock->isCatchBlock(), _curBlock->getFrequency(), MAX_COLD_BLOCK_COUNT+1);
+}
             if ((_curBlock->isCold() ||
                  _curBlock->isCatchBlock() ||
                  //(_curBlock->getHotness(comp()->getFlowGraph()) == deadCold)) &&

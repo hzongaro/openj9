@@ -136,6 +136,7 @@ class Candidate : public TR_Link<Candidate>
           static const char *forceContinguousAllocation = feGetEnv("TR_forceContinguousAllocation");
           if (forceContinguousAllocation)
              setMustBeContiguousAllocation();
+traceMsg(comp(), "HZ In Candidate::Candidate - _flags == %d; _nonThisArgToCallFlags == %d; _argToCallFlags == %d\n", _flags, _nonThisArgToCallFlags, _argToCallFlags);
          }
 
    TR::Compilation *          comp()                        { return _comp; }
