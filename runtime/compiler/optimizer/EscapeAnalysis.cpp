@@ -4687,6 +4687,10 @@ traceMsg(comp(), "HZ In fixupTrees\n");
       nextTree = treeTop->getNextTreeTop();
       _curTree = treeTop;
       TR::Node *node = treeTop->getNode();
+if (trace())
+{
+traceMsg(comp(), "HZ In fixupTrees for node == %p\n", node);
+}
 
       if (node->getOpCodeValue() == TR::BBStart)
 {
@@ -4706,6 +4710,10 @@ traceMsg(comp(), "HZ (4) _curBlock %p from node %p\n", _curBlock, node);
             }
          }
       }
+if (trace())
+{
+traceMsg(comp(), "HZ Leaving fixupTrees\n");
+}
    }
 
 static bool shouldRemoveTree(Candidate *candidate, TR::Block *block)
@@ -4740,7 +4748,7 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
 
 if (trace())
 {
-traceMsg(comp(), "HZ (1) - node == %p\n", node);
+traceMsg(comp(), "HZ fixupNode (1) - node == %p\n", node);
 }
    // Look for indirect loads or stores for fields of local allocations.
    //
@@ -4750,7 +4758,7 @@ traceMsg(comp(), "HZ (1) - node == %p\n", node);
       {
 if (trace())
 {
-traceMsg(comp(), "HZ (2)\n");
+traceMsg(comp(), "HZ fixupNode (2)\n");
 }
       if (node->getSymbol()->isArrayShadowSymbol() &&
           node->getFirstChild()->getOpCode().isArrayRef())
@@ -4763,7 +4771,7 @@ traceMsg(comp(), "HZ (2)\n");
          {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.1)\n");
+traceMsg(comp(), "HZ fixupNode (2.1)\n");
 }
          if (comp()->generateArraylets() && (candidate->_kind != TR::New))
             continue;
@@ -4772,7 +4780,7 @@ traceMsg(comp(), "HZ (2.1)\n");
 
 if (trace())
 {
-traceMsg(comp(), "HZ (2.11) - usesValueNumber(%p, %d) == %d\n", candidate, valueNumber, usesValueNum);
+traceMsg(comp(), "HZ fixupNode (2.11) - usesValueNumber(%p, %d) == %d\n", candidate, valueNumber, usesValueNum);
 }
          // Check if this is a class load for a finalizable test
          if (usesValueNum &&
@@ -4783,7 +4791,7 @@ traceMsg(comp(), "HZ (2.11) - usesValueNumber(%p, %d) == %d\n", candidate, value
             {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.2)\n");
+traceMsg(comp(), "HZ fixupNode (2.2)\n");
 }
             // This transformation is optional for candidates that can't be stack-allocated and contiguous allocations,
             // but required for discontiguous allocations because the class field will no longer exist
@@ -4832,13 +4840,13 @@ traceMsg(comp(), "HZ (2.2)\n");
 
 if (trace())
 {
-traceMsg(comp(), "HZ (2.29) usesValueNum == %d\n", usesValueNum);
+traceMsg(comp(), "HZ fixupNode (2.29) usesValueNum == %d\n", usesValueNum);
 }
          if (candidate->isLocalAllocation() && usesValueNum)
             {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.3)\n");
+traceMsg(comp(), "HZ fixupNode (2.3)\n");
 }
             int32_t fieldOffset = node->getSymbolReference()->getOffset();
             if (candidate->_origKind == TR::New)
@@ -4878,7 +4886,7 @@ traceMsg(comp(), "HZ (2.3)\n");
             bool fieldIsPresentInObject = true;
 if (trace())
 {
-traceMsg(comp(), "HZ (2.31) fieldOffset == %d; fieldIsPresentInObject == %d\n", fieldOffset, fieldIsPresentInObject);
+traceMsg(comp(), "HZ fixupNode (2.31) fieldOffset == %d; fieldIsPresentInObject == %d\n", fieldOffset, fieldIsPresentInObject);
 }
 
             int32_t j;
@@ -4886,20 +4894,20 @@ traceMsg(comp(), "HZ (2.31) fieldOffset == %d; fieldIsPresentInObject == %d\n", 
                {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.32) Looping over candidate fields:  j == %d\n", j);
+traceMsg(comp(), "HZ fixupNode (2.32) Looping over candidate fields:  j == %d\n", j);
 }
                if ((candidate->_fields->element(j)._offset == fieldOffset) &&
                    (!candidate->_fields->element(j).symRefIsForFieldInAllocatedClass(node->getSymbolReference())))
                   {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.321) Found candidate field:  j == %d\n", j);
+traceMsg(comp(), "HZ fixupNode (2.321) Found candidate field:  j == %d\n", j);
 }
                   if (mustRemoveDereferences)
                      {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.322) mustRemoveDereferences\n", j);
+traceMsg(comp(), "HZ fixupNode (2.322) mustRemoveDereferences\n", j);
 }
                      child->decReferenceCount();
                      child = TR::Node::create(child, TR::iconst, 0, 0);
@@ -4948,13 +4956,13 @@ traceMsg(comp(), "HZ (2.322) mustRemoveDereferences\n", j);
                {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.5) fieldIsPresentInObject", j);
+traceMsg(comp(), "HZ fixupNode (2.5) fieldIsPresentInObject", j);
 }
                if (candidate->escapesInColdBlock(_curBlock))
                   {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.8) - candidate->escapesInColdBlock\n");
+traceMsg(comp(), "HZ fixupNode (2.8) - candidate->escapesInColdBlock\n");
 }
                   // Uh, why are we re-calculating the fieldOffset?  Didn't we just do that above?
                   //
@@ -5014,7 +5022,7 @@ traceMsg(comp(), "HZ (2.8) - candidate->escapesInColdBlock\n");
                   {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.9) - !candidate->escapesInColdBlock\n");
+traceMsg(comp(), "HZ fixupNode (2.9) - !candidate->escapesInColdBlock\n");
 }
                   if (candidate->isContiguousAllocation())
                      removeThisNode |= fixupFieldAccessForContiguousAllocation(node, candidate);
@@ -5029,7 +5037,7 @@ traceMsg(comp(), "HZ (2.9) - !candidate->escapesInColdBlock\n");
 {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.99) fieldIsPresentInObject", j);
+traceMsg(comp(), "HZ fixupNode (2.99) fieldIsPresentInObject", j);
 }
                if (!candidate->isContiguousAllocation())
                   break; // Can only be one matching candidate
@@ -5039,7 +5047,7 @@ traceMsg(comp(), "HZ (2.99) fieldIsPresentInObject", j);
 
 if (trace())
 {
-traceMsg(comp(), "HZ (2.999) removeThisNode == %d\n", removeThisNode);
+traceMsg(comp(), "HZ fixupNode (2.999) removeThisNode == %d\n", removeThisNode);
 }
       if (removeThisNode)
          return true;
@@ -5047,7 +5055,7 @@ traceMsg(comp(), "HZ (2.999) removeThisNode == %d\n", removeThisNode);
 
 if (trace())
 {
-traceMsg(comp(), "HZ (3) After indirect if\n");
+traceMsg(comp(), "HZ fixupNode (3) After indirect if\n");
 }
    // Look for call to Throwable::fillInStackTrace that can be removed
    // (Note this has to be done before processing the children, since the
@@ -5055,6 +5063,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
    //
    if (node->getOpCode().isCall())
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.1) isCall\n");
+}
       calledMethod = node->getSymbol()->getResolvedMethodSymbol();
       if (calledMethod && (!calledMethod->getResolvedMethod()->virtualMethodIsOverridden() || !node->getOpCode().isIndirect()))
          {
@@ -5096,6 +5108,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
    //
    else if (node->getOpCodeValue() == TR::NULLCHK)
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.2) NULLCHK\n");
+}
       // If the reference child of the NULLCHK is a candidate, replace the
       // NULLCHK node by a treetop.
       //
@@ -5110,6 +5126,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
 
    else if (node->getOpCode().isArrayLength())
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.3) isArrayLength\n");
+}
       // If the child of the arraylength node is a candidate, replace the
       // arraylength node by the (constant) bound from the allocation node.
       //
@@ -5144,6 +5164,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
    else if (node->getOpCode().isCheckCast() ||
             node->getOpCodeValue() == TR::instanceof)
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.3) checkCast/instanceOf\n");
+}
       // If the first child is a candidate, decide if the test will succeed or
       // fail and change the node accordingly
       //
@@ -5206,6 +5230,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
 
    else if (node->getOpCodeValue() == TR::ifacmpeq || node->getOpCodeValue() == TR::ifacmpne)
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.4) ifacmpeq/ifacmpne\n");
+}
       // If one of the children is a candidate we may be able to determine if
       // the comparison will succeed or fail
       //
@@ -5257,6 +5285,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
    else if (comp()->useCompressedPointers() &&
             node->getOpCodeValue() == TR::compressedRefs)
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.5) compressed\n");
+}
       TR::Node *loadOrStore = node->getFirstChild();
       bool treeAsExpected = false;
       if (loadOrStore &&
@@ -5311,6 +5343,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
 
    if (synchronizedObject)
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (3.6) synchronizedObject\n");
+}
       valueNumber = _valueNumberInfo->getValueNumber(synchronizedObject);
       candidate = findCandidate(valueNumber);
       if (candidate &&
@@ -5399,13 +5435,23 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
       TR::Node *child = node->getChild(i);
       if (!visited.contains(child))
          {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (4) Recursive call to fixupNode for child == %p\n", child);
+}
          if (fixupNode(child, node, visited))
             removeThisNode = true;
          }
       }
 
    if (removeThisNode)
+{
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (5) returning - removeThisNode == true\n", child);
+}
       return true;
+}
 
    // If no local object is to be created remove all nodes that refer to the
    // original allocation.
@@ -5418,6 +5464,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
        !candidate->objectIsReferenced() &&
        !comp()->suppressAllocationInlining())
       {
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (6) removing trees that refer to candidate %p, node %p\n", candidate, node);
+}
       // Remove trees (other than the allocation tree itself) that
       // refer to the allocation node.
       //
@@ -5455,6 +5505,10 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
       visited.remove(node);
       }
 
+if (trace())
+{
+traceMsg(comp(), "HZ fixupNode (7) - returning removeThisNode == %d\n", removeThisNode);
+}
    return removeThisNode;
    }
 
@@ -5462,7 +5516,7 @@ traceMsg(comp(), "HZ (3) After indirect if\n");
 bool TR_EscapeAnalysis::fixupFieldAccessForContiguousAllocation(TR::Node *node, Candidate *candidate)
    {
 if (trace())
-traceMsg(comp(), "In fixupFieldAccessForContiguousAllocation");
+traceMsg(comp(), "In fixupFieldAccessForContiguousAllocation - candidate == %p; node == %p\n", candidate, node);
    // Ignore stores to the generic int shadow for nodes that are already
    // explicitly initialized. These are the initializing stores and are going to
    // be left as they are (except maybe to insert real field symbol references
@@ -5603,7 +5657,7 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
       comp()->fej9()->getObjectHeaderSizeInBytes() : TR::Compiler->om.contiguousArrayHeaderSizeInBytes();
    TR::DataType fieldType = TR::NoType; // or array element type
 if (trace())
-traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation\n");
+traceMsg(comp(), "In fixupFieldAccessForNonContiguousAllocation - candidate == %p; node == %p\n", candidate, node);
 
    // If this is a store to the generic int shadow, it is zero-initializing the
    // object. Remember which words are being zero-initialized; only fields that
