@@ -4740,7 +4740,7 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
 
 if (trace())
 {
-traceMsg(comp(), "HZ (1)\n");
+traceMsg(comp(), "HZ (1) - node == %p\n", node);
 }
    // Look for indirect loads or stores for fields of local allocations.
    //
@@ -4876,15 +4876,31 @@ traceMsg(comp(), "HZ (2.3)\n");
             //
             bool mustRemoveDereferences = !candidate->isContiguousAllocation();
             bool fieldIsPresentInObject = true;
+if (trace())
+{
+traceMsg(comp(), "HZ (2.31) fieldOffset == %d; fieldIsPresentInObject == %d\n", fieldOffset, fieldIsPresentInObject);
+}
 
             int32_t j;
             for (j = candidate->_fields->size()-1; j >= 0; j--)
                {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.32) Looping over candidate fields:  j == %d\n", j);
+}
                if ((candidate->_fields->element(j)._offset == fieldOffset) &&
                    (!candidate->_fields->element(j).symRefIsForFieldInAllocatedClass(node->getSymbolReference())))
                   {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.321) Found candidate field:  j == %d\n", j);
+}
                   if (mustRemoveDereferences)
                      {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.322) mustRemoveDereferences\n", j);
+}
                      child->decReferenceCount();
                      child = TR::Node::create(child, TR::iconst, 0, 0);
                      if (trace())
@@ -4930,8 +4946,16 @@ traceMsg(comp(), "HZ (2.3)\n");
 
             if (fieldIsPresentInObject)
                {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.5) fieldIsPresentInObject", j);
+}
                if (candidate->escapesInColdBlock(_curBlock))
                   {
+if (trace())
+{
+traceMsg(comp(), "HZ (2.8) - candidate->escapesInColdBlock\n");
+}
                   // Uh, why are we re-calculating the fieldOffset?  Didn't we just do that above?
                   //
                   int32_t fieldOffset = node->getSymbolReference()->getOffset();
@@ -4990,7 +5014,7 @@ traceMsg(comp(), "HZ (2.3)\n");
                   {
 if (trace())
 {
-traceMsg(comp(), "HZ (2.9)\n");
+traceMsg(comp(), "HZ (2.9) - !candidate->escapesInColdBlock\n");
 }
                   if (candidate->isContiguousAllocation())
                      removeThisNode |= fixupFieldAccessForContiguousAllocation(node, candidate);
@@ -5002,15 +5026,29 @@ traceMsg(comp(), "HZ (2.9)\n");
                   }
                }
             else   //There was a field outside the bound of an object
+{
+if (trace())
+{
+traceMsg(comp(), "HZ (2.99) fieldIsPresentInObject", j);
+}
                if (!candidate->isContiguousAllocation())
                   break; // Can only be one matching candidate
+}
             }
          }
 
+if (trace())
+{
+traceMsg(comp(), "HZ (2.999) removeThisNode == %d\n", removeThisNode);
+}
       if (removeThisNode)
          return true;
       }
 
+if (trace())
+{
+traceMsg(comp(), "HZ (3) After indirect if\n");
+}
    // Look for call to Throwable::fillInStackTrace that can be removed
    // (Note this has to be done before processing the children, since the
    // children will go away with the call.
@@ -5690,7 +5728,7 @@ traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - i == %d\n",
          candidate->_fields->element(i).rememberFieldSymRef(node, fieldOffset, candidate, this);
          candidate->_fields->element(i)._symRef = autoSymRef;
 if (trace())
-traceMsg(comp(), "HZ Creating temporary autoSymRef == %d\n", autoSymRef);
+traceMsg(comp(), "HZ Creating temporary autoSymRef == %d\n", autoSymRef->getReferenceNumber());
          }
 
       if (node->getOpCode().isLoadVar())
@@ -5699,6 +5737,9 @@ if (trace())
 traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - isLoadVar\n", elem);
          node->removeAllChildren();
          conversionOp = TR::ILOpCode::getProperConversion(newOpType, nodeType, false /* !wantZeroExtension */);
+
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - conversionOp == %d\n", conversionOp);
 
          if (conversionOp != TR::BadILOp)
             {
@@ -5714,6 +5755,8 @@ traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - isLoadVar\n
          if (autoSymRef->getSymbol()->getDataType().isVector() &&
              !node->getDataType().isVector())
             {
+if (trace())
+traceMsg(comp(), "HZ In fixupFieldAccessForNonContiguousAllocation - isVector\n");
             TR::Node::recreate(node, node->getDataType() == TR::VectorDouble ? TR::vdgetelem : TR::vigetelem);
             node->setAndIncChild(0, TR::Node::create(node, TR::vload, 0));
             node->setNumChildren(2);
