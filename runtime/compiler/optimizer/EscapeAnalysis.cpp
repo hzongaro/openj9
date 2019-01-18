@@ -7133,7 +7133,7 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
       ListIterator<TR::TreeTop> treesIt(info->getTrees());
       TR::Node *escapeNode;
       TR::TreeTop *escapeTree = treesIt.getFirst();
-      TR::Block *lastComparisonBlock = NULL, *lastStoreBlock = NULL;
+      bool generatedStoresForSymRefs = false;
       for (escapeNode = nodesIt.getFirst(); escapeNode != NULL; escapeNode = nodesIt.getNext(), escapeTree = treesIt.getNext())
         {
         bool skipStores = false;
@@ -7227,7 +7227,14 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
             }
         }
 
+// #define HZ_STORE_BEFORE_COLD_BLOCK
+
+#if defined(HZ_STORE_BEFORE_COLD_BLOCK)
       TR::Block *storeBlock = NULL;
+#else
+      TR::TreeTop *insertSymRefStoresAfter = coldBlock->getEntry();
+#endif
+
       ListIterator<TR::SymbolReference> symRefsIt(candidate->getSymRefs());
       TR::SymbolReference *symRef;
       for (symRef = symRefsIt.getFirst(); symRef; symRef = symRefsIt.getNext())
@@ -7236,18 +7243,20 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
         // Now create the compares (one for each node) and
         // stores if required
         //
-        if (NULL == storeBlock)
+        if (!generatedStoresForSymRefs)
           {
+#if defined(HZ_STORE_BEFORE_COLD_BLOCK)
           storeBlock =
                toBlock(cfg->addNode(TR::Block::createEmptyBlock(candidate->_node, comp(), coldBlock->getFrequency())));
           targetBlock = storeBlock;
-          lastComparisonBlock = storeBlock;
-          lastStoreBlock = storeBlock;
+#endif
+          generatedStoresForSymRefs = true;
 
           // Reload address of object on heap for this block
           tempLoad = TR::Node::createWithSymRef(candidate->_node, TR::aload, 0, heapSymRef);
           TR::TreeTop *tempLoadTree = TR::TreeTop::create(comp(), TR::Node::create(candidate->_node, TR::treetop, 1,
                                                                                    tempLoad), NULL, NULL);
+#if defined(HZ_STORE_BEFORE_COLD_BLOCK)
           storeBlock->append(tempLoadTree);
 
           cfg->addEdge(storeBlock, coldBlock);
@@ -7264,6 +7273,11 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
             {
             comp()->setStartTree(storeBlockEntryTree);
             }
+#else
+          tempLoadTree->join(insertSymRefStoresAfter->getNextTreeTop());
+          insertSymRefStoresAfter->join(tempLoadTree);
+          insertSymRefStoresAfter = tempLoadTree;
+#endif
           }
 
         // Check if a heap object has been created for this stack allocated
@@ -7276,9 +7290,14 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
         TR::Node *updateSymNode = TR::Node::createWithSymRef(candidate->_node, TR::astore, 1, chooseAddrNode, symRef);
         TR::TreeTop *updateSymTree = TR::TreeTop::create(comp(), updateSymNode, NULL, NULL);
 
-        updateSymNode->getFirstChild()->setHeapificationAlloc(true);
+        updateSymNode->setHeapificationStore(true);
 
+#if defined(HZ_STORE_BEFORE_COLD_BLOCK)
         storeBlock->append(updateSymTree);
+#else
+        updateSymTree->join(insertSymRefStoresAfter->getNextTreeTop());
+        insertSymRefStoresAfter->join(updateSymTree);
+#endif
 
         if (symRef->getSymbol()->holdsMonitoredObject())
           {
@@ -7307,8 +7326,13 @@ void TR_EscapeAnalysis::heapifyBeforeColdBlocks(Candidate *candidate)
          TR::CFGNode *predNode = (*pred)->getFrom();
          /* might be removed, keep reference to next object in list */
          pred++;
-         if (((predNode != lastComparisonBlock) &&
-              (predNode != lastStoreBlock)) ||
+         if (
+#if defined(HZ_STORE_BEFORE_COLD_BLOCK)
+             (predNode != storeBlock) ||
+#else
+             ((predNode != heapComparisonBlock) &&
+              (predNode != heapAllocationBlock)) ||
+#endif
              coldBlock->isCatchBlock())
             {
             TR::Block *predBlock = toBlock(predNode);
