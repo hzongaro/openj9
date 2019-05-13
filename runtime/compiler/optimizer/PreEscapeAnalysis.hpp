@@ -32,9 +32,21 @@ typedef TR::typed_allocator<TR::Node *, TR::Region &> NodeDequeAllocator;
 typedef std::deque<TR::Node *, NodeDequeAllocator> NodeDeque;
 
 /**
- * Pass over trees before Escape Analysis if Voluntary OSR is
- * enabled.
- * @see TR_EscapeAnalysis
+ * The \c TR_PreEscapeAnalysis optimization looks for calls to
+ * \c OSRInductionHelper and adds a fake \c prepareForOSR call
+ * that references all live auto symrefs and pending pushes.  Any object
+ * that ends up as a candidate for stack allocation that appears to be
+ * used by such a fake \c prepareForOSR call can be heapified at that
+ * point.
+ *
+ * During \ref TR_EscapeAnalysis (EA) itself, those references on
+ * \c prepareForOSR calls are marked as ignoreable for the purposes
+ * of determining whether an object can be stack allocated.
+ *
+ * After EA, the \ref TR_PostEscapeAnalysis pass will remove the fake
+ * calls to \c prepareForOSR.
+ *
+ * \see TR_EscapeAnalysis,TR_PostEscapeAnalysis
  */
 class TR_PreEscapeAnalysis : public TR::Optimization
    {
