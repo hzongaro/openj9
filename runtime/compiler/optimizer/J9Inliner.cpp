@@ -252,15 +252,20 @@ TR_CallSite* TR_CallSite::create(TR::TreeTop* callNodeTreeTop,
 
 static void computeNumLivePendingSlotsAndNestingDepth(TR::Optimizer* optimizer, TR_CallTarget* calltarget, TR_CallStack* callStack, int32_t& numLivePendingPushSlots, int32_t& nestingDepth)
    {
-   if (optimizer->comp()->getOption(TR_EnableOSR))
+   TR::Compilation *comp = optimizer->comp();
+
+   if (comp->getOption(TR_EnableOSR))
        {
        TR::Block *containingBlock = calltarget->_myCallSite->_callNodeTreeTop->getEnclosingBlock();
         int32_t weight = 1;
         nestingDepth = weight/10;
 
        TR::Node *callNode = calltarget->_myCallSite->_callNode;
-       TR_OSRMethodData *osrMethodData = optimizer->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(callNode->getByteCodeInfo().getCallerIndex(), callNode->getSymbolReference()->getOwningMethodSymbol(optimizer->comp()));
-       TR_Array<List<TR::SymbolReference> > *pendingPushSymRefs = callNode->getSymbolReference()->getOwningMethodSymbol(optimizer->comp())->getPendingPushSymRefs();
+       int32_t callerIndex = callNode->getByteCodeInfo().getCallerIndex();
+       TR::ResolvedMethodSymbol *caller = (callerIndex == -1) ? comp->getMethodSymbol()
+                                                              : comp->getInlinedResolvedMethodSymbol(callerIndex);
+       TR_OSRMethodData *osrMethodData = comp->getOSRCompilationData()->findOrCreateOSRMethodData(callerIndex, caller);
+       TR_Array<List<TR::SymbolReference> > *pendingPushSymRefs = caller->getPendingPushSymRefs();
        int32_t numPendingSlots = 0;
 
        if (pendingPushSymRefs)
