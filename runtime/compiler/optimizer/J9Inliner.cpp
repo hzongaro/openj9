@@ -252,15 +252,20 @@ TR_CallSite* TR_CallSite::create(TR::TreeTop* callNodeTreeTop,
 
 static void computeNumLivePendingSlotsAndNestingDepth(TR::Optimizer* optimizer, TR_CallTarget* calltarget, TR_CallStack* callStack, int32_t& numLivePendingPushSlots, int32_t& nestingDepth)
    {
-   if (optimizer->comp()->getOption(TR_EnableOSR))
+   TR::Compilation *comp = optimizer->comp();
+
+   if (comp->getOption(TR_EnableOSR))
        {
        TR::Block *containingBlock = calltarget->_myCallSite->_callNodeTreeTop->getEnclosingBlock();
         int32_t weight = 1;
         nestingDepth = weight/10;
 
        TR::Node *callNode = calltarget->_myCallSite->_callNode;
-       TR_OSRMethodData *osrMethodData = optimizer->comp()->getOSRCompilationData()->findOrCreateOSRMethodData(callNode->getByteCodeInfo().getCallerIndex(), callNode->getSymbolReference()->getOwningMethodSymbol(optimizer->comp()));
-       TR_Array<List<TR::SymbolReference> > *pendingPushSymRefs = callNode->getSymbolReference()->getOwningMethodSymbol(optimizer->comp())->getPendingPushSymRefs();
+       int32_t callerIndex = callNode->getByteCodeInfo().getCallerIndex();
+       TR::ResolvedMethodSymbol *caller = (callerIndex == -1) ? comp->getMethodSymbol()
+                                                              : comp->getInlinedResolvedMethodSymbol(callerIndex);
+       TR_OSRMethodData *osrMethodData = comp->getOSRCompilationData()->findOrCreateOSRMethodData(callerIndex, caller);
+       TR_Array<List<TR::SymbolReference> > *pendingPushSymRefs = caller->getPendingPushSymRefs();
        int32_t numPendingSlots = 0;
 
        if (pendingPushSymRefs)
@@ -323,10 +328,13 @@ static void populateOSRCallSiteRematTable(TR::Optimizer* optimizer, TR_CallTarge
       // A PPS of an auto/parm. Necessary to scan to check if auto/parm has not been modified
       // since it was anchored.
       //
+      int32_t callerIndex = child->getByteCodeInfo().getCallerIndex();
       if (child->getOpCode().hasSymbolReference()
           && (child->getSymbol()->isParm()
              || (child->getSymbol()->isAuto()
-                && child->getSymbolReference()->getCPIndex() < child->getSymbolReference()->getOwningMethodSymbol(comp)->getFirstJitTempIndex())))
+      && child->getSymbolReference()->getCPIndex() <
+               (( (callerIndex == -1) ? comp->getMethodSymbol()
+                                      : comp->getInlinedResolvedMethodSymbol(callerIndex) )->getFirstJitTempIndex()))))
          {
          if (comp->trace(OMR::inlining))
             traceMsg(comp, "callSiteRemat: found potential pending push #%d with store #%d\n", store->getSymbolReference()->getReferenceNumber(),
@@ -387,19 +395,25 @@ static void populateOSRCallSiteRematTable(TR::Optimizer* optimizer, TR_CallTarge
                storeTree->getNode()->getSymbolReference(),
                child->getSymbolReference());
             }
-         else if (node->getSymbol()->isParm()
-            || node->getSymbol()->isPendingPush()
-            || (node->getSymbol()->isAuto()
-               && node->getSymbolReference()->getCPIndex() < node->getSymbolReference()->getOwningMethodSymbol(comp)->getFirstJitTempIndex()))
+         else
             {
-            if (comp->trace(OMR::inlining))
-               traceMsg(comp, "callSiteRemat: adding pending push #%d with store #%d to remat table\n",
-                  storeTree->getNode()->getSymbolReference()->getReferenceNumber(),
-                  node->getSymbolReference()->getReferenceNumber());
+            int32_t callerIndex = node->getByteCodeInfo().getCallerIndex();
+            if (node->getSymbol()->isParm()
+               || node->getSymbol()->isPendingPush()
+               || (node->getSymbol()->isAuto()
+                  && node->getSymbolReference()->getCPIndex() <
+                        (( (callerIndex == -1) ? comp->getMethodSymbol()
+                                               : comp->getInlinedResolvedMethodSymbol(callerIndex) )->getFirstJitTempIndex())))
+               {
+               if (comp->trace(OMR::inlining))
+                  traceMsg(comp, "callSiteRemat: adding pending push #%d with store #%d to remat table\n",
+                     storeTree->getNode()->getSymbolReference()->getReferenceNumber(),
+                     node->getSymbolReference()->getReferenceNumber());
 
-            comp->setOSRCallSiteRemat(comp->getCurrentInlinedSiteIndex(),
-               storeTree->getNode()->getSymbolReference(),
-               node->getSymbolReference());
+               comp->setOSRCallSiteRemat(comp->getCurrentInlinedSiteIndex(),
+                  storeTree->getNode()->getSymbolReference(),
+                  node->getSymbolReference());
+               }
             }
          }
       }
