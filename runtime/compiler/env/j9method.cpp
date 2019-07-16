@@ -49,6 +49,7 @@
 #include "il/DataTypes.hpp"
 #include "il/Node.hpp"
 #include "il/Node_inlines.hpp"
+#include "infra/Flags.hpp"
 #include "infra/SimpleRegex.hpp"
 #include "optimizer/Inliner.hpp"
 #include "optimizer/PreExistence.hpp"
@@ -2335,6 +2336,40 @@ static bool supportsFastJNI(TR_FrontEnd *fe)
 #endif
    }
 
+   struct X
+      {
+      TR::RecognizedMethod _enum;
+      char _nameLen;
+      const char * _name;
+      int16_t _sigLen;
+      const char * _sig;
+      flags8_t _modifiers;
+      enum // flag bits
+         {
+         MustBeNative     = 0x01,
+         } ;
+   };
+
+   struct Y { const char * _class; X * _methods; };
+
+static bool printRecognizedMethods(Y *classes[], int32_t minRecognizedClassLength, int32_t maxRecognizedClassLength)
+   {
+   for (int len = minRecognizedClassLength; len <= maxRecognizedClassLength; len++)
+      {
+      for (Y * cl = classes[len - minRecognizedClassLength]; cl && cl->_class; cl++)
+         {
+         for (X *method = cl->_methods; method->_enum != TR::unknownMethod; method++)
+            {
+            if (method)
+               {
+               printf("%s.%s%s\n", cl->_class, method->_name, method->_sig);
+               }
+            }
+         }
+      }
+   return false;
+   }
+
 TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_FrontEnd * fe, TR_Memory * trMemory, TR_ResolvedMethod * owner, uint32_t vTableSlot)
    : TR_J9Method(fe, trMemory, aMethod), TR_ResolvedJ9MethodBase(fe, owner), _pendingPushSlots(-1)
    {
@@ -2386,8 +2421,10 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_FrontEnd * fe, TR_ResolvedMethod * o
 
 void TR_ResolvedJ9Method::construct()
    {
-#define x(a, b, c) a, sizeof(b) - 1, b, (int16_t)strlen(c), c
+#define xx(a, b, c, d) a, sizeof(b) - 1, b, (int16_t)strlen(c), c, d
+#define x(a, b, c) xx(a, b, c, 0)
 
+#if 0
    struct X
       {
       TR::RecognizedMethod _enum;
@@ -2395,7 +2432,13 @@ void TR_ResolvedJ9Method::construct()
       const char * _name;
       int16_t _sigLen;
       const char * _sig;
+      flags8_t _modifiers;
+      enum // flag bits
+         {
+         MustBeNative     = 0x01,
+         } ;
       };
+#endif
 
    static X ArrayListMethods[] =
       {
@@ -4174,7 +4217,7 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod},
       };
 
-   struct Y { const char * _class; X * _methods; };
+//   struct Y { const char * _class; X * _methods; };
 
    /* classXX where XX is the number of characters in the class name */
    static Y class13[] =
@@ -4512,6 +4555,9 @@ void TR_ResolvedJ9Method::construct()
       {
       class17
       };
+
+static const char * printRecognized = feGetEnv("TR_printRecognizedMethods");
+static bool b = printRecognized && printRecognizedMethods(recognizedClasses, minRecognizedClassLength, maxRecognizedClassLength);
 
    if (isMethodInValidLibrary())
       {
