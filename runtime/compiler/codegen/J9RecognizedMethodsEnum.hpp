@@ -124,7 +124,19 @@
    java_lang_ref_Reference_reachabilityFence,
    java_lang_ref_SoftReference_get,
    java_lang_Thread_currentThread,
+
+// Temporary definitions to allow for a transition from using a single
+// enum value that is the same for java_lang_System_arraycopy,
+// java_lang_System_arraycopy_Object and java_lang_System_arraycopy_Array
+// This is to simplify dealing with the dependency in OMR
+// in compiler/il/Aliases.cpp and compiler/compile/OMRSymbolReferenceTable.cpp
+
+#define J9_RECOGNIZED_METHOD_ARRAYCOPY_DUPLICATE_ENUM_VALUES
+#undef  J9_RECOGNIZED_METHOD_ARRAYCOPY_DISTINCT_ENUM_VALUES
+
    java_lang_System_arraycopy,
+   java_lang_System_arraycopy_Object = java_lang_System_arraycopy,
+   java_lang_System_arraycopy_Array = java_lang_System_arraycopy,
    java_lang_System_currentTimeMillis,
    java_lang_System_nanoTime,
    java_lang_System_hiresClockImpl,

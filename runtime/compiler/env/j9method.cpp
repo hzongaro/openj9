@@ -3172,7 +3172,8 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
    static X SystemMethods[] =
       {
-      {  TR::java_lang_System_arraycopy,      9, "arraycopy",    (int16_t)-1, "*"},
+      {x(TR::java_lang_System_arraycopy_Object,  "arraycopy",    "(Ljava/lang/Object;ILjava/lang/Object;II)V")},
+      {x(TR::java_lang_System_arraycopy_Array,   "arraycopy",    "([Ljava/lang/Object;I[Ljava/lang/Object;II)V")},
       {x(TR::java_lang_System_currentTimeMillis, "currentTimeMillis",   "()J")},
       {x(TR::java_lang_System_nanoTime,          "nanoTime",   "()J")},
       {x(TR::java_lang_System_hiresClockImpl,          "hiresClockImpl",   "()J")},
