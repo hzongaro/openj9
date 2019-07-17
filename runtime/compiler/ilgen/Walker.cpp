@@ -3819,7 +3819,8 @@ TR_J9ByteCodeIlGenerator::genInvokeStatic(int32_t cpIndex)
          {
          TR::RecognizedMethod recognizedMethod = callNode->getSymbol()->castToResolvedMethodSymbol()->getRecognizedMethod();
 
-         if (recognizedMethod != TR::java_lang_System_arraycopy &&
+         if (recognizedMethod != TR::java_lang_System_arraycopy_Object &&
+             recognizedMethod != TR::java_lang_System_arraycopy_Array &&
              recognizedMethod != TR::java_lang_String_compressedArrayCopy_BIBII &&
              recognizedMethod != TR::java_lang_String_compressedArrayCopy_BICII &&
              recognizedMethod != TR::java_lang_String_compressedArrayCopy_CIBII &&
