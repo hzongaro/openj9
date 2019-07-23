@@ -2648,9 +2648,9 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
    static X XPCryptoMethods[] =
       {
-      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_isAESSupportedByHardwareImpl, "isAESSupportedByHardwareImpl", "()Z"),
-      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_doAESInHardware, "doAESInHardware", "([BII[BI[IIZ)Z"),
-      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_expandAESKeyInHardware, "expandAESKeyInHardware", "([B[II)Z"),
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_isAESSupportedByHardwareImpl, "isAESSupportedByHardwareImpl", "()Z", AllPastJavaVer),
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_doAESInHardware, "doAESInHardware", "([BII[BI[IIZ)Z", AllPastJavaVer),
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_expandAESKeyInHardware, "expandAESKeyInHardware", "([B[II)Z", AllPastJavaVer),
       X(TR::unknownMethod)
       };
 
@@ -3993,9 +3993,9 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
    // Transactional Memory
    static X JavaUtilConcurrentConcurrentLinkedQueueMethods[] =
       {
-      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmOffer,     "tmOffer", "(Ljava/util/concurrent/ConcurrentLinkedQueue$Node;)I"),
-      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmPoll,      "tmPoll",  "()Ljava/lang/Object;"),
-      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z"),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmOffer,     "tmOffer", "(Ljava/util/concurrent/ConcurrentLinkedQueue$Node;)I", AllPastJavaVer),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmPoll,      "tmPoll",  "()Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z", AllPastJavaVer),
 
       X(TR::unknownMethod)
       };
@@ -4084,7 +4084,7 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
       X(TR::java_lang_invoke_ILGenMacros_dropFirstN, "dropFirstN", AllPastJavaVer),
       X(TR::java_lang_invoke_ILGenMacros_getField, "getField"),
       X(TR::java_lang_invoke_ILGenMacros_invokeExact_X,         "invokeExact_X",    "(Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer),
-      X(TR::java_lang_invoke_ILGenMacros_invokeExactAndFixup,   "invokeExact",      "(Ljava/lang/invoke/MethodHandle;I)I"),
+      X(TR::java_lang_invoke_ILGenMacros_invokeExactAndFixup,   "invokeExact",      "(Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer),
       X(TR::java_lang_invoke_ILGenMacros_isCustomThunk,         "isCustomThunk",    "()Z", AllPastJavaVer),
       X(TR::java_lang_invoke_ILGenMacros_isShareableThunk,      "isShareableThunk", "()Z", AllPastJavaVer),
       X(TR::java_lang_invoke_ILGenMacros_lastN, "lastN", AllPastJavaVer),
