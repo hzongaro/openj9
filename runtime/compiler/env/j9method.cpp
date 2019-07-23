@@ -4789,14 +4789,18 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
                      {
                      if (m->_nameLen == nameLen && (m->_sigLen == sigLen || m->_sigLen == (int16_t)-1) &&
                          !strncmp(m->_name, name, nameLen) &&
-                         (m->_sigLen == (int16_t)-1 || !strncmp(m->_sig,  sig,  sigLen)) &&
-                         (m->_nativeMaxVersion == AllPastJavaVer ||
-                          (m->_nativeMinVersion <= JAVA_SPEC_VERSION &&
-                           JAVA_SPEC_VERSION <= m->_nativeMaxVersion &&
-                           isNative())))
+                         (m->_sigLen == (int16_t)-1 || !strncmp(m->_sig,  sig,  sigLen)))
                         {
-                        setRecognizedMethodInfo(m->_enum);
-                        break;
+                        bool expectNative = m->_nativeMinVersion <= JAVA_SPEC_VERSION &&
+                           JAVA_SPEC_VERSION <= m->_nativeMaxVersion;
+
+                        TR_ASSERT_FATAL(expectNative == isNative(), "Java method %s.%s%s expectNative == %d (native version range == [%d,%d] - JAVA_SPEC_VERSION == %d); isNative() == %d\n", cl->_class, m->_name, m->_sig, expectNative, m->_nativeMinVersion, m->_nativeMaxVersion, JAVA_SPEC_VERSION, isNative());
+
+                        if (!expectNative || isNative())
+                           {
+                           setRecognizedMethodInfo(m->_enum);
+                           break;
+                           }
                         }
                      }
                   }
