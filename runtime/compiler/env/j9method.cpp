@@ -2369,8 +2369,6 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
       _jniTargetAddress = NULL;
       }
 
-#define x(a, b, c) X(a, b, c)
-
    struct X
       {
       typedef int8_t javaVersion_t;
@@ -2413,1626 +2411,1626 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
    static X ArrayListMethods[] =
       {
-      {x(TR::java_util_ArrayList_add,  "add",    "(Ljava/lang/Object;)Z")},
-      {x(TR::java_util_ArrayList_ensureCapacity,      "ensureCapacity",      "(I)V")},
-      {x(TR::java_util_ArrayList_get,      "get",      "(I)Ljava/lang/Object;")},
-      {x(TR::java_util_ArrayList_remove, "remove", "(I)Ljava/lang/Object;")},
-      {x(TR::java_util_ArrayList_set,    "set", "(ILjava/lang/Object;)Ljava/lang/Object;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_ArrayList_add,  "add",    "(Ljava/lang/Object;)Z"),
+      X(TR::java_util_ArrayList_ensureCapacity,      "ensureCapacity",      "(I)V"),
+      X(TR::java_util_ArrayList_get,      "get",      "(I)Ljava/lang/Object;"),
+      X(TR::java_util_ArrayList_remove, "remove", "(I)Ljava/lang/Object;"),
+      X(TR::java_util_ArrayList_set,    "set", "(ILjava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::unknownMethod)
       };
 
    static X ClassMethods[] =
       {
-      {x(TR::java_lang_Class_newInstancePrototype, "newInstancePrototype", "(Ljava/lang/Class;)Ljava/lang/Object;")},
-      //{x(TR::java_lang_Class_newInstanceImpl,      "newInstanceImpl",      "()Ljava/lang/Object;")},
-      {x(TR::java_lang_Class_newInstance,          "newInstance",          "()Ljava/lang/Object;")},
-      {X(TR::java_lang_Class_isArray,              "isArray",              "()Z", AllPastJavaVer)},
-      {X(TR::java_lang_Class_isPrimitive,          "isPrimitive",          "()Z", AllPastJavaVer)},
-      {X(TR::java_lang_Class_getComponentType,     "getComponentType",     "()Ljava/lang/Class;", AllPastJavaVer)},
-      {X(TR::java_lang_Class_getModifiersImpl,     "getModifiersImpl",     "()I", AllPastJavaVer)},
-      {X(TR::java_lang_Class_isAssignableFrom,     "isAssignableFrom",     "(Ljava/lang/Class;)Z", AllPastJavaVer)},
-      {X(TR::java_lang_Class_isInstance,           "isInstance",           "(Ljava/lang/Object;)Z", AllPastJavaVer)},
-      {x(TR::java_lang_Class_isInterface,          "isInterface",          "()Z")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Class_newInstancePrototype, "newInstancePrototype", "(Ljava/lang/Class;)Ljava/lang/Object;"),
+      //x(TR::java_lang_Class_newInstanceImpl,      "newInstanceImpl",      "()Ljava/lang/Object;"),
+      X(TR::java_lang_Class_newInstance,          "newInstance",          "()Ljava/lang/Object;"),
+      X(TR::java_lang_Class_isArray,              "isArray",              "()Z", AllPastJavaVer),
+      X(TR::java_lang_Class_isPrimitive,          "isPrimitive",          "()Z", AllPastJavaVer),
+      X(TR::java_lang_Class_getComponentType,     "getComponentType",     "()Ljava/lang/Class;", AllPastJavaVer),
+      X(TR::java_lang_Class_getModifiersImpl,     "getModifiersImpl",     "()I", AllPastJavaVer),
+      X(TR::java_lang_Class_isAssignableFrom,     "isAssignableFrom",     "(Ljava/lang/Class;)Z", AllPastJavaVer),
+      X(TR::java_lang_Class_isInstance,           "isInstance",           "(Ljava/lang/Object;)Z", AllPastJavaVer),
+      X(TR::java_lang_Class_isInterface,          "isInterface",          "()Z"),
+      X(TR::unknownMethod)
       };
 
    static X ClassLoaderMethods[] =
       {
-      {x(TR::java_lang_ClassLoader_callerClassLoader,     "callerClassLoader",    "()Ljava/lang/ClassLoader;")},
-      {x(TR::java_lang_ClassLoader_getCallerClassLoader,  "getCallerClassLoader", "()Ljava/lang/ClassLoader;")},
-      {X(TR::java_lang_ClassLoader_getStackClassLoader,   "getStackClassLoader",  "(I)Ljava/lang/ClassLoader;", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_ClassLoader_callerClassLoader,     "callerClassLoader",    "()Ljava/lang/ClassLoader;"),
+      X(TR::java_lang_ClassLoader_getCallerClassLoader,  "getCallerClassLoader", "()Ljava/lang/ClassLoader;"),
+      X(TR::java_lang_ClassLoader_getStackClassLoader,   "getStackClassLoader",  "(I)Ljava/lang/ClassLoader;", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X DoubleMethods[] =
       {
-      {X(TR::java_lang_Double_longBitsToDouble, "longBitsToDouble", "(J)D", AllPastJavaVer)},
-      {x(TR::java_lang_Double_doubleToLongBits, "doubleToLongBits", "(D)J")},
-      {X(TR::java_lang_Double_doubleToRawLongBits, "doubleToRawLongBits", "(D)J", AllPastJavaVer)},
-      {X(TR::java_lang_Double_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Double_longBitsToDouble, "longBitsToDouble", "(J)D", AllPastJavaVer),
+      X(TR::java_lang_Double_doubleToLongBits, "doubleToLongBits", "(D)J"),
+      X(TR::java_lang_Double_doubleToRawLongBits, "doubleToRawLongBits", "(D)J", AllPastJavaVer),
+      X(TR::java_lang_Double_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X FloatMethods[] =
       {
-      {X(TR::java_lang_Float_intBitsToFloat, "intBitsToFloat", "(I)F", AllPastJavaVer)},
-      {x(TR::java_lang_Float_floatToIntBits, "floatToIntBits", "(F)I")},
-      {X(TR::java_lang_Float_floatToRawIntBits, "floatToRawIntBits", "(F)I", AllPastJavaVer)},
-      {X(TR::java_lang_Float_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Float_intBitsToFloat, "intBitsToFloat", "(I)F", AllPastJavaVer),
+      X(TR::java_lang_Float_floatToIntBits, "floatToIntBits", "(F)I"),
+      X(TR::java_lang_Float_floatToRawIntBits, "floatToRawIntBits", "(F)I", AllPastJavaVer),
+      X(TR::java_lang_Float_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X HashtableMethods[] =
       {
-      {x(TR::java_util_Hashtable_get,        "get",           "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_Hashtable_put,        "put",           "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_Hashtable_clone,      "clone",         "()Ljava/lang/Object;")},
-      {x(TR::java_util_Hashtable_putAll,     "putAll",        "(Ljava/util/Map;)V")},
-      {x(TR::java_util_Hashtable_rehash,     "rehash",        "()V")},
-      {x(TR::java_util_Hashtable_remove,     "remove",        "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_Hashtable_contains,   "contains",      "(Ljava/lang/Object;)Z")},
-      {x(TR::java_util_Hashtable_getEntry,   "getEntry",      "(Ljava/lang/Object;)Ljava/util/HashMapEntry;")},
-      {x(TR::java_util_Hashtable_getEnumeration,   "getEnumeration",      "(I)Ljava/util/Enumeration;")},
-      {x(TR::java_util_Hashtable_elements,   "elements",      "()Ljava/util/Enumeration;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_Hashtable_get,        "get",           "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_Hashtable_put,        "put",           "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_Hashtable_clone,      "clone",         "()Ljava/lang/Object;"),
+      X(TR::java_util_Hashtable_putAll,     "putAll",        "(Ljava/util/Map;)V"),
+      X(TR::java_util_Hashtable_rehash,     "rehash",        "()V"),
+      X(TR::java_util_Hashtable_remove,     "remove",        "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_Hashtable_contains,   "contains",      "(Ljava/lang/Object;)Z"),
+      X(TR::java_util_Hashtable_getEntry,   "getEntry",      "(Ljava/lang/Object;)Ljava/util/HashMapEntry;"),
+      X(TR::java_util_Hashtable_getEnumeration,   "getEnumeration",      "(I)Ljava/util/Enumeration;"),
+      X(TR::java_util_Hashtable_elements,   "elements",      "()Ljava/util/Enumeration;"),
+      X(TR::unknownMethod)
       };
 
    static X TreeMapMethods[] =
       {
-      {x(TR::java_util_TreeMap_rbInsert,     "rbInsert",           "(Ljava/lang/Object;)Ljava/util/TreeMap$Entry;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_TreeMap_rbInsert,     "rbInsert",           "(Ljava/lang/Object;)Ljava/util/TreeMap$Entry;"),
+      X(TR::unknownMethod)
       };
 
    static X TreeMapUnboundedValueIteratorMethods[] =
       {
-      {x(TR::java_util_TreeMapUnboundedValueIterator_next,   "next",      "()Ljava/lang/Object;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_TreeMapUnboundedValueIterator_next,   "next",      "()Ljava/lang/Object;"),
+      X(TR::unknownMethod)
       };
 
    static X HashMapMethods[] =
       {
-      {x(TR::java_util_HashMap_rehash,                "rehash",           "()V")},
-      {x(TR::java_util_HashMap_analyzeMap,            "analyzeMap",           "()V")},
-      {x(TR::java_util_HashMap_calculateCapacity,     "calculateCapacity",           "(I)I")},
-      {x(TR::java_util_HashMap_findNullKeyEntry,      "findNullKeyEntry",           "()Ljava/util/HashMap$Entry;")},
-      {x(TR::java_util_HashMap_get,                   "get",           "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_HashMap_getNode,               "getNode",       "(ILjava/lang/Object;)Ljava/util/HashMap$Node;")},
-      {x(TR::java_util_HashMap_putImpl,               "putImpl",       "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_HashMap_findNonNullKeyEntry,   "findNonNullKeyEntry",         "(Ljava/lang/Object;II)Ljava/util/HashMap$Entry;")},
-      {x(TR::java_util_HashMap_resize,                "resize",         "()[Ljava/util/HashMap$Node;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_HashMap_rehash,                "rehash",           "()V"),
+      X(TR::java_util_HashMap_analyzeMap,            "analyzeMap",           "()V"),
+      X(TR::java_util_HashMap_calculateCapacity,     "calculateCapacity",           "(I)I"),
+      X(TR::java_util_HashMap_findNullKeyEntry,      "findNullKeyEntry",           "()Ljava/util/HashMap$Entry;"),
+      X(TR::java_util_HashMap_get,                   "get",           "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_HashMap_getNode,               "getNode",       "(ILjava/lang/Object;)Ljava/util/HashMap$Node;"),
+      X(TR::java_util_HashMap_putImpl,               "putImpl",       "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_HashMap_findNonNullKeyEntry,   "findNonNullKeyEntry",         "(Ljava/lang/Object;II)Ljava/util/HashMap$Entry;"),
+      X(TR::java_util_HashMap_resize,                "resize",         "()[Ljava/util/HashMap$Node;"),
+      X(TR::unknownMethod)
       };
 
    static X HashMapHashIteratorMethods[] =
       {
-      {x(TR::java_util_HashMapHashIterator_nextNode,   "nextNode",      "()Ljava/util/HashMap$Node;")},
-      {x(TR::java_util_HashMapHashIterator_init,       "<init>",            "(Ljava/util/HashMap;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_HashMapHashIterator_nextNode,   "nextNode",      "()Ljava/util/HashMap$Node;"),
+      X(TR::java_util_HashMapHashIterator_init,       "<init>",            "(Ljava/util/HashMap;)V"),
+      X(TR::unknownMethod)
       };
 
    static X HashtableHashEnumeratorMethods[] =
       {
-      {x(TR::java_util_HashtableHashEnumerator_nextElement,     "nextElement",     "()Ljava/lang/Object;")},
-      {x(TR::java_util_HashtableHashEnumerator_hasMoreElements, "hasMoreElements", "()Z")},
-      {  TR::unknownMethod}
+      X(TR::java_util_HashtableHashEnumerator_nextElement,     "nextElement",     "()Ljava/lang/Object;"),
+      X(TR::java_util_HashtableHashEnumerator_hasMoreElements, "hasMoreElements", "()Z"),
+      X(TR::unknownMethod)
       };
 
    static X WriterMethods[] =
       {
-      {x(TR::java_io_Writer_write_lStringII, "write", "(Ljava/lang/String;II)V")},
-      {x(TR::java_io_Writer_write_I,         "write", "(I)V")},
-      {  TR::unknownMethod}
+      X(TR::java_io_Writer_write_lStringII, "write", "(Ljava/lang/String;II)V"),
+      X(TR::java_io_Writer_write_I,         "write", "(I)V"),
+      X(TR::unknownMethod)
       };
 
    static X ByteArrayOutputStreamMethods[] =
       {
-      {x(TR::java_io_ByteArrayOutputStream_write, "write", "([BII)V")},
-      { TR::unknownMethod}
+      X(TR::java_io_ByteArrayOutputStream_write, "write", "([BII)V"),
+      X(TR::unknownMethod)
       };
 
    static X ObjectInputStream_BlockDataInputStreamMethods[] =
       {
-      {x(TR::java_io_ObjectInputStream_BlockDataInputStream_read, "read", "([BIIZ)I")},
-      {  TR::unknownMethod}
+      X(TR::java_io_ObjectInputStream_BlockDataInputStream_read, "read", "([BIIZ)I"),
+      X(TR::unknownMethod)
       };
 
    static X BitsMethods[] =
       {
-      {x(TR::java_nio_Bits_copyToByteArray,            "copyToByteArray",            "(JLjava/lang/Object;JJ)V")},
-      {x(TR::java_nio_Bits_copyFromByteArray,          "copyFromByteArray",          "(Ljava/lang/Object;JJJ)V")},
-      {x(TR::java_nio_Bits_keepAlive,                  "keepAlive",                  "(Ljava/lang/Object;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_nio_Bits_copyToByteArray,            "copyToByteArray",            "(JLjava/lang/Object;JJ)V"),
+      X(TR::java_nio_Bits_copyFromByteArray,          "copyFromByteArray",          "(Ljava/lang/Object;JJJ)V"),
+      X(TR::java_nio_Bits_keepAlive,                  "keepAlive",                  "(Ljava/lang/Object;)V"),
+      X(TR::unknownMethod)
       };
 
    static X HeapByteBufferMethods[] =
        {
-       {x(TR::java_nio_HeapByteBuffer_put,             "put",                        "(IB)Ljava/nio/ByteBuffer;")},
-       {  TR::unknownMethod}
+       X(TR::java_nio_HeapByteBuffer_put,             "put",                        "(IB)Ljava/nio/ByteBuffer;"),
+       X(TR::unknownMethod)
        };
 
    static X MathMethods[] =
       {
-      {x(TR::java_lang_Math_abs_I,            "abs",            "(I)I")},
-      {x(TR::java_lang_Math_abs_L,            "abs",            "(J)J")},
-      {x(TR::java_lang_Math_abs_F,            "abs",            "(F)F")},
-      {x(TR::java_lang_Math_abs_D,            "abs",            "(D)D")},
-      {x(TR::java_lang_Math_acos,             "acos",           "(D)D")},
-      {x(TR::java_lang_Math_asin,             "asin",           "(D)D")},
-      {x(TR::java_lang_Math_atan,             "atan",           "(D)D")},
-      {x(TR::java_lang_Math_atan2,            "atan2",          "(DD)D")},
-      {x(TR::java_lang_Math_cbrt,             "cbrt",           "(D)D")},
-      {x(TR::java_lang_Math_ceil,             "ceil",           "(D)D")},
-      {x(TR::java_lang_Math_copySign_F,       "copySign",       "(FF)F")},
-      {x(TR::java_lang_Math_copySign_D,       "copySign",       "(DD)D")},
-      {x(TR::java_lang_Math_cos,              "cos",            "(D)D")},
-      {x(TR::java_lang_Math_cosh,             "cosh",           "(D)D")},
-      {x(TR::java_lang_Math_exp,              "exp",            "(D)D")},
-      {x(TR::java_lang_Math_expm1,            "expm1",          "(D)D")},
-      {x(TR::java_lang_Math_floor,            "floor",          "(D)D")},
-      {x(TR::java_lang_Math_hypot,            "hypot",          "(DD)D")},
-      {x(TR::java_lang_Math_IEEEremainder,    "IEEEremainder",  "(DD)D")},
-      {x(TR::java_lang_Math_log,              "log",            "(D)D")},
-      {x(TR::java_lang_Math_log10,            "log10",          "(D)D")},
-      {x(TR::java_lang_Math_log1p,            "log1p",          "(D)D")},
-      {x(TR::java_lang_Math_max_I,            "max",            "(II)I")},
-      {x(TR::java_lang_Math_max_L,            "max",            "(JJ)J")},
-      {x(TR::java_lang_Math_max_F,            "max",            "(FF)F")},
-      {x(TR::java_lang_Math_max_D,            "max",            "(DD)D")},
-      {x(TR::java_lang_Math_min_I,            "min",            "(II)I")},
-      {x(TR::java_lang_Math_min_L,            "min",            "(JJ)J")},
-      {x(TR::java_lang_Math_min_F,            "min",            "(FF)F")},
-      {x(TR::java_lang_Math_min_D,            "min",            "(DD)D")},
-      {x(TR::java_lang_Math_nextAfter_F,      "nextAfter",      "(FD)F")},
-      {x(TR::java_lang_Math_nextAfter_D,      "nextAfter",      "(DD)D")},
-      {x(TR::java_lang_Math_pow,              "pow",            "(DD)D")},
-      {x(TR::java_lang_Math_rint,             "rint",           "(D)D")},
-      {x(TR::java_lang_Math_round_F,          "round",          "(F)I")},
-      {x(TR::java_lang_Math_round_D,          "round",          "(D)J")},
-      {x(TR::java_lang_Math_scalb_F,          "scalb",          "(FI)F")},
-      {x(TR::java_lang_Math_scalb_D,          "scalb",          "(DI)F")},
-      {x(TR::java_lang_Math_sin,              "sin",            "(D)D")},
-      {x(TR::java_lang_Math_sinh,             "sinh",           "(D)D")},
-      {x(TR::java_lang_Math_sqrt,             "sqrt",           "(D)D")},
-      {x(TR::java_lang_Math_tan,              "tan",            "(D)D")},
-      {x(TR::java_lang_Math_tanh,             "tanh",           "(D)D")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Math_abs_I,            "abs",            "(I)I"),
+      X(TR::java_lang_Math_abs_L,            "abs",            "(J)J"),
+      X(TR::java_lang_Math_abs_F,            "abs",            "(F)F"),
+      X(TR::java_lang_Math_abs_D,            "abs",            "(D)D"),
+      X(TR::java_lang_Math_acos,             "acos",           "(D)D"),
+      X(TR::java_lang_Math_asin,             "asin",           "(D)D"),
+      X(TR::java_lang_Math_atan,             "atan",           "(D)D"),
+      X(TR::java_lang_Math_atan2,            "atan2",          "(DD)D"),
+      X(TR::java_lang_Math_cbrt,             "cbrt",           "(D)D"),
+      X(TR::java_lang_Math_ceil,             "ceil",           "(D)D"),
+      X(TR::java_lang_Math_copySign_F,       "copySign",       "(FF)F"),
+      X(TR::java_lang_Math_copySign_D,       "copySign",       "(DD)D"),
+      X(TR::java_lang_Math_cos,              "cos",            "(D)D"),
+      X(TR::java_lang_Math_cosh,             "cosh",           "(D)D"),
+      X(TR::java_lang_Math_exp,              "exp",            "(D)D"),
+      X(TR::java_lang_Math_expm1,            "expm1",          "(D)D"),
+      X(TR::java_lang_Math_floor,            "floor",          "(D)D"),
+      X(TR::java_lang_Math_hypot,            "hypot",          "(DD)D"),
+      X(TR::java_lang_Math_IEEEremainder,    "IEEEremainder",  "(DD)D"),
+      X(TR::java_lang_Math_log,              "log",            "(D)D"),
+      X(TR::java_lang_Math_log10,            "log10",          "(D)D"),
+      X(TR::java_lang_Math_log1p,            "log1p",          "(D)D"),
+      X(TR::java_lang_Math_max_I,            "max",            "(II)I"),
+      X(TR::java_lang_Math_max_L,            "max",            "(JJ)J"),
+      X(TR::java_lang_Math_max_F,            "max",            "(FF)F"),
+      X(TR::java_lang_Math_max_D,            "max",            "(DD)D"),
+      X(TR::java_lang_Math_min_I,            "min",            "(II)I"),
+      X(TR::java_lang_Math_min_L,            "min",            "(JJ)J"),
+      X(TR::java_lang_Math_min_F,            "min",            "(FF)F"),
+      X(TR::java_lang_Math_min_D,            "min",            "(DD)D"),
+      X(TR::java_lang_Math_nextAfter_F,      "nextAfter",      "(FD)F"),
+      X(TR::java_lang_Math_nextAfter_D,      "nextAfter",      "(DD)D"),
+      X(TR::java_lang_Math_pow,              "pow",            "(DD)D"),
+      X(TR::java_lang_Math_rint,             "rint",           "(D)D"),
+      X(TR::java_lang_Math_round_F,          "round",          "(F)I"),
+      X(TR::java_lang_Math_round_D,          "round",          "(D)J"),
+      X(TR::java_lang_Math_scalb_F,          "scalb",          "(FI)F"),
+      X(TR::java_lang_Math_scalb_D,          "scalb",          "(DI)F"),
+      X(TR::java_lang_Math_sin,              "sin",            "(D)D"),
+      X(TR::java_lang_Math_sinh,             "sinh",           "(D)D"),
+      X(TR::java_lang_Math_sqrt,             "sqrt",           "(D)D"),
+      X(TR::java_lang_Math_tan,              "tan",            "(D)D"),
+      X(TR::java_lang_Math_tanh,             "tanh",           "(D)D"),
+      X(TR::unknownMethod)
       };
 
    static X StrictMathMethods[] =
       {
-      {X(TR::java_lang_StrictMath_acos,       "acos",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_asin,       "asin",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_atan,       "atan",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_atan2,      "atan2",           "(DD)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_cbrt,       "cbrt",            "(D)D", AllPastJavaVer, 8)},
-      {x(TR::java_lang_StrictMath_ceil,       "ceil",            "(D)D")},
-      {x(TR::java_lang_StrictMath_copySign_F, "copySign",       "(FF)F")},
-      {x(TR::java_lang_StrictMath_copySign_D, "copySign",       "(DD)D")},
-      {X(TR::java_lang_StrictMath_cos,        "cos",             "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_cosh,       "cosh",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_exp,        "exp",             "(D)D", AllPastJavaVer, 8)},
-      {X(TR::java_lang_StrictMath_expm1,      "expm1",           "(D)D", AllPastJavaVer)},
-      {x(TR::java_lang_StrictMath_floor,      "floor",           "(D)D")},
-      {X(TR::java_lang_StrictMath_hypot,      "hypot",           "(DD)D", AllPastJavaVer, 8)},
-      {X(TR::java_lang_StrictMath_IEEEremainder,"IEEEremainder", "(DD)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_log,        "log",             "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_log10,      "log10",           "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_log1p,      "log1p",           "(D)D", AllPastJavaVer)},
-      {x(TR::java_lang_StrictMath_max_F,      "max",            "(FF)F")},
-      {x(TR::java_lang_StrictMath_max_D,      "max",            "(DD)D")},
-      {x(TR::java_lang_StrictMath_min_F,      "min",            "(FF)F")},
-      {x(TR::java_lang_StrictMath_min_D,      "min",            "(DD)D")},
-      {x(TR::java_lang_StrictMath_nextAfter_F,"nextAfter",      "(FD)F")},
-      {x(TR::java_lang_StrictMath_nextAfter_D,"nextAfter",      "(DD)D")},
-      {X(TR::java_lang_StrictMath_pow,        "pow",             "(DD)D", AllPastJavaVer, 8)},
-      {x(TR::java_lang_StrictMath_rint,       "rint",            "(D)D")},
-      {x(TR::java_lang_StrictMath_round_F,    "round",          "(F)I")},
-      {x(TR::java_lang_StrictMath_round_D,    "round",          "(D)J")},
-      {x(TR::java_lang_StrictMath_scalb_F,    "scalb",          "(FI)F")},
-      {x(TR::java_lang_StrictMath_scalb_D,    "scalb",          "(DI)F")},
-      {X(TR::java_lang_StrictMath_sin,        "sin",             "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_sinh,       "sinh",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_sqrt,       "sqrt",            "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_tan,        "tan",             "(D)D", AllPastJavaVer)},
-      {X(TR::java_lang_StrictMath_tanh,       "tanh",            "(D)D", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_StrictMath_acos,       "acos",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_asin,       "asin",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_atan,       "atan",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_atan2,      "atan2",           "(DD)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_cbrt,       "cbrt",            "(D)D", AllPastJavaVer, 8),
+      X(TR::java_lang_StrictMath_ceil,       "ceil",            "(D)D"),
+      X(TR::java_lang_StrictMath_copySign_F, "copySign",       "(FF)F"),
+      X(TR::java_lang_StrictMath_copySign_D, "copySign",       "(DD)D"),
+      X(TR::java_lang_StrictMath_cos,        "cos",             "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_cosh,       "cosh",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_exp,        "exp",             "(D)D", AllPastJavaVer, 8),
+      X(TR::java_lang_StrictMath_expm1,      "expm1",           "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_floor,      "floor",           "(D)D"),
+      X(TR::java_lang_StrictMath_hypot,      "hypot",           "(DD)D", AllPastJavaVer, 8),
+      X(TR::java_lang_StrictMath_IEEEremainder,"IEEEremainder", "(DD)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_log,        "log",             "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_log10,      "log10",           "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_log1p,      "log1p",           "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_max_F,      "max",            "(FF)F"),
+      X(TR::java_lang_StrictMath_max_D,      "max",            "(DD)D"),
+      X(TR::java_lang_StrictMath_min_F,      "min",            "(FF)F"),
+      X(TR::java_lang_StrictMath_min_D,      "min",            "(DD)D"),
+      X(TR::java_lang_StrictMath_nextAfter_F,"nextAfter",      "(FD)F"),
+      X(TR::java_lang_StrictMath_nextAfter_D,"nextAfter",      "(DD)D"),
+      X(TR::java_lang_StrictMath_pow,        "pow",             "(DD)D", AllPastJavaVer, 8),
+      X(TR::java_lang_StrictMath_rint,       "rint",            "(D)D"),
+      X(TR::java_lang_StrictMath_round_F,    "round",          "(F)I"),
+      X(TR::java_lang_StrictMath_round_D,    "round",          "(D)J"),
+      X(TR::java_lang_StrictMath_scalb_F,    "scalb",          "(FI)F"),
+      X(TR::java_lang_StrictMath_scalb_D,    "scalb",          "(DI)F"),
+      X(TR::java_lang_StrictMath_sin,        "sin",             "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_sinh,       "sinh",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_sqrt,       "sqrt",            "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_tan,        "tan",             "(D)D", AllPastJavaVer),
+      X(TR::java_lang_StrictMath_tanh,       "tanh",            "(D)D", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X ObjectMethods[] =
       {
-      {X(TR::java_lang_Object_init, "<init>")},
-      {X(TR::java_lang_Object_getClass,             "getClass",             "()Ljava/lang/Class;", AllPastJavaVer)},
-      {x(TR::java_lang_Object_clone,                "clone",                "()Ljava/lang/Object;")},
-      {x(TR::java_lang_Object_newInstancePrototype, "newInstancePrototype", "(Ljava/lang/Class;)Ljava/lang/Object;")},
-      {x(TR::java_lang_Object_getAddressAsPrimitive, "getAddressAsPrimitive", "(Ljava/lang/Object;)I")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Object_init, "<init>"),
+      X(TR::java_lang_Object_getClass,             "getClass",             "()Ljava/lang/Class;", AllPastJavaVer),
+      X(TR::java_lang_Object_clone,                "clone",                "()Ljava/lang/Object;"),
+      X(TR::java_lang_Object_newInstancePrototype, "newInstancePrototype", "(Ljava/lang/Class;)Ljava/lang/Object;"),
+      X(TR::java_lang_Object_getAddressAsPrimitive, "getAddressAsPrimitive", "(Ljava/lang/Object;)I"),
+      X(TR::unknownMethod)
       };
 
    static X XPCryptoMethods[] =
       {
-      {x(TR::com_ibm_jit_crypto_JITAESCryptInHardware_isAESSupportedByHardwareImpl, "isAESSupportedByHardwareImpl", "()Z")},
-      {x(TR::com_ibm_jit_crypto_JITAESCryptInHardware_doAESInHardware, "doAESInHardware", "([BII[BI[IIZ)Z")},
-      {x(TR::com_ibm_jit_crypto_JITAESCryptInHardware_expandAESKeyInHardware, "expandAESKeyInHardware", "([B[II)Z")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_isAESSupportedByHardwareImpl, "isAESSupportedByHardwareImpl", "()Z"),
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_doAESInHardware, "doAESInHardware", "([BII[BI[IIZ)Z"),
+      X(TR::com_ibm_jit_crypto_JITAESCryptInHardware_expandAESKeyInHardware, "expandAESKeyInHardware", "([B[II)Z"),
+      X(TR::unknownMethod)
       };
 
    static X ZCryptoMethods[] =
       {
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_km,   "z_km",   "([BII[BI[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmc,  "z_kmc",  "([BII[BI[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmo,  "z_kmo",  "([BII[BI[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmf,  "z_kmf",  "([BII[BI[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmctr,"z_kmctr","([BII[BI[BI[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmgcm,"z_kmgcm","([BII[BI[BII[BI)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_km,   "z_km",   "([BII[BI[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmc,  "z_kmc",  "([BII[BI[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmo,  "z_kmo",  "([BII[BI[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmf,  "z_kmf",  "([BII[BI[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmctr,"z_kmctr","([BII[BI[BI[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareCrypt_z_kmgcm,"z_kmgcm","([BII[BI[BII[BI)V"),
+      X(TR::unknownMethod)
       };
 
    static X CryptoDigestMethods[] =
       {
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_kimd,"z_kimd", "([BII[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_klmd,"z_klmd", "([BII[BI)V")},
-      {x(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_kmac,"z_kmac", "([BII[BI)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_kimd,"z_kimd", "([BII[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_klmd,"z_klmd", "([BII[BI)V"),
+      X(TR::com_ibm_jit_crypto_JITFullHardwareDigest_z_kmac,"z_kmac", "([BII[BI)V"),
+      X(TR::unknownMethod)
       };
 
    static X CryptoECC224Methods[] =
       {
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_multiply     ,"multiply", "([I[I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_divideHelper ,"divideHelper", "([I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_shiftRight   ,"shiftRight", "([I[II)V")},
-      {x(TR::com_ibm_crypto_provider_P224PrimeField_mod          ,"mod", "([I[I)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_crypto_provider_P224PrimeField_multiply     ,"multiply", "([I[I[I)V"),
+      X(TR::com_ibm_crypto_provider_P224PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P224PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P224PrimeField_divideHelper ,"divideHelper", "([I[I)V"),
+      X(TR::com_ibm_crypto_provider_P224PrimeField_shiftRight   ,"shiftRight", "([I[II)V"),
+      X(TR::com_ibm_crypto_provider_P224PrimeField_mod          ,"mod", "([I[I)V"),
+      X(TR::unknownMethod)
       };
 
    static X CryptoECC256Methods[] =
       {
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_multiply     ,"multiply", "([I[I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_divideHelper ,"divideHelper", "([I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_shiftRight   ,"shiftRight", "([I[II)V")},
-      {x(TR::com_ibm_crypto_provider_P256PrimeField_mod          ,"mod", "([I[I)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_crypto_provider_P256PrimeField_multiply     ,"multiply", "([I[I[I)V"),
+      X(TR::com_ibm_crypto_provider_P256PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P256PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P256PrimeField_divideHelper ,"divideHelper", "([I[I)V"),
+      X(TR::com_ibm_crypto_provider_P256PrimeField_shiftRight   ,"shiftRight", "([I[II)V"),
+      X(TR::com_ibm_crypto_provider_P256PrimeField_mod          ,"mod", "([I[I)V"),
+      X(TR::unknownMethod)
       };
 
    static X CryptoECC384Methods[] =
       {
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_multiply     ,"multiply", "([I[I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z")},
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_divideHelper ,"divideHelper", "([I[I)V")},
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_shiftRight   ,"shiftRight", "([I[II)V")},
-      {x(TR::com_ibm_crypto_provider_P384PrimeField_mod          ,"mod", "([I[I)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_crypto_provider_P384PrimeField_multiply     ,"multiply", "([I[I[I)V"),
+      X(TR::com_ibm_crypto_provider_P384PrimeField_addNoMod     ,"addNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P384PrimeField_subNoMod     ,"subNoMod", "([I[I[I)Z"),
+      X(TR::com_ibm_crypto_provider_P384PrimeField_divideHelper ,"divideHelper", "([I[I)V"),
+      X(TR::com_ibm_crypto_provider_P384PrimeField_shiftRight   ,"shiftRight", "([I[II)V"),
+      X(TR::com_ibm_crypto_provider_P384PrimeField_mod          ,"mod", "([I[I)V"),
+      X(TR::unknownMethod)
       };
 
    static X CryptoAESMethods[] =
      {
-     {x(TR::com_ibm_crypto_provider_AEScryptInHardware_cbcDecrypt ,"cbcDecrypt", "([BI[BII[B[I)V")},
-     {x(TR::com_ibm_crypto_provider_AEScryptInHardware_cbcEncrypt ,"cbcEncrypt", "([BI[BII[B[I)V")},
-     {  TR::unknownMethod}
+     X(TR::com_ibm_crypto_provider_AEScryptInHardware_cbcDecrypt ,"cbcDecrypt", "([BI[BII[B[I)V"),
+     X(TR::com_ibm_crypto_provider_AEScryptInHardware_cbcEncrypt ,"cbcEncrypt", "([BI[BII[B[I)V"),
+     X(TR::unknownMethod)
      };
 
    static X DataAccessByteArrayMarshallerMethods[] =
    {
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShort , "writeShort" , "(S[BIZ)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShort_, "writeShort_", "(S[BIZ)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShort , "writeShort" , "(S[BIZ)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShort_, "writeShort_", "(S[BIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShortLength , "writeShort" , "(S[BIZI)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShortLength_, "writeShort_", "(S[BIZI)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShortLength , "writeShort" , "(S[BIZI)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeShortLength_, "writeShort_", "(S[BIZI)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeInt , "writeInt" , "(I[BIZ)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeInt_, "writeInt_", "(I[BIZ)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeInt , "writeInt" , "(I[BIZ)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeInt_, "writeInt_", "(I[BIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeIntLength , "writeInt" , "(I[BIZI)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeIntLength_, "writeInt_", "(I[BIZI)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeIntLength , "writeInt" , "(I[BIZI)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeIntLength_, "writeInt_", "(I[BIZI)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLong , "writeLong" , "(J[BIZ)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLong_, "writeLong_", "(J[BIZ)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLong , "writeLong" , "(J[BIZ)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLong_, "writeLong_", "(J[BIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLongLength , "writeLong" , "(J[BIZI)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLongLength_, "writeLong_", "(J[BIZI)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLongLength , "writeLong" , "(J[BIZI)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeLongLength_, "writeLong_", "(J[BIZI)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeFloat , "writeFloat" , "(F[BIZ)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeFloat_, "writeFloat_", "(F[BIZ)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeFloat , "writeFloat" , "(F[BIZ)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeFloat_, "writeFloat_", "(F[BIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeDouble , "writeDouble" , "(D[BIZ)V")},
-      {x(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeDouble_, "writeDouble_", "(D[BIZ)V")},
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeDouble , "writeDouble" , "(D[BIZ)V"),
+      X(TR::com_ibm_dataaccess_ByteArrayMarshaller_writeDouble_, "writeDouble_", "(D[BIZ)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
    };
 
    static X DataAccessByteArrayUnmarshallerMethods[] =
    {
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShort , "readShort" , "([BIZ)S")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShort_, "readShort_", "([BIZ)S")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShort , "readShort" , "([BIZ)S"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShort_, "readShort_", "([BIZ)S"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShortLength , "readShort" , "([BIZIZ)S")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShortLength_, "readShort_", "([BIZIZ)S")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShortLength , "readShort" , "([BIZIZ)S"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readShortLength_, "readShort_", "([BIZIZ)S"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readInt , "readInt" , "([BIZ)I")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readInt_, "readInt_", "([BIZ)I")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readInt , "readInt" , "([BIZ)I"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readInt_, "readInt_", "([BIZ)I"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readIntLength , "readInt" , "([BIZIZ)I")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readIntLength_, "readInt_", "([BIZIZ)I")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readIntLength , "readInt" , "([BIZIZ)I"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readIntLength_, "readInt_", "([BIZIZ)I"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLong , "readLong" , "([BIZ)J")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLong_, "readLong_", "([BIZ)J")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLong , "readLong" , "([BIZ)J"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLong_, "readLong_", "([BIZ)J"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLongLength , "readLong" , "([BIZIZ)J")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLongLength_, "readLong_", "([BIZIZ)J")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLongLength , "readLong" , "([BIZIZ)J"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readLongLength_, "readLong_", "([BIZIZ)J"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readFloat , "readFloat" , "([BIZ)F")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readFloat_, "readFloat_", "([BIZ)F")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readFloat , "readFloat" , "([BIZ)F"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readFloat_, "readFloat_", "([BIZ)F"),
 
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readDouble , "readDouble" , "([BIZ)D")},
-      {x(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readDouble_, "readDouble_", "([BIZ)D")},
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readDouble , "readDouble" , "([BIZ)D"),
+      X(TR::com_ibm_dataaccess_ByteArrayUnmarshaller_readDouble_, "readDouble_", "([BIZ)D"),
 
-      { TR::unknownMethod}
+      X(TR::unknownMethod)
    };
 
    static X DataAccessByteArrayUtilMethods[] =
       {
-       {x(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZeros,           "trailingZeros"        ,    "([B)I")},
-       {x(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosByteAtATime,"trailingZerosByteAtATime", "([BII)I")},
-       {x(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosQuadWordAtATime_,   "trailingZerosQuadWordAtATime_", "([BI)I")},
-       { TR::unknownMethod}
+       X(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZeros,           "trailingZeros"        ,    "([B)I"),
+       X(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosByteAtATime,"trailingZerosByteAtATime", "([BII)I"),
+       X(TR::com_ibm_dataaccess_ByteArrayUtils_trailingZerosQuadWordAtATime_,   "trailingZerosQuadWordAtATime_", "([BI)I"),
+       X(TR::unknownMethod)
       };
 
    static X DataAccessDecimalDataMethods[] =
    {
-      {x(TR::com_ibm_dataaccess_DecimalData_JITIntrinsicsEnabled, "JITIntrinsicsEnabled", "()Z")},
+      X(TR::com_ibm_dataaccess_DecimalData_JITIntrinsicsEnabled, "JITIntrinsicsEnabled", "()Z"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger , "convertPackedDecimalToInteger" , "([BIIZ)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_, "convertPackedDecimalToInteger_", "([BIIZ)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_ByteBuffer , "convertPackedDecimalToInteger" , "(Ljava/nio/ByteBuffer;IIZ)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_ByteBuffer_, "convertPackedDecimalToInteger_", "(Ljava/nio/ByteBuffer;IIZJII)I")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger , "convertPackedDecimalToInteger" , "([BIIZ)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_, "convertPackedDecimalToInteger_", "([BIIZ)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_ByteBuffer , "convertPackedDecimalToInteger" , "(Ljava/nio/ByteBuffer;IIZ)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_ByteBuffer_, "convertPackedDecimalToInteger_", "(Ljava/nio/ByteBuffer;IIZJII)I"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal, "convertIntegerToPackedDecimal" , "(I[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_,"convertIntegerToPackedDecimal_", "(I[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_ByteBuffer , "convertIntegerToPackedDecimal" , "(ILjava/nio/ByteBuffer;IIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_ByteBuffer_, "convertIntegerToPackedDecimal_", "(ILjava/nio/ByteBuffer;IIZJII)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal, "convertIntegerToPackedDecimal" , "(I[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_,"convertIntegerToPackedDecimal_", "(I[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_ByteBuffer , "convertIntegerToPackedDecimal" , "(ILjava/nio/ByteBuffer;IIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToPackedDecimal_ByteBuffer_, "convertIntegerToPackedDecimal_", "(ILjava/nio/ByteBuffer;IIZJII)V"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong , "convertPackedDecimalToLong" , "([BIIZ)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_, "convertPackedDecimalToLong_", "([BIIZ)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_ByteBuffer , "convertPackedDecimalToLong" , "(Ljava/nio/ByteBuffer;IIZ)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_ByteBuffer_, "convertPackedDecimalToLong_", "(Ljava/nio/ByteBuffer;IIZJII)J")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong , "convertPackedDecimalToLong" , "([BIIZ)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_, "convertPackedDecimalToLong_", "([BIIZ)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_ByteBuffer , "convertPackedDecimalToLong" , "(Ljava/nio/ByteBuffer;IIZ)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_ByteBuffer_, "convertPackedDecimalToLong_", "(Ljava/nio/ByteBuffer;IIZJII)J"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal , "convertLongToPackedDecimal" , "(J[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_, "convertLongToPackedDecimal_", "(J[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_ByteBuffer , "convertLongToPackedDecimal" , "(JLjava/nio/ByteBuffer;IIZ)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_ByteBuffer_, "convertLongToPackedDecimal_", "(JLjava/nio/ByteBuffer;IIZJII)V")},
-
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToInteger , "convertExternalDecimalToInteger" , "([BIIZI)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToInteger_, "convertExternalDecimalToInteger_", "([BIIZI)I")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToExternalDecimal , "convertIntegerToExternalDecimal" , "(I[BIIZI)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToExternalDecimal_, "convertIntegerToExternalDecimal_", "(I[BIIZI)V")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToLong , "convertExternalDecimalToLong" , "([BIIZI)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToLong_, "convertExternalDecimalToLong_", "([BIIZI)J")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToExternalDecimal , "convertLongToExternalDecimal" , "(J[BIIZI)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToExternalDecimal_, "convertLongToExternalDecimal_", "(J[BIIZI)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal , "convertLongToPackedDecimal" , "(J[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_, "convertLongToPackedDecimal_", "(J[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_ByteBuffer , "convertLongToPackedDecimal" , "(JLjava/nio/ByteBuffer;IIZ)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToPackedDecimal_ByteBuffer_, "convertLongToPackedDecimal_", "(JLjava/nio/ByteBuffer;IIZJII)V"),
 
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToExternalDecimal , "convertPackedDecimalToExternalDecimal" , "([BI[BIII)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToExternalDecimal_, "convertPackedDecimalToExternalDecimal_", "([BI[BIII)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToInteger , "convertExternalDecimalToInteger" , "([BIIZI)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToInteger_, "convertExternalDecimalToInteger_", "([BIIZI)I"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToPackedDecimal , "convertExternalDecimalToPackedDecimal" , "([BI[BIII)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToPackedDecimal_, "convertExternalDecimalToPackedDecimal_", "([BI[BIII)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToExternalDecimal , "convertIntegerToExternalDecimal" , "(I[BIIZI)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToExternalDecimal_, "convertIntegerToExternalDecimal_", "(I[BIIZI)V"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToUnicodeDecimal , "convertPackedDecimalToUnicodeDecimal" , "([BI[CIII)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToUnicodeDecimal_, "convertPackedDecimalToUnicodeDecimal_", "([BI[CIII)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToLong , "convertExternalDecimalToLong" , "([BIIZI)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToLong_, "convertExternalDecimalToLong_", "([BIIZI)J"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToPackedDecimal , "convertUnicodeDecimalToPackedDecimal" , "([CI[BIII)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToPackedDecimal_, "convertUnicodeDecimalToPackedDecimal_", "([CI[BIII)V")},
-
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToBigInteger, "convertPackedDecimalToBigInteger", "([BIIZ)Ljava/math/BigInteger;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToPackedDecimal, "convertBigIntegerToPackedDecimal", "(Ljava/math/BigInteger;[BIIZ)V")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToBigDecimal, "convertPackedDecimalToBigDecimal", "([BIIIZ)Ljava/math/BigDecimal;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToPackedDecimal, "convertBigDecimalToPackedDecimal", "(Ljava/math/BigDecimal;[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToExternalDecimal , "convertLongToExternalDecimal" , "(J[BIIZI)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToExternalDecimal_, "convertLongToExternalDecimal_", "(J[BIIZI)V"),
 
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToBigInteger, "convertExternalDecimalToBigInteger", "([BIIZI)Ljava/math/BigInteger;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToExternalDecimal, "convertBigIntegerToExternalDecimal", "(Ljava/math/BigInteger;[BIIZI)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToExternalDecimal , "convertPackedDecimalToExternalDecimal" , "([BI[BIII)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToExternalDecimal_, "convertPackedDecimalToExternalDecimal_", "([BI[BIII)V"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToBigDecimal, "convertExternalDecimalToBigDecimal", "([BIIIZI)Ljava/math/BigDecimal;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToExternalDecimal, "convertBigDecimalToExternalDecimal", "(Ljava/math/BigDecimal;[BIIZI)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToPackedDecimal , "convertExternalDecimalToPackedDecimal" , "([BI[BIII)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToPackedDecimal_, "convertExternalDecimalToPackedDecimal_", "([BI[BIII)V"),
 
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToUnicodeDecimal , "convertPackedDecimalToUnicodeDecimal" , "([BI[CIII)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToUnicodeDecimal_, "convertPackedDecimalToUnicodeDecimal_", "([BI[CIII)V"),
 
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToInteger, "convertUnicodeDecimalToInteger", "([CIIZI)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertIntegerToUnicodeDecimal, "convertIntegerToUnicodeDecimal", "(I[CIIZI)V")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToLong, "convertUnicodeDecimalToLong", "([CIIZI)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertLongToUnicodeDecimal, "convertLongToUnicodeDecimal", "(J[CIIZI)V")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToBigInteger, "convertUnicodeDecimalToBigInteger", "([CIIZI)Ljava/math/BigInteger;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToUnicodeDecimal, "convertBigIntegerToUnicodeDecimal", "(Ljava/math/BigInteger;[CIIZI)V")},
-
-      {x(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToBigDecimal, "convertUnicodeDecimalToBigDecimal", "([CIIIZI)Ljava/math/BigDecimal;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToUnicodeDecimal, "convertBigDecimalToUnicodeDecimal", "(Ljava/math/BigDecimal;[CIIZI)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToPackedDecimal , "convertUnicodeDecimalToPackedDecimal" , "([CI[BIII)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToPackedDecimal_, "convertUnicodeDecimalToPackedDecimal_", "([CI[BIII)V"),
 
 
-      {x(TR::com_ibm_dataaccess_DecimalData_translateArray, "translateArray",   "([BII[BI[BII)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToBigInteger, "convertPackedDecimalToBigInteger", "([BIIZ)Ljava/math/BigInteger;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToPackedDecimal, "convertBigIntegerToPackedDecimal", "(Ljava/math/BigInteger;[BIIZ)V"),
+
+      X(TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToBigDecimal, "convertPackedDecimalToBigDecimal", "([BIIIZ)Ljava/math/BigDecimal;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToPackedDecimal, "convertBigDecimalToPackedDecimal", "(Ljava/math/BigDecimal;[BIIZ)V"),
 
 
-      {x(TR::com_ibm_dataaccess_DecimalData_DFPFacilityAvailable,  "DFPFacilityAvailable",        "()Z")},
-      {x(TR::com_ibm_dataaccess_DecimalData_DFPUseDFP,             "DFPUseDFP",             "()Z")},
-      {x(TR::com_ibm_dataaccess_DecimalData_DFPConvertPackedToDFP, "DFPConvertPackedToDFP", "(Ljava/math/BigDecimal;JIZ)Z")},
-      {x(TR::com_ibm_dataaccess_DecimalData_DFPConvertDFPToPacked, "DFPConvertDFPToPacked", "(JZ)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_createZeroBigDecimal, "createZeroBigDecimal", "()Ljava/math/BigDecimal;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_getlaside, "getlaside", "(Ljava/math/BigDecimal;)J")},
-      {x(TR::com_ibm_dataaccess_DecimalData_setlaside, "setlaside", "(Ljava/math/BigDecimal;J)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_getflags, "getflags", "(Ljava/math/BigDecimal;)I")},
-      {x(TR::com_ibm_dataaccess_DecimalData_setflags, "setflags", "(Ljava/math/BigDecimal;I)V")},
-      {x(TR::com_ibm_dataaccess_DecimalData_slowSignedPackedToBigDecimal, "slowSignedPackedToBigDecimal", "([BIIIZ)Ljava/math/BigDecimal;")},
-      {x(TR::com_ibm_dataaccess_DecimalData_slowBigDecimalToSignedPacked, "slowBigDecimalToSignedPacked", "(Ljava/math/BigDecimal;[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToBigInteger, "convertExternalDecimalToBigInteger", "([BIIZI)Ljava/math/BigInteger;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToExternalDecimal, "convertBigIntegerToExternalDecimal", "(Ljava/math/BigInteger;[BIIZI)V"),
 
-      {TR::unknownMethod}
+      X(TR::com_ibm_dataaccess_DecimalData_convertExternalDecimalToBigDecimal, "convertExternalDecimalToBigDecimal", "([BIIIZI)Ljava/math/BigDecimal;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToExternalDecimal, "convertBigDecimalToExternalDecimal", "(Ljava/math/BigDecimal;[BIIZI)V"),
+
+
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToInteger, "convertUnicodeDecimalToInteger", "([CIIZI)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertIntegerToUnicodeDecimal, "convertIntegerToUnicodeDecimal", "(I[CIIZI)V"),
+
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToLong, "convertUnicodeDecimalToLong", "([CIIZI)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertLongToUnicodeDecimal, "convertLongToUnicodeDecimal", "(J[CIIZI)V"),
+
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToBigInteger, "convertUnicodeDecimalToBigInteger", "([CIIZI)Ljava/math/BigInteger;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigIntegerToUnicodeDecimal, "convertBigIntegerToUnicodeDecimal", "(Ljava/math/BigInteger;[CIIZI)V"),
+
+      X(TR::com_ibm_dataaccess_DecimalData_convertUnicodeDecimalToBigDecimal, "convertUnicodeDecimalToBigDecimal", "([CIIIZI)Ljava/math/BigDecimal;"),
+      X(TR::com_ibm_dataaccess_DecimalData_convertBigDecimalToUnicodeDecimal, "convertBigDecimalToUnicodeDecimal", "(Ljava/math/BigDecimal;[CIIZI)V"),
+
+
+      X(TR::com_ibm_dataaccess_DecimalData_translateArray, "translateArray",   "([BII[BI[BII)V"),
+
+
+      X(TR::com_ibm_dataaccess_DecimalData_DFPFacilityAvailable,  "DFPFacilityAvailable",        "()Z"),
+      X(TR::com_ibm_dataaccess_DecimalData_DFPUseDFP,             "DFPUseDFP",             "()Z"),
+      X(TR::com_ibm_dataaccess_DecimalData_DFPConvertPackedToDFP, "DFPConvertPackedToDFP", "(Ljava/math/BigDecimal;JIZ)Z"),
+      X(TR::com_ibm_dataaccess_DecimalData_DFPConvertDFPToPacked, "DFPConvertDFPToPacked", "(JZ)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_createZeroBigDecimal, "createZeroBigDecimal", "()Ljava/math/BigDecimal;"),
+      X(TR::com_ibm_dataaccess_DecimalData_getlaside, "getlaside", "(Ljava/math/BigDecimal;)J"),
+      X(TR::com_ibm_dataaccess_DecimalData_setlaside, "setlaside", "(Ljava/math/BigDecimal;J)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_getflags, "getflags", "(Ljava/math/BigDecimal;)I"),
+      X(TR::com_ibm_dataaccess_DecimalData_setflags, "setflags", "(Ljava/math/BigDecimal;I)V"),
+      X(TR::com_ibm_dataaccess_DecimalData_slowSignedPackedToBigDecimal, "slowSignedPackedToBigDecimal", "([BIIIZ)Ljava/math/BigDecimal;"),
+      X(TR::com_ibm_dataaccess_DecimalData_slowBigDecimalToSignedPacked, "slowBigDecimalToSignedPacked", "(Ljava/math/BigDecimal;[BIIZ)V"),
+
+      X(TR::unknownMethod)
    };
 
    static X DataAccessPackedDecimalMethods[] =
    {
-      {x(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal , "checkPackedDecimal" , "([BIIZZ)I")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_, "checkPackedDecimal_", "([BIIZZ)I")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal , "checkPackedDecimal" , "([BIIZZ)I"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_, "checkPackedDecimal_", "([BIIZZ)I"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_2bInlined1, "checkPackedDecimal", "([BII)I"  )},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_2bInlined2, "checkPackedDecimal", "([BIIZ)I" )},
+      X(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_2bInlined1, "checkPackedDecimal", "([BII)I"  ),
+      X(TR::com_ibm_dataaccess_PackedDecimal_checkPackedDecimal_2bInlined2, "checkPackedDecimal", "([BIIZ)I" ),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_addPackedDecimal , "addPackedDecimal" , "([BII[BII[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_addPackedDecimal_, "addPackedDecimal_", "([BII[BII[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_addPackedDecimal , "addPackedDecimal" , "([BII[BII[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_addPackedDecimal_, "addPackedDecimal_", "([BII[BII[BIIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_subtractPackedDecimal , "subtractPackedDecimal" , "([BII[BII[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_subtractPackedDecimal_, "subtractPackedDecimal_", "([BII[BII[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_subtractPackedDecimal , "subtractPackedDecimal" , "([BII[BII[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_subtractPackedDecimal_, "subtractPackedDecimal_", "([BII[BII[BIIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_multiplyPackedDecimal , "multiplyPackedDecimal" , "([BII[BII[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_multiplyPackedDecimal_, "multiplyPackedDecimal_", "([BII[BII[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_multiplyPackedDecimal , "multiplyPackedDecimal" , "([BII[BII[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_multiplyPackedDecimal_, "multiplyPackedDecimal_", "([BII[BII[BIIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_dividePackedDecimal , "dividePackedDecimal" , "([BII[BII[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_dividePackedDecimal_, "dividePackedDecimal_", "([BII[BII[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_dividePackedDecimal , "dividePackedDecimal" , "([BII[BII[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_dividePackedDecimal_, "dividePackedDecimal_", "([BII[BII[BIIZ)V"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_remainderPackedDecimal , "remainderPackedDecimal" , "([BII[BII[BIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_remainderPackedDecimal_, "remainderPackedDecimal_", "([BII[BII[BIIZ)V")},
-
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_lessThanPackedDecimal , "lessThanPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_lessThanPackedDecimal_, "lessThanPackedDecimal_", "([BII[BII)Z")},
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_lessThanOrEqualsPackedDecimal , "lessThanOrEqualsPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_lessThanOrEqualsPackedDecimal_, "lessThanOrEqualsPackedDecimal_", "([BII[BII)Z")},
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_greaterThanPackedDecimal , "greaterThanPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_greaterThanPackedDecimal_, "greaterThanPackedDecimal_", "([BII[BII)Z")},
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_greaterThanOrEqualsPackedDecimal , "greaterThanOrEqualsPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_greaterThanOrEqualsPackedDecimal_, "greaterThanOrEqualsPackedDecimal_", "([BII[BII)Z")},
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_equalsPackedDecimal , "equalsPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_equalsPackedDecimal_, "equalsPackedDecimal_", "([BII[BII)Z")},
-
-      {x(TR::com_ibm_dataaccess_PackedDecimal_notEqualsPackedDecimal , "notEqualsPackedDecimal" , "([BII[BII)Z")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_notEqualsPackedDecimal_, "notEqualsPackedDecimal_", "([BII[BII)Z")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_remainderPackedDecimal , "remainderPackedDecimal" , "([BII[BII[BIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_remainderPackedDecimal_, "remainderPackedDecimal_", "([BII[BII[BIIZ)V"),
 
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_shiftLeftPackedDecimal , "shiftLeftPackedDecimal" , "([BII[BIIIZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_shiftLeftPackedDecimal_, "shiftLeftPackedDecimal_", "([BII[BIIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_lessThanPackedDecimal , "lessThanPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_lessThanPackedDecimal_, "lessThanPackedDecimal_", "([BII[BII)Z"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_shiftRightPackedDecimal , "shiftRightPackedDecimal" , "([BII[BIIIZZ)V")},
-      {x(TR::com_ibm_dataaccess_PackedDecimal_shiftRightPackedDecimal_, "shiftRightPackedDecimal_", "([BII[BIIIZZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_lessThanOrEqualsPackedDecimal , "lessThanOrEqualsPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_lessThanOrEqualsPackedDecimal_, "lessThanOrEqualsPackedDecimal_", "([BII[BII)Z"),
 
-      {x(TR::com_ibm_dataaccess_PackedDecimal_movePackedDecimal, "movePackedDecimal" , "([BII[BIIZ)V")},
+      X(TR::com_ibm_dataaccess_PackedDecimal_greaterThanPackedDecimal , "greaterThanPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_greaterThanPackedDecimal_, "greaterThanPackedDecimal_", "([BII[BII)Z"),
 
-      {TR::unknownMethod}
+      X(TR::com_ibm_dataaccess_PackedDecimal_greaterThanOrEqualsPackedDecimal , "greaterThanOrEqualsPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_greaterThanOrEqualsPackedDecimal_, "greaterThanOrEqualsPackedDecimal_", "([BII[BII)Z"),
+
+      X(TR::com_ibm_dataaccess_PackedDecimal_equalsPackedDecimal , "equalsPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_equalsPackedDecimal_, "equalsPackedDecimal_", "([BII[BII)Z"),
+
+      X(TR::com_ibm_dataaccess_PackedDecimal_notEqualsPackedDecimal , "notEqualsPackedDecimal" , "([BII[BII)Z"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_notEqualsPackedDecimal_, "notEqualsPackedDecimal_", "([BII[BII)Z"),
+
+
+      X(TR::com_ibm_dataaccess_PackedDecimal_shiftLeftPackedDecimal , "shiftLeftPackedDecimal" , "([BII[BIIIZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_shiftLeftPackedDecimal_, "shiftLeftPackedDecimal_", "([BII[BIIIZ)V"),
+
+      X(TR::com_ibm_dataaccess_PackedDecimal_shiftRightPackedDecimal , "shiftRightPackedDecimal" , "([BII[BIIIZZ)V"),
+      X(TR::com_ibm_dataaccess_PackedDecimal_shiftRightPackedDecimal_, "shiftRightPackedDecimal_", "([BII[BIIIZZ)V"),
+
+      X(TR::com_ibm_dataaccess_PackedDecimal_movePackedDecimal, "movePackedDecimal" , "([BII[BIIZ)V"),
+
+      X(TR::unknownMethod)
    };
 
    static X BigDecimalMethods[] =
       {
-      {x(TR::java_math_BigDecimal_add,                   "add",                   "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_subtract,              "subtract",              "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_multiply,              "multiply",              "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_clone,                 "clone",                 "()Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_possibleClone,         "possibleClone",          "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_valueOf,               "valueOf",               "(JI)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_valueOf_J,             "valueOf",               "(J)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_setScale,              "setScale",              "(II)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_slowSubMulAddAddMulSetScale, "slowSMAAMSS",     "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_slowSubMulSetScale,    "slowSMSS",              "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_slowAddAddMulSetScale, "slowAAMSS",             "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_slowMulSetScale,       "slowMSS",               "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_subMulAddAddMulSetScale, "SMAAMSS",             "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;IIII)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_subMulSetScale,        "SMSS",                  "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;II)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_addAddMulSetScale,     "AAMSS",                 "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;III)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_mulSetScale,           "MSS",                   "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;I)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_longString1,           "longString1",           "(II)Ljava/lang/String;")},
-      {x(TR::java_math_BigDecimal_longString1C,          "longString1",           "(II[C)V")},
-      {x(TR::java_math_BigDecimal_longString2,           "longString2",           "(III)Ljava/lang/String;")},
-      {x(TR::java_math_BigDecimal_toString,              "toString",              "()Ljava/lang/String;")},
-      {x(TR::java_math_BigDecimal_doToString,            "doToString",            "()Ljava/lang/String;")},
-      {x(TR::java_math_BigDecimal_noLLOverflowAdd,       "noLLOverflowAdd",       "(JJJ)Z")},
-      {x(TR::java_math_BigDecimal_noLLOverflowMul,       "noLLOverflowMul",       "(JJJ)Z")},
-      {x(TR::java_math_BigDecimal_longAdd,               "longAdd",               "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;Z)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_slAdd,                  "slAdd",                 "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;Z)Ljava/math/BigDecimal;")},
-      {x(TR::java_math_BigDecimal_getLaside,             "getLaside",             "()J")},
-      {x(TR::java_math_BigDecimal_DFPPerformHysteresis,  "DFPPerformHysteresis",  "()Z")},
-      {x(TR::java_math_BigDecimal_DFPUseDFP,             "DFPUseDFP",             "()Z")},
-      {x(TR::java_math_BigDecimal_DFPHWAvailable,        "DFPHWAvailable",        "()Z")},
-      {x(TR::java_math_BigDecimal_DFPIntConstructor,     "DFPIntConstructor",     "(IIII)Z")},
-      {x(TR::java_math_BigDecimal_DFPLongConstructor,    "DFPLongConstructor",    "(JIII)Z")},
-      {x(TR::java_math_BigDecimal_DFPLongExpConstructor, "DFPLongExpConstructor", "(JIIIIZ)Z")},
-      {x(TR::java_math_BigDecimal_DFPAdd,                "DFPAdd",                "(JJIII)Z")},
-      {x(TR::java_math_BigDecimal_DFPSubtract,           "DFPSubtract",           "(JJIII)Z")},
-      {x(TR::java_math_BigDecimal_DFPMultiply,           "DFPMultiply",           "(JJIII)Z")},
-      {x(TR::java_math_BigDecimal_DFPDivide,             "DFPDivide",             "(JJZIII)I")},
-      {x(TR::java_math_BigDecimal_DFPScaledAdd,          "DFPScaledAdd",          "(JJI)Z")},
-      {x(TR::java_math_BigDecimal_DFPScaledSubtract,     "DFPScaledSubtract",     "(JJI)Z")},
-      {x(TR::java_math_BigDecimal_DFPScaledMultiply,     "DFPScaledMultiply",     "(JJI)Z")},
-      {x(TR::java_math_BigDecimal_DFPScaledDivide,       "DFPScaledDivide",       "(JJIII)I")},
-      {x(TR::java_math_BigDecimal_DFPRound,              "DFPRound",              "(JII)Z")},
-      {x(TR::java_math_BigDecimal_DFPSetScale,           "DFPSetScale",           "(JIZIZ)I")},
-      {x(TR::java_math_BigDecimal_DFPCompareTo,          "DFPCompareTo",          "(JJ)I")},
-      {x(TR::java_math_BigDecimal_DFPSignificance,       "DFPSignificance",       "(J)I")},
-      {x(TR::java_math_BigDecimal_DFPExponent,           "DFPExponent",           "(J)I")},
-      {x(TR::java_math_BigDecimal_DFPBCDDigits,          "DFPBCDDigits",          "(J)J")},
-      {x(TR::java_math_BigDecimal_DFPUnscaledValue,      "DFPUnscaledValue",      "(J)J")},
-      {x(TR::java_math_BigDecimal_DFPConvertPackedToDFP, "DFPConvertPackedToDFP", "(JIZ)Z")},
-      {x(TR::java_math_BigDecimal_DFPConvertDFPToPacked, "DFPConvertDFPToPacked", "(JZ)J")},
-      {x(TR::java_math_BigDecimal_DFPGetHWAvailable,     "DFPGetHWAvailable",     "()Z")},
-      {x(TR::java_math_BigDecimal_doubleValue,     "doubleValue",     "()D")},
-      {x(TR::java_math_BigDecimal_floatValue,     "floatValue",       "()F")},
-      {x(TR::java_math_BigDecimal_storeTwoCharsFromInt,  "storeTwoCharsFromInt",  "([CII)V")},
-      {    TR::unknownMethod}
+      X(TR::java_math_BigDecimal_add,                   "add",                   "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_subtract,              "subtract",              "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_multiply,              "multiply",              "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_clone,                 "clone",                 "()Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_possibleClone,         "possibleClone",          "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_valueOf,               "valueOf",               "(JI)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_valueOf_J,             "valueOf",               "(J)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_setScale,              "setScale",              "(II)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_slowSubMulAddAddMulSetScale, "slowSMAAMSS",     "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_slowSubMulSetScale,    "slowSMSS",              "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_slowAddAddMulSetScale, "slowAAMSS",             "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_slowMulSetScale,       "slowMSS",               "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_subMulAddAddMulSetScale, "SMAAMSS",             "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;IIII)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_subMulSetScale,        "SMSS",                  "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;II)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_addAddMulSetScale,     "AAMSS",                 "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/BigDecimal;III)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_mulSetScale,           "MSS",                   "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;I)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_longString1,           "longString1",           "(II)Ljava/lang/String;"),
+      X(TR::java_math_BigDecimal_longString1C,          "longString1",           "(II[C)V"),
+      X(TR::java_math_BigDecimal_longString2,           "longString2",           "(III)Ljava/lang/String;"),
+      X(TR::java_math_BigDecimal_toString,              "toString",              "()Ljava/lang/String;"),
+      X(TR::java_math_BigDecimal_doToString,            "doToString",            "()Ljava/lang/String;"),
+      X(TR::java_math_BigDecimal_noLLOverflowAdd,       "noLLOverflowAdd",       "(JJJ)Z"),
+      X(TR::java_math_BigDecimal_noLLOverflowMul,       "noLLOverflowMul",       "(JJJ)Z"),
+      X(TR::java_math_BigDecimal_longAdd,               "longAdd",               "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;Z)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_slAdd,                  "slAdd",                 "(Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;Z)Ljava/math/BigDecimal;"),
+      X(TR::java_math_BigDecimal_getLaside,             "getLaside",             "()J"),
+      X(TR::java_math_BigDecimal_DFPPerformHysteresis,  "DFPPerformHysteresis",  "()Z"),
+      X(TR::java_math_BigDecimal_DFPUseDFP,             "DFPUseDFP",             "()Z"),
+      X(TR::java_math_BigDecimal_DFPHWAvailable,        "DFPHWAvailable",        "()Z"),
+      X(TR::java_math_BigDecimal_DFPIntConstructor,     "DFPIntConstructor",     "(IIII)Z"),
+      X(TR::java_math_BigDecimal_DFPLongConstructor,    "DFPLongConstructor",    "(JIII)Z"),
+      X(TR::java_math_BigDecimal_DFPLongExpConstructor, "DFPLongExpConstructor", "(JIIIIZ)Z"),
+      X(TR::java_math_BigDecimal_DFPAdd,                "DFPAdd",                "(JJIII)Z"),
+      X(TR::java_math_BigDecimal_DFPSubtract,           "DFPSubtract",           "(JJIII)Z"),
+      X(TR::java_math_BigDecimal_DFPMultiply,           "DFPMultiply",           "(JJIII)Z"),
+      X(TR::java_math_BigDecimal_DFPDivide,             "DFPDivide",             "(JJZIII)I"),
+      X(TR::java_math_BigDecimal_DFPScaledAdd,          "DFPScaledAdd",          "(JJI)Z"),
+      X(TR::java_math_BigDecimal_DFPScaledSubtract,     "DFPScaledSubtract",     "(JJI)Z"),
+      X(TR::java_math_BigDecimal_DFPScaledMultiply,     "DFPScaledMultiply",     "(JJI)Z"),
+      X(TR::java_math_BigDecimal_DFPScaledDivide,       "DFPScaledDivide",       "(JJIII)I"),
+      X(TR::java_math_BigDecimal_DFPRound,              "DFPRound",              "(JII)Z"),
+      X(TR::java_math_BigDecimal_DFPSetScale,           "DFPSetScale",           "(JIZIZ)I"),
+      X(TR::java_math_BigDecimal_DFPCompareTo,          "DFPCompareTo",          "(JJ)I"),
+      X(TR::java_math_BigDecimal_DFPSignificance,       "DFPSignificance",       "(J)I"),
+      X(TR::java_math_BigDecimal_DFPExponent,           "DFPExponent",           "(J)I"),
+      X(TR::java_math_BigDecimal_DFPBCDDigits,          "DFPBCDDigits",          "(J)J"),
+      X(TR::java_math_BigDecimal_DFPUnscaledValue,      "DFPUnscaledValue",      "(J)J"),
+      X(TR::java_math_BigDecimal_DFPConvertPackedToDFP, "DFPConvertPackedToDFP", "(JIZ)Z"),
+      X(TR::java_math_BigDecimal_DFPConvertDFPToPacked, "DFPConvertDFPToPacked", "(JZ)J"),
+      X(TR::java_math_BigDecimal_DFPGetHWAvailable,     "DFPGetHWAvailable",     "()Z"),
+      X(TR::java_math_BigDecimal_doubleValue,     "doubleValue",     "()D"),
+      X(TR::java_math_BigDecimal_floatValue,     "floatValue",       "()F"),
+      X(TR::java_math_BigDecimal_storeTwoCharsFromInt,  "storeTwoCharsFromInt",  "([CII)V"),
+      X(TR::unknownMethod)
       };
 
    static X BigIntegerMethods[] =
       {
-      {x(TR::java_math_BigInteger_add,                   "add",                   "(Ljava/math/BigInteger;)Ljava/math/BigInteger;")},
-      {x(TR::java_math_BigInteger_subtract,              "subtract",              "(Ljava/math/BigInteger;)Ljava/math/BigInteger;")},
-      {x(TR::java_math_BigInteger_multiply,              "multiply",              "(Ljava/math/BigInteger;)Ljava/math/BigInteger;")},
-      {    TR::unknownMethod}
+      X(TR::java_math_BigInteger_add,                   "add",                   "(Ljava/math/BigInteger;)Ljava/math/BigInteger;"),
+      X(TR::java_math_BigInteger_subtract,              "subtract",              "(Ljava/math/BigInteger;)Ljava/math/BigInteger;"),
+      X(TR::java_math_BigInteger_multiply,              "multiply",              "(Ljava/math/BigInteger;)Ljava/math/BigInteger;"),
+      X(TR::unknownMethod)
       };
 
    static X PrefetchMethods[] =
       {
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/Object;I)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/String;Ljava/lang/String;)V")},
-      {    TR::unknownMethod}
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/Object;I)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load",              "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L1",           "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L2",           "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Load_L3",           "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_Store",             "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_LoadNTA",           "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreNTA",          "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Prefetch_StoreConditional",  "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_StoreOnly",          "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::com_ibm_Compiler_Internal__TR_Prefetch,     "_TR_Release_All",                "(Ljava/lang/String;Ljava/lang/String;)V"),
+      X(TR::unknownMethod)
       };
 
    static X OSMemoryMethods[] =
       {
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putByte_JB_V,                  "putByte",    "(JB)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putShort_JS_V,                 "putShort",   "(JS)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putInt_JI_V,                   "putInt",     "(JI)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putLong_JJ_V,                  "putLong",    "(JJ)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putFloat_JF_V,                 "putFloat",   "(JF)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putDouble_JD_V,                "putDouble",  "(JD)V")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_putAddress_JJ_V,               "putAddress", "(JJ)V")},
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putByte_JB_V,                  "putByte",    "(JB)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putShort_JS_V,                 "putShort",   "(JS)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putInt_JI_V,                   "putInt",     "(JI)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putLong_JJ_V,                  "putLong",    "(JJ)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putFloat_JF_V,                 "putFloat",   "(JF)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putDouble_JD_V,                "putDouble",  "(JD)V"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_putAddress_JJ_V,               "putAddress", "(JJ)V"),
 
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getByte_J_B,                   "getByte",    "(J)B")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getShort_J_S,                  "getShort",   "(J)S")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getInt_J_I,                    "getInt",     "(J)I")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getLong_J_J,                   "getLong",    "(J)J")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getFloat_J_F,                  "getFloat",   "(J)F")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getDouble_J_D,                 "getDouble",  "(J)D")},
-      {x(TR::org_apache_harmony_luni_platform_OSMemory_getAddress_J_J,                "getAddress", "(J)J")},
-      {  TR::unknownMethod}
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getByte_J_B,                   "getByte",    "(J)B"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getShort_J_S,                  "getShort",   "(J)S"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getInt_J_I,                    "getInt",     "(J)I"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getLong_J_J,                   "getLong",    "(J)J"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getFloat_J_F,                  "getFloat",   "(J)F"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getDouble_J_D,                 "getDouble",  "(J)D"),
+      X(TR::org_apache_harmony_luni_platform_OSMemory_getAddress_J_J,                "getAddress", "(J)J"),
+      X(TR::unknownMethod)
       };
 
    static X otivmMethods[] =
       {
-      {X(TR::com_ibm_oti_vm_VM_callerClass, "callerClass")},
-      {x(TR::java_lang_ClassLoader_callerClassLoader, "callerClassLoader", "()Ljava/lang/ClassLoader;")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_oti_vm_VM_callerClass, "callerClass"),
+      X(TR::java_lang_ClassLoader_callerClassLoader, "callerClassLoader", "()Ljava/lang/ClassLoader;"),
+      X(TR::unknownMethod)
       };
 
    static X ArraysMethods[] =
       {
-      {X(TR::java_util_Arrays_fill, "fill")},
-      {X(TR::java_util_Arrays_equals, "equals")},
-      {x(TR::java_util_Arrays_copyOf_byte,   "copyOf",     "([BI)[B")},
-      {x(TR::java_util_Arrays_copyOf_short,  "copyOf",     "([SI)[S")},
-      {x(TR::java_util_Arrays_copyOf_char,   "copyOf",     "([CI)[C")},
-      {x(TR::java_util_Arrays_copyOf_boolean,"copyOf",     "([ZI)[Z")},
-      {x(TR::java_util_Arrays_copyOf_int,    "copyOf",     "([II)[I")},
-      {x(TR::java_util_Arrays_copyOf_long,   "copyOf",     "([JI)[J")},
-      {x(TR::java_util_Arrays_copyOf_float,  "copyOf",     "([FI)[F")},
-      {x(TR::java_util_Arrays_copyOf_double, "copyOf",     "([DI)[D")},
-      {x(TR::java_util_Arrays_copyOf_Object1,"copyOf",     "([Ljava/lang/Object;I)[Ljava/lang/Object;")},
-      {x(TR::java_util_Arrays_copyOf_Object2,"copyOf",     "([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object;")},
+      X(TR::java_util_Arrays_fill, "fill"),
+      X(TR::java_util_Arrays_equals, "equals"),
+      X(TR::java_util_Arrays_copyOf_byte,   "copyOf",     "([BI)[B"),
+      X(TR::java_util_Arrays_copyOf_short,  "copyOf",     "([SI)[S"),
+      X(TR::java_util_Arrays_copyOf_char,   "copyOf",     "([CI)[C"),
+      X(TR::java_util_Arrays_copyOf_boolean,"copyOf",     "([ZI)[Z"),
+      X(TR::java_util_Arrays_copyOf_int,    "copyOf",     "([II)[I"),
+      X(TR::java_util_Arrays_copyOf_long,   "copyOf",     "([JI)[J"),
+      X(TR::java_util_Arrays_copyOf_float,  "copyOf",     "([FI)[F"),
+      X(TR::java_util_Arrays_copyOf_double, "copyOf",     "([DI)[D"),
+      X(TR::java_util_Arrays_copyOf_Object1,"copyOf",     "([Ljava/lang/Object;I)[Ljava/lang/Object;"),
+      X(TR::java_util_Arrays_copyOf_Object2,"copyOf",     "([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object;"),
 
-      {x(TR::java_util_Arrays_copyOfRange_byte,   "copyOfRange",     "([BII)[B")},
-      {x(TR::java_util_Arrays_copyOfRange_short,  "copyOfRange",     "([SII)[S")},
-      {x(TR::java_util_Arrays_copyOfRange_char,   "copyOfRange",     "([CII)[C")},
-      {x(TR::java_util_Arrays_copyOfRange_boolean,"copyOfRange",     "([ZII)[Z")},
-      {x(TR::java_util_Arrays_copyOfRange_int,    "copyOfRange",     "([III)[I")},
-      {x(TR::java_util_Arrays_copyOfRange_long,   "copyOfRange",     "([JII)[J")},
-      {x(TR::java_util_Arrays_copyOfRange_float,  "copyOfRange",     "([FII)[F")},
-      {x(TR::java_util_Arrays_copyOfRange_double, "copyOfRange",     "([DII)[D")},
-      {x(TR::java_util_Arrays_copyOfRange_Object1,"copyOfRange",     "([Ljava/lang/Object;II)[Ljava/lang/Object;")},
-      {x(TR::java_util_Arrays_copyOfRange_Object2,"copyOfRange",     "([Ljava/lang/Object;IILjava/lang/Class;)[Ljava/lang/Object;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_Arrays_copyOfRange_byte,   "copyOfRange",     "([BII)[B"),
+      X(TR::java_util_Arrays_copyOfRange_short,  "copyOfRange",     "([SII)[S"),
+      X(TR::java_util_Arrays_copyOfRange_char,   "copyOfRange",     "([CII)[C"),
+      X(TR::java_util_Arrays_copyOfRange_boolean,"copyOfRange",     "([ZII)[Z"),
+      X(TR::java_util_Arrays_copyOfRange_int,    "copyOfRange",     "([III)[I"),
+      X(TR::java_util_Arrays_copyOfRange_long,   "copyOfRange",     "([JII)[J"),
+      X(TR::java_util_Arrays_copyOfRange_float,  "copyOfRange",     "([FII)[F"),
+      X(TR::java_util_Arrays_copyOfRange_double, "copyOfRange",     "([DII)[D"),
+      X(TR::java_util_Arrays_copyOfRange_Object1,"copyOfRange",     "([Ljava/lang/Object;II)[Ljava/lang/Object;"),
+      X(TR::java_util_Arrays_copyOfRange_Object2,"copyOfRange",     "([Ljava/lang/Object;IILjava/lang/Class;)[Ljava/lang/Object;"),
+      X(TR::unknownMethod)
       };
 
    static X StringMethods[] =
       {
-      {x(TR::java_lang_String_trim,                "trim",                "()Ljava/lang/String;")},
-      {x(TR::java_lang_String_init_String,         "<init>",              "(Ljava/lang/String;)V")},
-      {x(TR::java_lang_String_init_String_char,    "<init>",              "(Ljava/lang/String;C)V")},
-      {x(TR::java_lang_String_init_int_String_int_String_String, "<init>","(ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;)V")},
-      {x(TR::java_lang_String_init_int_int_char_boolean, "<init>",       "(II[CZ)V")},
-      {X(TR::java_lang_String_init, "<init>")},
-      {x(TR::java_lang_String_charAt,              "charAt",              "(I)C")},
-      {x(TR::java_lang_String_charAtInternal_I,    "charAtInternal",      "(I)C")},
-      {x(TR::java_lang_String_charAtInternal_IB,   "charAtInternal",      "(I[B)C")},
-      {x(TR::java_lang_String_charAtInternal_IB,   "charAtInternal",      "(I[C)C")},
-      {x(TR::java_lang_String_concat,              "concat",              "(Ljava/lang/String;)Ljava/lang/String;")},
-      {x(TR::java_lang_String_compressedArrayCopy_BIBII,              "compressedArrayCopy",              "([BI[BII)V")},
-      {x(TR::java_lang_String_compressedArrayCopy_BICII,              "compressedArrayCopy",              "([BI[CII)V")},
-      {x(TR::java_lang_String_compressedArrayCopy_CIBII,              "compressedArrayCopy",              "([CI[BII)V")},
-      {x(TR::java_lang_String_compressedArrayCopy_CICII,              "compressedArrayCopy",              "([CI[CII)V")},
-      {x(TR::java_lang_String_decompressedArrayCopy_BIBII,              "decompressedArrayCopy",              "([BI[BII)V")},
-      {x(TR::java_lang_String_decompressedArrayCopy_BICII,              "decompressedArrayCopy",              "([BI[CII)V")},
-      {x(TR::java_lang_String_decompressedArrayCopy_CIBII,              "decompressedArrayCopy",              "([CI[BII)V")},
-      {x(TR::java_lang_String_decompressedArrayCopy_CICII,              "decompressedArrayCopy",              "([CI[CII)V")},
-      {x(TR::java_lang_String_equals,              "equals",              "(Ljava/lang/Object;)Z")},
-      {x(TR::java_lang_String_indexOf_String,      "indexOf",             "(Ljava/lang/String;)I")},
-      {x(TR::java_lang_String_indexOf_String_int,  "indexOf",             "(Ljava/lang/String;I)I")},
-      {x(TR::java_lang_String_indexOf_native,      "indexOf",             "(II)I")},
-      {x(TR::java_lang_String_indexOf_fast,        "indexOf",             "(Ljava/lang/String;Ljava/lang/String;IIC)I")},
-      {x(TR::java_lang_String_isCompressed,        "isCompressed",        "()Z")},
-      {x(TR::java_lang_String_length,              "length",              "()I")},
-      {x(TR::java_lang_String_lengthInternal,      "lengthInternal",      "()I")},
-      {x(TR::java_lang_String_replace,             "replace",             "(CC)Ljava/lang/String;")},
-      {x(TR::java_lang_String_hashCode,            "hashCode",            "()I")},
-      {x(TR::java_lang_String_hashCodeImplCompressed,  "hashCodeImplCompressed",          "([BII)I")},
-      {x(TR::java_lang_String_hashCodeImplCompressed,  "hashCodeImplCompressed",          "([CII)I")},
-      {x(TR::java_lang_String_hashCodeImplDecompressed,"hashCodeImplDecompressed",        "([BII)I")},
-      {x(TR::java_lang_String_hashCodeImplDecompressed,"hashCodeImplDecompressed",        "([CII)I")},
-      {x(TR::java_lang_String_compareTo,           "compareTo",           "(Ljava/lang/String;)I")},
-      {x(TR::java_lang_String_lastIndexOf,         "lastIndexOf",         "(Ljava/lang/String;I)I")},
-      {x(TR::java_lang_String_toLowerCase,         "toLowerCase",         "(Ljava/util/Locale;)Ljava/lang/String;")},
-      {x(TR::java_lang_String_toLowerCaseCore,     "toLowerCaseCore",     "(Ljava/lang/String;)Ljava/lang/String;")},
-      {x(TR::java_lang_String_toUpperCase,         "toUpperCase",         "(Ljava/util/Locale;)Ljava/lang/String;")},
-      {x(TR::java_lang_String_toUpperCaseCore,     "toUpperCaseCore",     "(Ljava/lang/String;)Ljava/lang/String;")},
-      {x(TR::java_lang_String_toCharArray,         "toCharArray",         "()[C")},
-      {x(TR::java_lang_String_regionMatches,       "regionMatches",       "(ILjava/lang/String;II)Z")},
-      {x(TR::java_lang_String_regionMatches_bool,  "regionMatches",       "(ZILjava/lang/String;II)Z")},
-      {X(TR::java_lang_String_regionMatchesInternal, "regionMatchesInternal")},
-      {x(TR::java_lang_String_equalsIgnoreCase,    "equalsIgnoreCase",    "(Ljava/lang/String;)Z")},
-      {x(TR::java_lang_String_compareToIgnoreCase, "compareToIgnoreCase", "(Ljava/lang/String;)I")},
-      {x(TR::java_lang_String_compress,            "compress",            "([C[BII)I")},
-      {x(TR::java_lang_String_compressNoCheck,     "compressNoCheck",     "([C[BII)V")},
-      {x(TR::java_lang_String_andOR,               "andOR",               "([CII)I")},
-      {x(TR::java_lang_String_unsafeCharAt,        "unsafeCharAt",        "(I)C")},
-      {x(TR::java_lang_String_split_str_int,       "split",               "(Ljava/lang/String;I)[Ljava/lang/String;")},
-      {x(TR::java_lang_String_getChars_charArray,  "getChars",            "(II[CI)V")},
-      {x(TR::java_lang_String_getChars_byteArray,  "getChars",            "(II[BI)V")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_String_trim,                "trim",                "()Ljava/lang/String;"),
+      X(TR::java_lang_String_init_String,         "<init>",              "(Ljava/lang/String;)V"),
+      X(TR::java_lang_String_init_String_char,    "<init>",              "(Ljava/lang/String;C)V"),
+      X(TR::java_lang_String_init_int_String_int_String_String, "<init>","(ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;)V"),
+      X(TR::java_lang_String_init_int_int_char_boolean, "<init>",       "(II[CZ)V"),
+      X(TR::java_lang_String_init, "<init>"),
+      X(TR::java_lang_String_charAt,              "charAt",              "(I)C"),
+      X(TR::java_lang_String_charAtInternal_I,    "charAtInternal",      "(I)C"),
+      X(TR::java_lang_String_charAtInternal_IB,   "charAtInternal",      "(I[B)C"),
+      X(TR::java_lang_String_charAtInternal_IB,   "charAtInternal",      "(I[C)C"),
+      X(TR::java_lang_String_concat,              "concat",              "(Ljava/lang/String;)Ljava/lang/String;"),
+      X(TR::java_lang_String_compressedArrayCopy_BIBII,              "compressedArrayCopy",              "([BI[BII)V"),
+      X(TR::java_lang_String_compressedArrayCopy_BICII,              "compressedArrayCopy",              "([BI[CII)V"),
+      X(TR::java_lang_String_compressedArrayCopy_CIBII,              "compressedArrayCopy",              "([CI[BII)V"),
+      X(TR::java_lang_String_compressedArrayCopy_CICII,              "compressedArrayCopy",              "([CI[CII)V"),
+      X(TR::java_lang_String_decompressedArrayCopy_BIBII,              "decompressedArrayCopy",              "([BI[BII)V"),
+      X(TR::java_lang_String_decompressedArrayCopy_BICII,              "decompressedArrayCopy",              "([BI[CII)V"),
+      X(TR::java_lang_String_decompressedArrayCopy_CIBII,              "decompressedArrayCopy",              "([CI[BII)V"),
+      X(TR::java_lang_String_decompressedArrayCopy_CICII,              "decompressedArrayCopy",              "([CI[CII)V"),
+      X(TR::java_lang_String_equals,              "equals",              "(Ljava/lang/Object;)Z"),
+      X(TR::java_lang_String_indexOf_String,      "indexOf",             "(Ljava/lang/String;)I"),
+      X(TR::java_lang_String_indexOf_String_int,  "indexOf",             "(Ljava/lang/String;I)I"),
+      X(TR::java_lang_String_indexOf_native,      "indexOf",             "(II)I"),
+      X(TR::java_lang_String_indexOf_fast,        "indexOf",             "(Ljava/lang/String;Ljava/lang/String;IIC)I"),
+      X(TR::java_lang_String_isCompressed,        "isCompressed",        "()Z"),
+      X(TR::java_lang_String_length,              "length",              "()I"),
+      X(TR::java_lang_String_lengthInternal,      "lengthInternal",      "()I"),
+      X(TR::java_lang_String_replace,             "replace",             "(CC)Ljava/lang/String;"),
+      X(TR::java_lang_String_hashCode,            "hashCode",            "()I"),
+      X(TR::java_lang_String_hashCodeImplCompressed,  "hashCodeImplCompressed",          "([BII)I"),
+      X(TR::java_lang_String_hashCodeImplCompressed,  "hashCodeImplCompressed",          "([CII)I"),
+      X(TR::java_lang_String_hashCodeImplDecompressed,"hashCodeImplDecompressed",        "([BII)I"),
+      X(TR::java_lang_String_hashCodeImplDecompressed,"hashCodeImplDecompressed",        "([CII)I"),
+      X(TR::java_lang_String_compareTo,           "compareTo",           "(Ljava/lang/String;)I"),
+      X(TR::java_lang_String_lastIndexOf,         "lastIndexOf",         "(Ljava/lang/String;I)I"),
+      X(TR::java_lang_String_toLowerCase,         "toLowerCase",         "(Ljava/util/Locale;)Ljava/lang/String;"),
+      X(TR::java_lang_String_toLowerCaseCore,     "toLowerCaseCore",     "(Ljava/lang/String;)Ljava/lang/String;"),
+      X(TR::java_lang_String_toUpperCase,         "toUpperCase",         "(Ljava/util/Locale;)Ljava/lang/String;"),
+      X(TR::java_lang_String_toUpperCaseCore,     "toUpperCaseCore",     "(Ljava/lang/String;)Ljava/lang/String;"),
+      X(TR::java_lang_String_toCharArray,         "toCharArray",         "()[C"),
+      X(TR::java_lang_String_regionMatches,       "regionMatches",       "(ILjava/lang/String;II)Z"),
+      X(TR::java_lang_String_regionMatches_bool,  "regionMatches",       "(ZILjava/lang/String;II)Z"),
+      X(TR::java_lang_String_regionMatchesInternal, "regionMatchesInternal"),
+      X(TR::java_lang_String_equalsIgnoreCase,    "equalsIgnoreCase",    "(Ljava/lang/String;)Z"),
+      X(TR::java_lang_String_compareToIgnoreCase, "compareToIgnoreCase", "(Ljava/lang/String;)I"),
+      X(TR::java_lang_String_compress,            "compress",            "([C[BII)I"),
+      X(TR::java_lang_String_compressNoCheck,     "compressNoCheck",     "([C[BII)V"),
+      X(TR::java_lang_String_andOR,               "andOR",               "([CII)I"),
+      X(TR::java_lang_String_unsafeCharAt,        "unsafeCharAt",        "(I)C"),
+      X(TR::java_lang_String_split_str_int,       "split",               "(Ljava/lang/String;I)[Ljava/lang/String;"),
+      X(TR::java_lang_String_getChars_charArray,  "getChars",            "(II[CI)V"),
+      X(TR::java_lang_String_getChars_byteArray,  "getChars",            "(II[BI)V"),
+      X(TR::unknownMethod)
       };
 
    static X StringBufferMethods[] =
       {
-      {x(TR::java_lang_StringBuffer_append,             "append",   "([C)Ljava/lang/StringBuffer;")},
-      {x(TR::java_lang_StringBuffer_append,             "append",   "([CII)Ljava/lang/StringBuffer;")},
-      {x(TR::java_lang_StringBuffer_capacityInternal,   "capacityInternal",   "()I")},
-      {x(TR::java_lang_StringBuffer_ensureCapacityImpl, "ensureCapacityImpl", "(I)V")},
-      {x(TR::java_lang_StringBuffer_lengthInternalUnsynchronized,     "lengthInternalUnsynchronized",     "()I")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_StringBuffer_append,             "append",   "([C)Ljava/lang/StringBuffer;"),
+      X(TR::java_lang_StringBuffer_append,             "append",   "([CII)Ljava/lang/StringBuffer;"),
+      X(TR::java_lang_StringBuffer_capacityInternal,   "capacityInternal",   "()I"),
+      X(TR::java_lang_StringBuffer_ensureCapacityImpl, "ensureCapacityImpl", "(I)V"),
+      X(TR::java_lang_StringBuffer_lengthInternalUnsynchronized,     "lengthInternalUnsynchronized",     "()I"),
+      X(TR::unknownMethod)
       };
 
    static X StringCodingMethods[] =
       {
-      {x(TR::java_lang_StringCoding_decode, "decode", "(Ljava/nio/charset/Charset;[BII)[C")},
-      {x(TR::java_lang_StringCoding_encode, "encode", "(Ljava/nio/charset/Charset;[CII)[B")},
-      {x(TR::java_lang_StringCoding_implEncodeISOArray, "implEncodeISOArray", "([BI[BII)I")},
-      {x(TR::java_lang_StringCoding_encode8859_1,       "encode8859_1",       "(B[B)[B")},
-      {x(TR::java_lang_StringCoding_encodeASCII,        "encodeASCII",        "(B[B)[B")},
-      {x(TR::java_lang_StringCoding_encodeUTF8,         "encodeUTF8",         "(B[B)[B")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_StringCoding_decode, "decode", "(Ljava/nio/charset/Charset;[BII)[C"),
+      X(TR::java_lang_StringCoding_encode, "encode", "(Ljava/nio/charset/Charset;[CII)[B"),
+      X(TR::java_lang_StringCoding_implEncodeISOArray, "implEncodeISOArray", "([BI[BII)I"),
+      X(TR::java_lang_StringCoding_encode8859_1,       "encode8859_1",       "(B[B)[B"),
+      X(TR::java_lang_StringCoding_encodeASCII,        "encodeASCII",        "(B[B)[B"),
+      X(TR::java_lang_StringCoding_encodeUTF8,         "encodeUTF8",         "(B[B)[B"),
+      X(TR::unknownMethod)
       };
 
    static X StringCoding_StringDecoderMethods[] =
       {
-      {x(TR::java_lang_StringCoding_StringDecoder_decode, "decode", "([BII)[C")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_StringCoding_StringDecoder_decode, "decode", "([BII)[C"),
+      X(TR::unknownMethod)
       };
 
    static X StringCoding_StringEncoderMethods[] =
       {
-      {x(TR::java_lang_StringCoding_StringEncoder_encode, "encode", "([CII)[B")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_StringCoding_StringEncoder_encode, "encode", "([CII)[B"),
+      X(TR::unknownMethod)
       };
 
     static X NumberFormatMethods[] =
       {
-      {x(TR::java_text_NumberFormat_format,             "format",   "(D)Ljava/lang/String;")},
-      {  TR::unknownMethod}
+      X(TR::java_text_NumberFormat_format,             "format",   "(D)Ljava/lang/String;"),
+      X(TR::unknownMethod)
       };
    static X StringBuilderMethods[] =
       {
-      {x(TR::java_lang_StringBuilder_init,               "<init>",             "()V")},
-      {x(TR::java_lang_StringBuilder_init_int,           "<init>",             "(I)V")},
-      {x(TR::java_lang_StringBuilder_append_bool,        "append",             "(Z)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_char,        "append",             "(C)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_double,      "append",             "(D)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_float,       "append",             "(F)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_int,         "append",             "(I)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_long,        "append",             "(J)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_String,      "append",             "(Ljava/lang/String;)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_append_Object,      "append",             "(Ljava/lang/Object;)Ljava/lang/StringBuilder;")},
-      {x(TR::java_lang_StringBuilder_capacityInternal,   "capacityInternal",   "()I")},
-      {x(TR::java_lang_StringBuilder_ensureCapacityImpl, "ensureCapacityImpl", "(I)V")},
-      {x(TR::java_lang_StringBuilder_lengthInternal,     "lengthInternal",     "()I")},
-      {x(TR::java_lang_StringBuilder_toString,           "toString",           "()Ljava/lang/String;")},
+      X(TR::java_lang_StringBuilder_init,               "<init>",             "()V"),
+      X(TR::java_lang_StringBuilder_init_int,           "<init>",             "(I)V"),
+      X(TR::java_lang_StringBuilder_append_bool,        "append",             "(Z)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_char,        "append",             "(C)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_double,      "append",             "(D)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_float,       "append",             "(F)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_int,         "append",             "(I)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_long,        "append",             "(J)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_String,      "append",             "(Ljava/lang/String;)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_append_Object,      "append",             "(Ljava/lang/Object;)Ljava/lang/StringBuilder;"),
+      X(TR::java_lang_StringBuilder_capacityInternal,   "capacityInternal",   "()I"),
+      X(TR::java_lang_StringBuilder_ensureCapacityImpl, "ensureCapacityImpl", "(I)V"),
+      X(TR::java_lang_StringBuilder_lengthInternal,     "lengthInternal",     "()I"),
+      X(TR::java_lang_StringBuilder_toString,           "toString",           "()Ljava/lang/String;"),
 
-      {  TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X SystemMethods[] =
       {
-      {X(TR::java_lang_System_arraycopy_Object,  "arraycopy",    "(Ljava/lang/Object;ILjava/lang/Object;II)V", AllPastJavaVer)},
-      {x(TR::java_lang_System_arraycopy_Array,   "arraycopy",    "([Ljava/lang/Object;I[Ljava/lang/Object;II)V")},
-      {X(TR::java_lang_System_currentTimeMillis, "currentTimeMillis",   "()J", AllPastJavaVer)},
-      {X(TR::java_lang_System_nanoTime,          "nanoTime",   "()J", AllPastJavaVer)},
-      {x(TR::java_lang_System_hiresClockImpl,          "hiresClockImpl",   "()J")},
-      {x(TR::java_lang_System_identityHashCode,  "identityHashCode",    "(Ljava/lang/Object;)I")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_System_arraycopy_Object,  "arraycopy",    "(Ljava/lang/Object;ILjava/lang/Object;II)V", AllPastJavaVer),
+      X(TR::java_lang_System_arraycopy_Array,   "arraycopy",    "([Ljava/lang/Object;I[Ljava/lang/Object;II)V"),
+      X(TR::java_lang_System_currentTimeMillis, "currentTimeMillis",   "()J", AllPastJavaVer),
+      X(TR::java_lang_System_nanoTime,          "nanoTime",   "()J", AllPastJavaVer),
+      X(TR::java_lang_System_hiresClockImpl,          "hiresClockImpl",   "()J"),
+      X(TR::java_lang_System_identityHashCode,  "identityHashCode",    "(Ljava/lang/Object;)I"),
+      X(TR::unknownMethod)
       };
 
    static X ThreadMethods[] =
       {
-      {X(TR::java_lang_Thread_currentThread,     "currentThread",   "()Ljava/lang/Thread;", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Thread_currentThread,     "currentThread",   "()Ljava/lang/Thread;", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X ThrowableMethods[] =
       {
-      {X(TR::java_lang_Throwable_printStackTrace, "printStackTrace")},
-      {X(TR::java_lang_Throwable_fillInStackTrace,    "fillInStackTrace",  "()Ljava/lang/Throwable;", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Throwable_printStackTrace, "printStackTrace"),
+      X(TR::java_lang_Throwable_fillInStackTrace,    "fillInStackTrace",  "()Ljava/lang/Throwable;", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X SunUnsafeMethods[] =
       {
-      {X(TR::sun_misc_Unsafe_putBoolean_jlObjectJZ_V,       "putBoolean", "(Ljava/lang/Object;JZ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putByte_jlObjectJB_V,          "putByte",    "(Ljava/lang/Object;JB)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putChar_jlObjectJC_V,          "putChar",    "(Ljava/lang/Object;JC)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putShort_jlObjectJS_V,         "putShort",   "(Ljava/lang/Object;JS)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putInt_jlObjectJI_V,           "putInt",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putLong_jlObjectJJ_V,          "putLong",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putFloat_jlObjectJF_V,         "putFloat",   "(Ljava/lang/Object;JF)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putDouble_jlObjectJD_V,        "putDouble",  "(Ljava/lang/Object;JD)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putReference",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBoolean_jlObjectJZ_V,       "putBoolean", "(Ljava/lang/Object;JZ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putByte_jlObjectJB_V,          "putByte",    "(Ljava/lang/Object;JB)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putChar_jlObjectJC_V,          "putChar",    "(Ljava/lang/Object;JC)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putShort_jlObjectJS_V,         "putShort",   "(Ljava/lang/Object;JS)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putInt_jlObjectJI_V,           "putInt",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putLong_jlObjectJJ_V,          "putLong",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putFloat_jlObjectJF_V,         "putFloat",   "(Ljava/lang/Object;JF)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putDouble_jlObjectJD_V,        "putDouble",  "(Ljava/lang/Object;JD)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putReference",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteVolatile",    "(Ljava/lang/Object;JB)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharVolatile",    "(Ljava/lang/Object;JC)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortVolatile",   "(Ljava/lang/Object;JS)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntVolatile",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongVolatile",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatVolatile",   "(Ljava/lang/Object;JF)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleVolatile",  "(Ljava/lang/Object;JD)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putReferenceVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteVolatile",    "(Ljava/lang/Object;JB)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharVolatile",    "(Ljava/lang/Object;JC)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortVolatile",   "(Ljava/lang/Object;JS)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntVolatile",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongVolatile",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatVolatile",   "(Ljava/lang/Object;JF)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleVolatile",  "(Ljava/lang/Object;JD)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putReferenceVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {x(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanRelease", "(Ljava/lang/Object;JZ)V")},
-      {x(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteRelease",    "(Ljava/lang/Object;JB)V")},
-      {x(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharRelease",    "(Ljava/lang/Object;JC)V")},
-      {x(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortRelease",   "(Ljava/lang/Object;JS)V")},
-      {x(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntRelease",     "(Ljava/lang/Object;JI)V")},
-      {x(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongRelease",    "(Ljava/lang/Object;JJ)V")},
-      {x(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatRelease",   "(Ljava/lang/Object;JF)V")},
-      {x(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleRelease",  "(Ljava/lang/Object;JD)V")},
-      {x(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectRelease",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanRelease", "(Ljava/lang/Object;JZ)V"),
+      X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteRelease",    "(Ljava/lang/Object;JB)V"),
+      X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharRelease",    "(Ljava/lang/Object;JC)V"),
+      X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortRelease",   "(Ljava/lang/Object;JS)V"),
+      X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntRelease",     "(Ljava/lang/Object;JI)V"),
+      X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongRelease",    "(Ljava/lang/Object;JJ)V"),
+      X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatRelease",   "(Ljava/lang/Object;JF)V"),
+      X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleRelease",  "(Ljava/lang/Object;JD)V"),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectRelease",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {x(TR::sun_misc_Unsafe_putInt_jlObjectII_V,           "putInt",     "(Ljava/lang/Object;II)V")},
+      X(TR::sun_misc_Unsafe_putInt_jlObjectII_V,           "putInt",     "(Ljava/lang/Object;II)V"),
 
-      {X(TR::sun_misc_Unsafe_getBoolean_jlObjectJ_Z,        "getBoolean", "(Ljava/lang/Object;J)Z", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getByte_jlObjectJ_B,           "getByte",    "(Ljava/lang/Object;J)B", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getChar_jlObjectJ_C,           "getChar",    "(Ljava/lang/Object;J)C", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getShort_jlObjectJ_S,          "getShort",   "(Ljava/lang/Object;J)S", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getInt_jlObjectJ_I,            "getInt",     "(Ljava/lang/Object;J)I", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getLong_jlObjectJ_J,           "getLong",    "(Ljava/lang/Object;J)J", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getFloat_jlObjectJ_F,          "getFloat",   "(Ljava/lang/Object;J)F", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getDouble_jlObjectJ_D,         "getDouble",  "(Ljava/lang/Object;J)D", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getObject",  "(Ljava/lang/Object;J)Ljava/lang/Object;", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getReference",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBoolean_jlObjectJ_Z,        "getBoolean", "(Ljava/lang/Object;J)Z", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getByte_jlObjectJ_B,           "getByte",    "(Ljava/lang/Object;J)B", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getChar_jlObjectJ_C,           "getChar",    "(Ljava/lang/Object;J)C", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getShort_jlObjectJ_S,          "getShort",   "(Ljava/lang/Object;J)S", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getInt_jlObjectJ_I,            "getInt",     "(Ljava/lang/Object;J)I", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getLong_jlObjectJ_J,           "getLong",    "(Ljava/lang/Object;J)J", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getFloat_jlObjectJ_F,          "getFloat",   "(Ljava/lang/Object;J)F", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getDouble_jlObjectJ_D,         "getDouble",  "(Ljava/lang/Object;J)D", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getObject",  "(Ljava/lang/Object;J)Ljava/lang/Object;", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getReference",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanVolatile", "(Ljava/lang/Object;J)Z", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteVolatile",    "(Ljava/lang/Object;J)B", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharVolatile",    "(Ljava/lang/Object;J)C", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortVolatile",   "(Ljava/lang/Object;J)S", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntVolatile",     "(Ljava/lang/Object;J)I", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongVolatile",    "(Ljava/lang/Object;J)J", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatVolatile",   "(Ljava/lang/Object;J)F", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleVolatile",  "(Ljava/lang/Object;J)D", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getReferenceVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanVolatile", "(Ljava/lang/Object;J)Z", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteVolatile",    "(Ljava/lang/Object;J)B", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharVolatile",    "(Ljava/lang/Object;J)C", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortVolatile",   "(Ljava/lang/Object;J)S", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntVolatile",     "(Ljava/lang/Object;J)I", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongVolatile",    "(Ljava/lang/Object;J)J", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatVolatile",   "(Ljava/lang/Object;J)F", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleVolatile",  "(Ljava/lang/Object;J)D", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getReferenceVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanAcquire", "(Ljava/lang/Object;J)Z")},
-      {x(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteAcquire",    "(Ljava/lang/Object;J)B")},
-      {x(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharAcquire",    "(Ljava/lang/Object;J)C")},
-      {x(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortAcquire",   "(Ljava/lang/Object;J)S")},
-      {x(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntAcquire",     "(Ljava/lang/Object;J)I")},
-      {x(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongAcquire",    "(Ljava/lang/Object;J)J")},
-      {x(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatAcquire",   "(Ljava/lang/Object;J)F")},
-      {x(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleAcquire",  "(Ljava/lang/Object;J)D")},
-      {x(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectAcquire",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanAcquire", "(Ljava/lang/Object;J)Z"),
+      X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteAcquire",    "(Ljava/lang/Object;J)B"),
+      X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharAcquire",    "(Ljava/lang/Object;J)C"),
+      X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortAcquire",   "(Ljava/lang/Object;J)S"),
+      X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntAcquire",     "(Ljava/lang/Object;J)I"),
+      X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongAcquire",    "(Ljava/lang/Object;J)J"),
+      X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatAcquire",   "(Ljava/lang/Object;J)F"),
+      X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleAcquire",  "(Ljava/lang/Object;J)D"),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectAcquire",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {X(TR::sun_misc_Unsafe_putByte_JB_V,                  "putByte",    "(JB)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putShort_JS_V,                 "putShort",   "(JS)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putChar_JC_V,                  "putChar",    "(JC)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putInt_JI_V,                   "putInt",     "(JI)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putLong_JJ_V,                  "putLong",    "(JJ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putFloat_JF_V,                 "putFloat",   "(JF)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putDouble_JD_V,                "putDouble",  "(JD)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putAddress_JJ_V,               "putAddress", "(JJ)V", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_putByte_JB_V,                  "putByte",    "(JB)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putShort_JS_V,                 "putShort",   "(JS)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putChar_JC_V,                  "putChar",    "(JC)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putInt_JI_V,                   "putInt",     "(JI)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putLong_JJ_V,                  "putLong",    "(JJ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putFloat_JF_V,                 "putFloat",   "(JF)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putDouble_JD_V,                "putDouble",  "(JD)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putAddress_JJ_V,               "putAddress", "(JJ)V", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_getByte_J_B,                   "getByte",    "(J)B", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getShort_J_S,                  "getShort",   "(J)S", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getChar_J_C,                   "getChar",    "(J)C", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getInt_J_I,                    "getInt",     "(J)I", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getLong_J_J,                   "getLong",    "(J)J", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getFloat_J_F,                  "getFloat",   "(J)F", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getDouble_J_D,                 "getDouble",  "(J)D", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_getAddress_J_J,                "getAddress", "(J)J", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_getByte_J_B,                   "getByte",    "(J)B", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getShort_J_S,                  "getShort",   "(J)S", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getChar_J_C,                   "getChar",    "(J)C", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getInt_J_I,                    "getInt",     "(J)I", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getLong_J_J,                   "getLong",    "(J)J", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getFloat_J_F,                  "getFloat",   "(J)F", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getDouble_J_D,                 "getDouble",  "(J)D", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getAddress_J_J,                "getAddress", "(J)J", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSwapInt",    "(Ljava/lang/Object;JII)Z", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSetInt",    "(Ljava/lang/Object;JII)Z")},
-      {X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSwapLong",   "(Ljava/lang/Object;JJJ)Z", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSetLong",   "(Ljava/lang/Object;JJJ)Z")},
-      {X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
+      X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSwapInt",    "(Ljava/lang/Object;JII)Z", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSetInt",    "(Ljava/lang/Object;JII)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSwapLong",   "(Ljava/lang/Object;JJJ)Z", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSetLong",   "(Ljava/lang/Object;JJJ)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
 
-      {x(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeInt",    "(Ljava/lang/Object;JII)I")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLong",   "(Ljava/lang/Object;JJJ)J")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeInt",    "(Ljava/lang/Object;JII)I"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLong",   "(Ljava/lang/Object;JJJ)J"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeIntVolatile",    "(Ljava/lang/Object;JII)I")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLongVolatile",   "(Ljava/lang/Object;JJJ)J")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeIntVolatile",    "(Ljava/lang/Object;JII)I"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLongVolatile",   "(Ljava/lang/Object;JJJ)J"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 
-      {X(TR::sun_misc_Unsafe_staticFieldBase,               "staticFieldBase",   "(Ljava/lang/reflect/Field;)Ljava/lang/Object", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_staticFieldOffset,             "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_objectFieldOffset,             "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_getAndAddInt,                  "getAndAddInt",      "(Ljava/lang/Object;JI)I")},
-      {x(TR::sun_misc_Unsafe_getAndSetInt,                  "getAndSetInt",      "(Ljava/lang/Object;JI)I")},
-      {x(TR::sun_misc_Unsafe_getAndAddLong,                 "getAndAddLong",     "(Ljava/lang/Object;JJ)J")},
-      {x(TR::sun_misc_Unsafe_getAndSetLong,                 "getAndSetLong",     "(Ljava/lang/Object;JJ)J")},
+      X(TR::sun_misc_Unsafe_staticFieldBase,               "staticFieldBase",   "(Ljava/lang/reflect/Field;)Ljava/lang/Object", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_staticFieldOffset,             "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_objectFieldOffset,             "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_getAndAddInt,                  "getAndAddInt",      "(Ljava/lang/Object;JI)I"),
+      X(TR::sun_misc_Unsafe_getAndSetInt,                  "getAndSetInt",      "(Ljava/lang/Object;JI)I"),
+      X(TR::sun_misc_Unsafe_getAndAddLong,                 "getAndAddLong",     "(Ljava/lang/Object;JJ)J"),
+      X(TR::sun_misc_Unsafe_getAndSetLong,                 "getAndSetLong",     "(Ljava/lang/Object;JJ)J"),
 
-      {x(TR::sun_misc_Unsafe_putOrderedBoolean_jlObjectJZ_V,       "putOrderedBoolean", "(Ljava/lang/Object;JZ)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedByte_jlObjectJB_V,          "putOrderedByte",    "(Ljava/lang/Object;JB)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedChar_jlObjectJC_V,          "putOrderedChar",    "(Ljava/lang/Object;JC)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedShort_jlObjectJS_V,         "putOrderedShort",   "(Ljava/lang/Object;JS)V")},
-      {X(TR::sun_misc_Unsafe_putOrderedInt_jlObjectJI_V,           "putOrderedInt",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_putOrderedLong_jlObjectJJ_V,          "putOrderedLong",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8)},
-      {x(TR::sun_misc_Unsafe_putOrderedFloat_jlObjectJF_V,         "putOrderedFloat",   "(Ljava/lang/Object;JF)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedDouble_jlObjectJD_V,        "putOrderedDouble",  "(Ljava/lang/Object;JD)V")},
-      {X(TR::sun_misc_Unsafe_putOrderedObject_jlObjectJjlObject_V, "putOrderedObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_putOrderedBoolean_jlObjectJZ_V,       "putOrderedBoolean", "(Ljava/lang/Object;JZ)V"),
+      X(TR::sun_misc_Unsafe_putOrderedByte_jlObjectJB_V,          "putOrderedByte",    "(Ljava/lang/Object;JB)V"),
+      X(TR::sun_misc_Unsafe_putOrderedChar_jlObjectJC_V,          "putOrderedChar",    "(Ljava/lang/Object;JC)V"),
+      X(TR::sun_misc_Unsafe_putOrderedShort_jlObjectJS_V,         "putOrderedShort",   "(Ljava/lang/Object;JS)V"),
+      X(TR::sun_misc_Unsafe_putOrderedInt_jlObjectJI_V,           "putOrderedInt",     "(Ljava/lang/Object;JI)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putOrderedLong_jlObjectJJ_V,          "putOrderedLong",    "(Ljava/lang/Object;JJ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_putOrderedFloat_jlObjectJF_V,         "putOrderedFloat",   "(Ljava/lang/Object;JF)V"),
+      X(TR::sun_misc_Unsafe_putOrderedDouble_jlObjectJD_V,        "putOrderedDouble",  "(Ljava/lang/Object;JD)V"),
+      X(TR::sun_misc_Unsafe_putOrderedObject_jlObjectJjlObject_V, "putOrderedObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_monitorEnter_jlObject_V,       "monitorEnter",    "(Ljava/lang/Object;)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_monitorExit_jlObject_V,        "monitorExit",     "(Ljava/lang/Object;)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_tryMonitorEnter_jlObject_Z,    "tryMonitorEnter", "(Ljava/lang/Object;)Z", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_monitorEnter_jlObject_V,       "monitorEnter",    "(Ljava/lang/Object;)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_monitorExit_jlObject_V,        "monitorExit",     "(Ljava/lang/Object;)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_tryMonitorEnter_jlObject_Z,    "tryMonitorEnter", "(Ljava/lang/Object;)Z", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_copyMemory,    "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_setMemory,     "setMemory",  "(Ljava/lang/Object;JJB)V", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_copyMemory,    "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_setMemory,     "setMemory",  "(Ljava/lang/Object;JJB)V", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_loadFence,     "loadFence",  "()V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_storeFence,    "storeFence", "()V", AllPastJavaVer, 8)},
-      {X(TR::sun_misc_Unsafe_fullFence,     "fullFence",  "()V", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_loadFence,     "loadFence",  "()V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_storeFence,    "storeFence", "()V", AllPastJavaVer, 8),
+      X(TR::sun_misc_Unsafe_fullFence,     "fullFence",  "()V", AllPastJavaVer, 8),
 
-      {X(TR::sun_misc_Unsafe_ensureClassInitialized,     "ensureClassInitialized", "(Ljava/lang/Class;)V", AllPastJavaVer, 8)},
+      X(TR::sun_misc_Unsafe_ensureClassInitialized,     "ensureClassInitialized", "(Ljava/lang/Class;)V", AllPastJavaVer, 8),
 
-      {  TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X InternalUnsafeMethods[] =
       {
-      {X(TR::sun_misc_Unsafe_putBoolean_jlObjectJZ_V,       "putBoolean", "(Ljava/lang/Object;JZ)V", 9)},
-      {X(TR::sun_misc_Unsafe_putByte_jlObjectJB_V,          "putByte",    "(Ljava/lang/Object;JB)V", 9)},
-      {X(TR::sun_misc_Unsafe_putChar_jlObjectJC_V,          "putChar",    "(Ljava/lang/Object;JC)V", 9)},
-      {X(TR::sun_misc_Unsafe_putShort_jlObjectJS_V,         "putShort",   "(Ljava/lang/Object;JS)V", 9)},
-      {X(TR::sun_misc_Unsafe_putInt_jlObjectJI_V,           "putInt",     "(Ljava/lang/Object;JI)V", 9)},
-      {X(TR::sun_misc_Unsafe_putLong_jlObjectJJ_V,          "putLong",    "(Ljava/lang/Object;JJ)V", 9)},
-      {X(TR::sun_misc_Unsafe_putFloat_jlObjectJF_V,         "putFloat",   "(Ljava/lang/Object;JF)V", 9)},
-      {X(TR::sun_misc_Unsafe_putDouble_jlObjectJD_V,        "putDouble",  "(Ljava/lang/Object;JD)V", 9)},
-      {X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", 9)},
-      {x(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putReference",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBoolean_jlObjectJZ_V,       "putBoolean", "(Ljava/lang/Object;JZ)V", 9),
+      X(TR::sun_misc_Unsafe_putByte_jlObjectJB_V,          "putByte",    "(Ljava/lang/Object;JB)V", 9),
+      X(TR::sun_misc_Unsafe_putChar_jlObjectJC_V,          "putChar",    "(Ljava/lang/Object;JC)V", 9),
+      X(TR::sun_misc_Unsafe_putShort_jlObjectJS_V,         "putShort",   "(Ljava/lang/Object;JS)V", 9),
+      X(TR::sun_misc_Unsafe_putInt_jlObjectJI_V,           "putInt",     "(Ljava/lang/Object;JI)V", 9),
+      X(TR::sun_misc_Unsafe_putLong_jlObjectJJ_V,          "putLong",    "(Ljava/lang/Object;JJ)V", 9),
+      X(TR::sun_misc_Unsafe_putFloat_jlObjectJF_V,         "putFloat",   "(Ljava/lang/Object;JF)V", 9),
+      X(TR::sun_misc_Unsafe_putDouble_jlObjectJD_V,        "putDouble",  "(Ljava/lang/Object;JD)V", 9),
+      X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V", 9),
+      X(TR::sun_misc_Unsafe_putObject_jlObjectJjlObject_V, "putReference",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", 9)},
-      {X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteVolatile",    "(Ljava/lang/Object;JB)V", 9)},
-      {X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharVolatile",    "(Ljava/lang/Object;JC)V", 9)},
-      {X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortVolatile",   "(Ljava/lang/Object;JS)V", 9)},
-      {X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntVolatile",     "(Ljava/lang/Object;JI)V", 9)},
-      {X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongVolatile",    "(Ljava/lang/Object;JJ)V", 9)},
-      {X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatVolatile",   "(Ljava/lang/Object;JF)V", 9)},
-      {X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleVolatile",  "(Ljava/lang/Object;JD)V", 9)},
-      {X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V", 9)},
-      {x(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putReferenceVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", 9),
+      X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteVolatile",    "(Ljava/lang/Object;JB)V", 9),
+      X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharVolatile",    "(Ljava/lang/Object;JC)V", 9),
+      X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortVolatile",   "(Ljava/lang/Object;JS)V", 9),
+      X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntVolatile",     "(Ljava/lang/Object;JI)V", 9),
+      X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongVolatile",    "(Ljava/lang/Object;JJ)V", 9),
+      X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatVolatile",   "(Ljava/lang/Object;JF)V", 9),
+      X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleVolatile",  "(Ljava/lang/Object;JD)V", 9),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V", 9),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putReferenceVolatile",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {x(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanRelease", "(Ljava/lang/Object;JZ)V")},
-      {x(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteRelease",    "(Ljava/lang/Object;JB)V")},
-      {x(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharRelease",    "(Ljava/lang/Object;JC)V")},
-      {x(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortRelease",   "(Ljava/lang/Object;JS)V")},
-      {x(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntRelease",     "(Ljava/lang/Object;JI)V")},
-      {x(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongRelease",    "(Ljava/lang/Object;JJ)V")},
-      {x(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatRelease",   "(Ljava/lang/Object;JF)V")},
-      {x(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleRelease",  "(Ljava/lang/Object;JD)V")},
-      {x(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectRelease",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putBooleanVolatile_jlObjectJZ_V,       "putBooleanRelease", "(Ljava/lang/Object;JZ)V"),
+      X(TR::sun_misc_Unsafe_putByteVolatile_jlObjectJB_V,          "putByteRelease",    "(Ljava/lang/Object;JB)V"),
+      X(TR::sun_misc_Unsafe_putCharVolatile_jlObjectJC_V,          "putCharRelease",    "(Ljava/lang/Object;JC)V"),
+      X(TR::sun_misc_Unsafe_putShortVolatile_jlObjectJS_V,         "putShortRelease",   "(Ljava/lang/Object;JS)V"),
+      X(TR::sun_misc_Unsafe_putIntVolatile_jlObjectJI_V,           "putIntRelease",     "(Ljava/lang/Object;JI)V"),
+      X(TR::sun_misc_Unsafe_putLongVolatile_jlObjectJJ_V,          "putLongRelease",    "(Ljava/lang/Object;JJ)V"),
+      X(TR::sun_misc_Unsafe_putFloatVolatile_jlObjectJF_V,         "putFloatRelease",   "(Ljava/lang/Object;JF)V"),
+      X(TR::sun_misc_Unsafe_putDoubleVolatile_jlObjectJD_V,        "putDoubleRelease",  "(Ljava/lang/Object;JD)V"),
+      X(TR::sun_misc_Unsafe_putObjectVolatile_jlObjectJjlObject_V, "putObjectRelease",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {x(TR::sun_misc_Unsafe_putInt_jlObjectII_V,           "putInt",     "(Ljava/lang/Object;II)V")},
+      X(TR::sun_misc_Unsafe_putInt_jlObjectII_V,           "putInt",     "(Ljava/lang/Object;II)V"),
 
-      {X(TR::sun_misc_Unsafe_getBoolean_jlObjectJ_Z,        "getBoolean", "(Ljava/lang/Object;J)Z", 9)},
-      {X(TR::sun_misc_Unsafe_getByte_jlObjectJ_B,           "getByte",    "(Ljava/lang/Object;J)B", 9)},
-      {X(TR::sun_misc_Unsafe_getChar_jlObjectJ_C,           "getChar",    "(Ljava/lang/Object;J)C", 9)},
-      {X(TR::sun_misc_Unsafe_getShort_jlObjectJ_S,          "getShort",   "(Ljava/lang/Object;J)S", 9)},
-      {X(TR::sun_misc_Unsafe_getInt_jlObjectJ_I,            "getInt",     "(Ljava/lang/Object;J)I", 9)},
-      {X(TR::sun_misc_Unsafe_getLong_jlObjectJ_J,           "getLong",    "(Ljava/lang/Object;J)J", 9)},
-      {X(TR::sun_misc_Unsafe_getFloat_jlObjectJ_F,          "getFloat",   "(Ljava/lang/Object;J)F", 9)},
-      {X(TR::sun_misc_Unsafe_getDouble_jlObjectJ_D,         "getDouble",  "(Ljava/lang/Object;J)D", 9)},
-      {X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getObject",  "(Ljava/lang/Object;J)Ljava/lang/Object;", 9)},
-      {x(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getReference",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBoolean_jlObjectJ_Z,        "getBoolean", "(Ljava/lang/Object;J)Z", 9),
+      X(TR::sun_misc_Unsafe_getByte_jlObjectJ_B,           "getByte",    "(Ljava/lang/Object;J)B", 9),
+      X(TR::sun_misc_Unsafe_getChar_jlObjectJ_C,           "getChar",    "(Ljava/lang/Object;J)C", 9),
+      X(TR::sun_misc_Unsafe_getShort_jlObjectJ_S,          "getShort",   "(Ljava/lang/Object;J)S", 9),
+      X(TR::sun_misc_Unsafe_getInt_jlObjectJ_I,            "getInt",     "(Ljava/lang/Object;J)I", 9),
+      X(TR::sun_misc_Unsafe_getLong_jlObjectJ_J,           "getLong",    "(Ljava/lang/Object;J)J", 9),
+      X(TR::sun_misc_Unsafe_getFloat_jlObjectJ_F,          "getFloat",   "(Ljava/lang/Object;J)F", 9),
+      X(TR::sun_misc_Unsafe_getDouble_jlObjectJ_D,         "getDouble",  "(Ljava/lang/Object;J)D", 9),
+      X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getObject",  "(Ljava/lang/Object;J)Ljava/lang/Object;", 9),
+      X(TR::sun_misc_Unsafe_getObject_jlObjectJ_jlObject,  "getReference",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanVolatile", "(Ljava/lang/Object;J)Z", 9)},
-      {X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteVolatile",    "(Ljava/lang/Object;J)B", 9)},
-      {X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharVolatile",    "(Ljava/lang/Object;J)C", 9)},
-      {X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortVolatile",   "(Ljava/lang/Object;J)S", 9)},
-      {X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntVolatile",     "(Ljava/lang/Object;J)I", 9)},
-      {X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongVolatile",    "(Ljava/lang/Object;J)J", 9)},
-      {X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatVolatile",   "(Ljava/lang/Object;J)F", 9)},
-      {X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleVolatile",  "(Ljava/lang/Object;J)D", 9)},
-      {X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;", 9)},
-      {x(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getReferenceVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanVolatile", "(Ljava/lang/Object;J)Z", 9),
+      X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteVolatile",    "(Ljava/lang/Object;J)B", 9),
+      X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharVolatile",    "(Ljava/lang/Object;J)C", 9),
+      X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortVolatile",   "(Ljava/lang/Object;J)S", 9),
+      X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntVolatile",     "(Ljava/lang/Object;J)I", 9),
+      X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongVolatile",    "(Ljava/lang/Object;J)J", 9),
+      X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatVolatile",   "(Ljava/lang/Object;J)F", 9),
+      X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleVolatile",  "(Ljava/lang/Object;J)D", 9),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;", 9),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getReferenceVolatile",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanAcquire", "(Ljava/lang/Object;J)Z")},
-      {x(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteAcquire",    "(Ljava/lang/Object;J)B")},
-      {x(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharAcquire",    "(Ljava/lang/Object;J)C")},
-      {x(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortAcquire",   "(Ljava/lang/Object;J)S")},
-      {x(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntAcquire",     "(Ljava/lang/Object;J)I")},
-      {x(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongAcquire",    "(Ljava/lang/Object;J)J")},
-      {x(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatAcquire",   "(Ljava/lang/Object;J)F")},
-      {x(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleAcquire",  "(Ljava/lang/Object;J)D")},
-      {x(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectAcquire",  "(Ljava/lang/Object;J)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_getBooleanVolatile_jlObjectJ_Z,        "getBooleanAcquire", "(Ljava/lang/Object;J)Z"),
+      X(TR::sun_misc_Unsafe_getByteVolatile_jlObjectJ_B,           "getByteAcquire",    "(Ljava/lang/Object;J)B"),
+      X(TR::sun_misc_Unsafe_getCharVolatile_jlObjectJ_C,           "getCharAcquire",    "(Ljava/lang/Object;J)C"),
+      X(TR::sun_misc_Unsafe_getShortVolatile_jlObjectJ_S,          "getShortAcquire",   "(Ljava/lang/Object;J)S"),
+      X(TR::sun_misc_Unsafe_getIntVolatile_jlObjectJ_I,            "getIntAcquire",     "(Ljava/lang/Object;J)I"),
+      X(TR::sun_misc_Unsafe_getLongVolatile_jlObjectJ_J,           "getLongAcquire",    "(Ljava/lang/Object;J)J"),
+      X(TR::sun_misc_Unsafe_getFloatVolatile_jlObjectJ_F,          "getFloatAcquire",   "(Ljava/lang/Object;J)F"),
+      X(TR::sun_misc_Unsafe_getDoubleVolatile_jlObjectJ_D,         "getDoubleAcquire",  "(Ljava/lang/Object;J)D"),
+      X(TR::sun_misc_Unsafe_getObjectVolatile_jlObjectJ_jlObject,  "getObjectAcquire",  "(Ljava/lang/Object;J)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_putByte_JB_V,                  "putByte",    "(JB)V")},
-      {x(TR::sun_misc_Unsafe_putShort_JS_V,                 "putShort",   "(JS)V")},
-      {x(TR::sun_misc_Unsafe_putChar_JC_V,                  "putChar",    "(JC)V")},
-      {x(TR::sun_misc_Unsafe_putInt_JI_V,                   "putInt",     "(JI)V")},
-      {x(TR::sun_misc_Unsafe_putLong_JJ_V,                  "putLong",    "(JJ)V")},
-      {x(TR::sun_misc_Unsafe_putFloat_JF_V,                 "putFloat",   "(JF)V")},
-      {x(TR::sun_misc_Unsafe_putDouble_JD_V,                "putDouble",  "(JD)V")},
-      {x(TR::sun_misc_Unsafe_putAddress_JJ_V,               "putAddress", "(JJ)V")},
+      X(TR::sun_misc_Unsafe_putByte_JB_V,                  "putByte",    "(JB)V"),
+      X(TR::sun_misc_Unsafe_putShort_JS_V,                 "putShort",   "(JS)V"),
+      X(TR::sun_misc_Unsafe_putChar_JC_V,                  "putChar",    "(JC)V"),
+      X(TR::sun_misc_Unsafe_putInt_JI_V,                   "putInt",     "(JI)V"),
+      X(TR::sun_misc_Unsafe_putLong_JJ_V,                  "putLong",    "(JJ)V"),
+      X(TR::sun_misc_Unsafe_putFloat_JF_V,                 "putFloat",   "(JF)V"),
+      X(TR::sun_misc_Unsafe_putDouble_JD_V,                "putDouble",  "(JD)V"),
+      X(TR::sun_misc_Unsafe_putAddress_JJ_V,               "putAddress", "(JJ)V"),
 
-      {x(TR::sun_misc_Unsafe_getByte_J_B,                   "getByte",    "(J)B")},
-      {x(TR::sun_misc_Unsafe_getShort_J_S,                  "getShort",   "(J)S")},
-      {x(TR::sun_misc_Unsafe_getChar_J_C,                   "getChar",    "(J)C")},
-      {x(TR::sun_misc_Unsafe_getInt_J_I,                    "getInt",     "(J)I")},
-      {x(TR::sun_misc_Unsafe_getLong_J_J,                   "getLong",    "(J)J")},
-      {x(TR::sun_misc_Unsafe_getFloat_J_F,                  "getFloat",   "(J)F")},
-      {x(TR::sun_misc_Unsafe_getDouble_J_D,                 "getDouble",  "(J)D")},
-      {x(TR::sun_misc_Unsafe_getAddress_J_J,                "getAddress", "(J)J")},
+      X(TR::sun_misc_Unsafe_getByte_J_B,                   "getByte",    "(J)B"),
+      X(TR::sun_misc_Unsafe_getShort_J_S,                  "getShort",   "(J)S"),
+      X(TR::sun_misc_Unsafe_getChar_J_C,                   "getChar",    "(J)C"),
+      X(TR::sun_misc_Unsafe_getInt_J_I,                    "getInt",     "(J)I"),
+      X(TR::sun_misc_Unsafe_getLong_J_J,                   "getLong",    "(J)J"),
+      X(TR::sun_misc_Unsafe_getFloat_J_F,                  "getFloat",   "(J)F"),
+      X(TR::sun_misc_Unsafe_getDouble_J_D,                 "getDouble",  "(J)D"),
+      X(TR::sun_misc_Unsafe_getAddress_J_J,                "getAddress", "(J)J"),
 
-      {x(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSwapInt",    "(Ljava/lang/Object;JII)Z")},
-      {X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSetInt",    "(Ljava/lang/Object;JII)Z", 9)},
-      {x(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSwapLong",   "(Ljava/lang/Object;JJJ)Z")},
-      {X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSetLong",   "(Ljava/lang/Object;JJJ)Z", 9)},
-      {x(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
+      X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSwapInt",    "(Ljava/lang/Object;JII)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z,                  "compareAndSetInt",    "(Ljava/lang/Object;JII)Z", 9),
+      X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSwapLong",   "(Ljava/lang/Object;JJJ)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z,                 "compareAndSetLong",   "(Ljava/lang/Object;JJJ)Z", 9),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z, "compareAndSetReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
 
-      {X(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeInt",    "(Ljava/lang/Object;JII)I", 9)},
-      {X(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLong",   "(Ljava/lang/Object;JJJ)J", 9)},
-      {X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", 9)},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeInt",    "(Ljava/lang/Object;JII)I", 9),
+      X(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLong",   "(Ljava/lang/Object;JJJ)J", 9),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", 9),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeReference", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeIntVolatile",    "(Ljava/lang/Object;JII)I")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLongVolatile",   "(Ljava/lang/Object;JJJ)J")},
-      {x(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
+      X(TR::sun_misc_Unsafe_compareAndExchangeInt_jlObjectJII_Z,                  "compareAndExchangeIntVolatile",    "(Ljava/lang/Object;JII)I"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeLong_jlObjectJJJ_Z,                 "compareAndExchangeLongVolatile",   "(Ljava/lang/Object;JJJ)J"),
+      X(TR::sun_misc_Unsafe_compareAndExchangeObject_jlObjectJjlObjectjlObject_Z, "compareAndExchangeObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 
-      {x(TR::sun_misc_Unsafe_staticFieldBase,               "staticFieldBase",   "(Ljava/lang/reflect/Field;)Ljava/lang/Object")},
-      {x(TR::sun_misc_Unsafe_staticFieldOffset,             "staticFieldOffset", "(Ljava/lang/reflect/Field;)J")},
-      {x(TR::sun_misc_Unsafe_objectFieldOffset,             "objectFieldOffset", "(Ljava/lang/reflect/Field;)J")},
-      {x(TR::sun_misc_Unsafe_getAndAddInt,                  "getAndAddInt",      "(Ljava/lang/Object;JI)I")},
-      {x(TR::sun_misc_Unsafe_getAndSetInt,                  "getAndSetInt",      "(Ljava/lang/Object;JI)I")},
-      {x(TR::sun_misc_Unsafe_getAndAddLong,                 "getAndAddLong",     "(Ljava/lang/Object;JJ)J")},
-      {x(TR::sun_misc_Unsafe_getAndSetLong,                 "getAndSetLong",     "(Ljava/lang/Object;JJ)J")},
+      X(TR::sun_misc_Unsafe_staticFieldBase,               "staticFieldBase",   "(Ljava/lang/reflect/Field;)Ljava/lang/Object"),
+      X(TR::sun_misc_Unsafe_staticFieldOffset,             "staticFieldOffset", "(Ljava/lang/reflect/Field;)J"),
+      X(TR::sun_misc_Unsafe_objectFieldOffset,             "objectFieldOffset", "(Ljava/lang/reflect/Field;)J"),
+      X(TR::sun_misc_Unsafe_getAndAddInt,                  "getAndAddInt",      "(Ljava/lang/Object;JI)I"),
+      X(TR::sun_misc_Unsafe_getAndSetInt,                  "getAndSetInt",      "(Ljava/lang/Object;JI)I"),
+      X(TR::sun_misc_Unsafe_getAndAddLong,                 "getAndAddLong",     "(Ljava/lang/Object;JJ)J"),
+      X(TR::sun_misc_Unsafe_getAndSetLong,                 "getAndSetLong",     "(Ljava/lang/Object;JJ)J"),
 
-      {x(TR::sun_misc_Unsafe_putOrderedBoolean_jlObjectJZ_V,       "putOrderedBoolean", "(Ljava/lang/Object;JZ)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedByte_jlObjectJB_V,          "putOrderedByte",    "(Ljava/lang/Object;JB)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedChar_jlObjectJC_V,          "putOrderedChar",    "(Ljava/lang/Object;JC)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedShort_jlObjectJS_V,         "putOrderedShort",   "(Ljava/lang/Object;JS)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedInt_jlObjectJI_V,           "putOrderedInt",     "(Ljava/lang/Object;JI)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedLong_jlObjectJJ_V,          "putOrderedLong",    "(Ljava/lang/Object;JJ)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedFloat_jlObjectJF_V,         "putOrderedFloat",   "(Ljava/lang/Object;JF)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedDouble_jlObjectJD_V,        "putOrderedDouble",  "(Ljava/lang/Object;JD)V")},
-      {x(TR::sun_misc_Unsafe_putOrderedObject_jlObjectJjlObject_V, "putOrderedObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V")},
+      X(TR::sun_misc_Unsafe_putOrderedBoolean_jlObjectJZ_V,       "putOrderedBoolean", "(Ljava/lang/Object;JZ)V"),
+      X(TR::sun_misc_Unsafe_putOrderedByte_jlObjectJB_V,          "putOrderedByte",    "(Ljava/lang/Object;JB)V"),
+      X(TR::sun_misc_Unsafe_putOrderedChar_jlObjectJC_V,          "putOrderedChar",    "(Ljava/lang/Object;JC)V"),
+      X(TR::sun_misc_Unsafe_putOrderedShort_jlObjectJS_V,         "putOrderedShort",   "(Ljava/lang/Object;JS)V"),
+      X(TR::sun_misc_Unsafe_putOrderedInt_jlObjectJI_V,           "putOrderedInt",     "(Ljava/lang/Object;JI)V"),
+      X(TR::sun_misc_Unsafe_putOrderedLong_jlObjectJJ_V,          "putOrderedLong",    "(Ljava/lang/Object;JJ)V"),
+      X(TR::sun_misc_Unsafe_putOrderedFloat_jlObjectJF_V,         "putOrderedFloat",   "(Ljava/lang/Object;JF)V"),
+      X(TR::sun_misc_Unsafe_putOrderedDouble_jlObjectJD_V,        "putOrderedDouble",  "(Ljava/lang/Object;JD)V"),
+      X(TR::sun_misc_Unsafe_putOrderedObject_jlObjectJjlObject_V, "putOrderedObject",  "(Ljava/lang/Object;JLjava/lang/Object;)V"),
 
-      {x(TR::sun_misc_Unsafe_monitorEnter_jlObject_V,       "monitorEnter",    "(Ljava/lang/Object;)V")},
-      {x(TR::sun_misc_Unsafe_monitorExit_jlObject_V,        "monitorExit",     "(Ljava/lang/Object;)V")},
-      {x(TR::sun_misc_Unsafe_tryMonitorEnter_jlObject_Z,    "tryMonitorEnter", "(Ljava/lang/Object;)Z")},
+      X(TR::sun_misc_Unsafe_monitorEnter_jlObject_V,       "monitorEnter",    "(Ljava/lang/Object;)V"),
+      X(TR::sun_misc_Unsafe_monitorExit_jlObject_V,        "monitorExit",     "(Ljava/lang/Object;)V"),
+      X(TR::sun_misc_Unsafe_tryMonitorEnter_jlObject_Z,    "tryMonitorEnter", "(Ljava/lang/Object;)Z"),
 
-      {x(TR::sun_misc_Unsafe_copyMemory,    "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V")},
-      {x(TR::sun_misc_Unsafe_setMemory,     "setMemory",  "(Ljava/lang/Object;JJB)V")},
+      X(TR::sun_misc_Unsafe_copyMemory,    "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V"),
+      X(TR::sun_misc_Unsafe_setMemory,     "setMemory",  "(Ljava/lang/Object;JJB)V"),
 
-      {X(TR::sun_misc_Unsafe_loadFence,     "loadFence",  "()V", 9)},
-      {X(TR::sun_misc_Unsafe_storeFence,    "storeFence", "()V", 9)},
-      {X(TR::sun_misc_Unsafe_fullFence,     "fullFence",  "()V", 9)},
+      X(TR::sun_misc_Unsafe_loadFence,     "loadFence",  "()V", 9),
+      X(TR::sun_misc_Unsafe_storeFence,    "storeFence", "()V", 9),
+      X(TR::sun_misc_Unsafe_fullFence,     "fullFence",  "()V", 9),
 
-      {x(TR::sun_misc_Unsafe_ensureClassInitialized,     "ensureClassInitialized", "(Ljava/lang/Class;)V")},
+      X(TR::sun_misc_Unsafe_ensureClassInitialized,     "ensureClassInitialized", "(Ljava/lang/Class;)V"),
 
-      {  TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X ArrayMethods[] =
       {
-      {x(TR::java_lang_reflect_Array_getLength, "getLength", "(Ljava/lang/Object;)I")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_reflect_Array_getLength, "getLength", "(Ljava/lang/Object;)I"),
+      X(TR::unknownMethod)
       };
 
    static X VectorMethods[] =
       {
-      {X(TR::java_util_Vector_subList, "subList")},
-      {x(TR::java_util_Vector_contains,      "contains",     "(Ljava/lang/Object;)Z")},
-      {x(TR::java_util_Vector_addElement,    "addElement",   "(Ljava/lang/Object;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_Vector_subList, "subList"),
+      X(TR::java_util_Vector_contains,      "contains",     "(Ljava/lang/Object;)Z"),
+      X(TR::java_util_Vector_addElement,    "addElement",   "(Ljava/lang/Object;)V"),
+      X(TR::unknownMethod)
       };
 
    static X SingleByteConverterMethods[] =
       {
-      {x(TR::sun_io_ByteToCharSingleByte_convert,       "convert", "([BII[CII)I")},
-      {x(TR::sun_io_CharToByteSingleByte_convert,       "convert", "([CII[BII)I")},
-      {x(TR::sun_io_ByteToCharSingleByte_JITintrinsicConvert,       "JITintrinsicConvert", "([Ljava/nio/ByteBuffer;[CI[B)I")},
-      {  TR::unknownMethod}
+      X(TR::sun_io_ByteToCharSingleByte_convert,       "convert", "([BII[CII)I"),
+      X(TR::sun_io_CharToByteSingleByte_convert,       "convert", "([CII[BII)I"),
+      X(TR::sun_io_ByteToCharSingleByte_JITintrinsicConvert,       "JITintrinsicConvert", "([Ljava/nio/ByteBuffer;[CI[B)I"),
+      X(TR::unknownMethod)
       };
 
    static X DoubleByteConverterMethods[] =
       {
-      {x(TR::sun_io_ByteToCharDBCS_EBCDIC_convert,      "convert", "([BII[CII)I")},
-      {  TR::unknownMethod}
+      X(TR::sun_io_ByteToCharDBCS_EBCDIC_convert,      "convert", "([BII[CII)I"),
+      X(TR::unknownMethod)
       };
 
    static X ORBVMHelperMethods[] =
       {
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_is32Bit,                             "is32Bit", "()Z", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBitsInReferenceField,          "getNumBitsInReferenceField", "()I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInReferenceField,         "getNumBytesInReferenceField", "()I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBitsInDescriptionWord,         "getNumBitsInDescriptionWord", "()I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInDescriptionWord,        "getNumBytesInDescriptionWord", "()I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInJ9ObjectHeader,         "getNumBytesInJ9ObjectHeader", "()I", AllPastJavaVer)},
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_is32Bit,                             "is32Bit", "()Z", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBitsInReferenceField,          "getNumBitsInReferenceField", "()I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInReferenceField,         "getNumBytesInReferenceField", "()I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBitsInDescriptionWord,         "getNumBitsInDescriptionWord", "()I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInDescriptionWord,        "getNumBytesInDescriptionWord", "()I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getNumBytesInJ9ObjectHeader,         "getNumBytesInJ9ObjectHeader", "()I", AllPastJavaVer),
 
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getJ9ClassFromClass32,               "getJ9ClassFromClass32", "(Ljava/lang/Class;)I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getTotalInstanceSizeFromJ9Class32,   "getTotalInstanceSizeFromJ9Class32", "(I)I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getInstanceDescriptionFromJ9Class32, "getInstanceDescriptionFromJ9Class32", "(I)I", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getDescriptionWordFromPtr32,         "getDescriptionWordFromPtr32", "(I)I", AllPastJavaVer)},
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getJ9ClassFromClass32,               "getJ9ClassFromClass32", "(Ljava/lang/Class;)I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getTotalInstanceSizeFromJ9Class32,   "getTotalInstanceSizeFromJ9Class32", "(I)I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getInstanceDescriptionFromJ9Class32, "getInstanceDescriptionFromJ9Class32", "(I)I", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getDescriptionWordFromPtr32,         "getDescriptionWordFromPtr32", "(I)I", AllPastJavaVer),
 
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getJ9ClassFromClass64,               "getJ9ClassFromClass64", "(Ljava/lang/Class;)J", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getTotalInstanceSizeFromJ9Class64,   "getTotalInstanceSizeFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getInstanceDescriptionFromJ9Class64, "getInstanceDescriptionFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_oti_vm_ORBVMHelpers_getDescriptionWordFromPtr64,         "getDescriptionWordFromPtr64", "(J)J", AllPastJavaVer)},
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getJ9ClassFromClass64,               "getJ9ClassFromClass64", "(Ljava/lang/Class;)J", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getTotalInstanceSizeFromJ9Class64,   "getTotalInstanceSizeFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getInstanceDescriptionFromJ9Class64, "getInstanceDescriptionFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_oti_vm_ORBVMHelpers_getDescriptionWordFromPtr64,         "getDescriptionWordFromPtr64", "(J)J", AllPastJavaVer),
 
-      {  TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    // some of these take a long and return an int
    static X JITHelperMethods[] =
       {
-      {X(TR::com_ibm_jit_JITHelpers_is32Bit,                                  "is32Bit", "()Z", AllPastJavaVer)},
-      {x(TR::com_ibm_jit_JITHelpers_isArray,                                  "isArray", "(Ljava/lang/Object;)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfStringLatin1,             "intrinsicIndexOfStringLatin1", "([CI[CII)I")},
-      {x(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfStringUTF16,              "intrinsicIndexOfStringUTF16", "([CI[CII)I")},
-      {x(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfLatin1,                   "intrinsicIndexOfLatin1", "(Ljava/lang/Object;BII)I")},
-      {x(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfUTF16,                    "intrinsicIndexOfUTF16", "(Ljava/lang/Object;CII)I")},
+      X(TR::com_ibm_jit_JITHelpers_is32Bit,                                  "is32Bit", "()Z", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_isArray,                                  "isArray", "(Ljava/lang/Object;)Z"),
+      X(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfStringLatin1,             "intrinsicIndexOfStringLatin1", "([CI[CII)I"),
+      X(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfStringUTF16,              "intrinsicIndexOfStringUTF16", "([CI[CII)I"),
+      X(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfLatin1,                   "intrinsicIndexOfLatin1", "(Ljava/lang/Object;BII)I"),
+      X(TR::com_ibm_jit_JITHelpers_intrinsicIndexOfUTF16,                    "intrinsicIndexOfUTF16", "(Ljava/lang/Object;CII)I"),
 #ifdef TR_TARGET_32BIT
-      {x(TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject32,                   "getJ9ClassFromObject32", "(Ljava/lang/Object;)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getJ9ClassFromClass32,                    "getJ9ClassFromClass32", "(Ljava/lang/Class;)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getBackfillOffsetFromJ9Class32,           "getBackfillOffsetFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getRomClassFromJ9Class32,                 "getRomClassFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getArrayShapeFromRomClass32,              "getArrayShapeFromRomClass32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getSuperClassesFromJ9Class32,             "getSuperClassesFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getClassDepthAndFlagsFromJ9Class32,       "getClassDepthAndFlagsFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getClassFlagsFromJ9Class32,               "getClassFlagsFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getModifiersFromRomClass32,               "getModifiersFromRomClass32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getClassFromJ9Class32,                    "getClassFromJ9Class32", "(I)Ljava/lang/Class;")},
-      {x(TR::com_ibm_jit_JITHelpers_getAddressAsPrimitive32,                  "getAddressAsPrimitive32", "(Ljava/lang/Object;)I")},
+      X(TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject32,                   "getJ9ClassFromObject32", "(Ljava/lang/Object;)I"),
+      X(TR::com_ibm_jit_JITHelpers_getJ9ClassFromClass32,                    "getJ9ClassFromClass32", "(Ljava/lang/Class;)I"),
+      X(TR::com_ibm_jit_JITHelpers_getBackfillOffsetFromJ9Class32,           "getBackfillOffsetFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getRomClassFromJ9Class32,                 "getRomClassFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getArrayShapeFromRomClass32,              "getArrayShapeFromRomClass32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getSuperClassesFromJ9Class32,             "getSuperClassesFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getClassDepthAndFlagsFromJ9Class32,       "getClassDepthAndFlagsFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getClassFlagsFromJ9Class32,               "getClassFlagsFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getModifiersFromRomClass32,               "getModifiersFromRomClass32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getClassFromJ9Class32,                    "getClassFromJ9Class32", "(I)Ljava/lang/Class;"),
+      X(TR::com_ibm_jit_JITHelpers_getAddressAsPrimitive32,                  "getAddressAsPrimitive32", "(Ljava/lang/Object;)I"),
 #endif
 #ifdef TR_TARGET_64BIT
-      {x(TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject64,                   "getJ9ClassFromObject64", "(Ljava/lang/Object;)J")},
-      {X(TR::com_ibm_jit_JITHelpers_getJ9ClassFromClass64,                    "getJ9ClassFromClass64", "(Ljava/lang/Class;)J", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getBackfillOffsetFromJ9Class64,           "getBackfillOffsetFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getRomClassFromJ9Class64,                 "getRomClassFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getArrayShapeFromRomClass64,              "getArrayShapeFromRomClass64", "(J)I", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getSuperClassesFromJ9Class64,             "getSuperClassesFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getClassDepthAndFlagsFromJ9Class64,       "getClassDepthAndFlagsFromJ9Class64", "(J)J", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getClassFlagsFromJ9Class64,               "getClassFlagsFromJ9Class64", "(J)I", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getModifiersFromRomClass64,               "getModifiersFromRomClass64", "(J)I", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_getClassFromJ9Class64,                    "getClassFromJ9Class64", "(J)Ljava/lang/Class;", AllPastJavaVer)},
-      {x(TR::com_ibm_jit_JITHelpers_getAddressAsPrimitive64,                  "getAddressAsPrimitive64", "(Ljava/lang/Object;)J")},
+      X(TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject64,                   "getJ9ClassFromObject64", "(Ljava/lang/Object;)J"),
+      X(TR::com_ibm_jit_JITHelpers_getJ9ClassFromClass64,                    "getJ9ClassFromClass64", "(Ljava/lang/Class;)J", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getBackfillOffsetFromJ9Class64,           "getBackfillOffsetFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getRomClassFromJ9Class64,                 "getRomClassFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getArrayShapeFromRomClass64,              "getArrayShapeFromRomClass64", "(J)I", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getSuperClassesFromJ9Class64,             "getSuperClassesFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getClassDepthAndFlagsFromJ9Class64,       "getClassDepthAndFlagsFromJ9Class64", "(J)J", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getClassFlagsFromJ9Class64,               "getClassFlagsFromJ9Class64", "(J)I", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getModifiersFromRomClass64,               "getModifiersFromRomClass64", "(J)I", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getClassFromJ9Class64,                    "getClassFromJ9Class64", "(J)Ljava/lang/Class;", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getAddressAsPrimitive64,                  "getAddressAsPrimitive64", "(Ljava/lang/Object;)J"),
 #endif
-      {x(TR::com_ibm_jit_JITHelpers_getSuperclass,                            "getSuperclass", "(Ljava/lang/Class;)Ljava/lang/Class;")},
-      {x(TR::com_ibm_jit_JITHelpers_optimizedClone,                           "optimizedClone", "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::com_ibm_jit_JITHelpers_getPackedDataSizeFromJ9Class32,           "getPackedDataSizeFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getPackedDataSizeFromJ9Class64,           "getPackedDataSizeFromJ9Class64", "(J)J")},
-      {x(TR::com_ibm_jit_JITHelpers_getComponentTypeFromJ9Class32,            "getComponentTypeFromJ9Class32", "(I)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getComponentTypeFromJ9Class64,            "getComponentTypeFromJ9Class64", "(J)J")},
-      {X(TR::com_ibm_jit_JITHelpers_transformedEncodeUTF16Big,                "transformedEncodeUTF16Big",       "(JJI)I", AllPastJavaVer)},
-      {X(TR::com_ibm_jit_JITHelpers_transformedEncodeUTF16Little,             "transformedEncodeUTF16Little",    "(JJI)I", AllPastJavaVer)},
-      {x(TR::com_ibm_jit_JITHelpers_getIntFromObject,                         "getIntFromObject", "(Ljava/lang/Object;J)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getIntFromObjectVolatile,                 "getIntFromObjectVolatile", "(Ljava/lang/Object;J)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getLongFromObject,                        "getLongFromObject", "(Ljava/lang/Object;J)J")},
-      {x(TR::com_ibm_jit_JITHelpers_getLongFromObjectVolatile,                "getLongFromObjectVolatile", "(Ljava/lang/Object;J)J")},
-      {x(TR::com_ibm_jit_JITHelpers_getObjectFromObject,                      "getObjectFromObject", "(Ljava/lang/Object;J)Ljava/lang/Object;")},
-      {x(TR::com_ibm_jit_JITHelpers_getObjectFromObjectVolatile,              "getObjectFromObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;")},
-      {x(TR::com_ibm_jit_JITHelpers_putIntInObject,                           "putIntInObject", "(Ljava/lang/Object;JI)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putIntInObjectVolatile,                   "putIntInObjectVolatile", "(Ljava/lang/Object;JI)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putLongInObject,                          "putLongInObject", "(Ljava/lang/Object;JJ)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putLongInObjectVolatile,                  "putLongInObjectVolatile", "(Ljava/lang/Object;JJ)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putObjectInObject,                        "putObjectInObject", "(Ljava/lang/Object;JLjava/lang/Object;)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putObjectInObjectVolatile,                "putObjectInObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapIntInObject,                "compareAndSwapIntInObject", "(Ljava/lang/Object;JII)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapLongInObject,               "compareAndSwapLongInObject", "(Ljava/lang/Object;JJJ)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInObject,             "compareAndSwapObjectInObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_getByteFromArray,                         "getByteFromArray", "(Ljava/lang/Object;J)B")},
-      {x(TR::com_ibm_jit_JITHelpers_getByteFromArrayByIndex,                  "getByteFromArrayByIndex", "(Ljava/lang/Object;I)B")},
-      {x(TR::com_ibm_jit_JITHelpers_getByteFromArrayVolatile,                 "getByteFromArrayVolatile", "(Ljava/lang/Object;J)B")},
-      {x(TR::com_ibm_jit_JITHelpers_getCharFromArray,                         "getCharFromArray", "(Ljava/lang/Object;J)C")},
-      {x(TR::com_ibm_jit_JITHelpers_getCharFromArrayByIndex,                  "getCharFromArrayByIndex", "(Ljava/lang/Object;I)C")},
-      {x(TR::com_ibm_jit_JITHelpers_getCharFromArrayVolatile,                 "getCharFromArrayVolatile", "(Ljava/lang/Object;J)C")},
-      {x(TR::com_ibm_jit_JITHelpers_getIntFromArray,                          "getIntFromArray", "(Ljava/lang/Object;J)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getIntFromArrayVolatile,                  "getIntFromArrayVolatile", "(Ljava/lang/Object;J)I")},
-      {x(TR::com_ibm_jit_JITHelpers_getLongFromArray,                         "getLongFromArray", "(Ljava/lang/Object;J)J")},
-      {x(TR::com_ibm_jit_JITHelpers_getLongFromArrayVolatile,                 "getLongFromArrayVolatile", "(Ljava/lang/Object;J)J")},
-      {x(TR::com_ibm_jit_JITHelpers_getObjectFromArray,                       "getObjectFromArray", "(Ljava/lang/Object;J)Ljava/lang/Object;")},
-      {x(TR::com_ibm_jit_JITHelpers_getObjectFromArrayVolatile,               "getObjectFromArrayVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;")},
-      {x(TR::com_ibm_jit_JITHelpers_putByteInArray,                           "putByteInArray", "(Ljava/lang/Object;JB)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putByteInArrayByIndex,                    "putByteInArrayByIndex", "(Ljava/lang/Object;IB)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putByteInArrayVolatile,                   "putByteInArrayVolatile", "(Ljava/lang/Object;JB)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putCharInArray,                           "putCharInArray", "(Ljava/lang/Object;JC)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putCharInArrayByIndex,                    "putCharInArrayByIndex", "(Ljava/lang/Object;IC)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putCharInArrayVolatile,                   "putCharInArrayVolatile", "(Ljava/lang/Object;JC)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putIntInArray,                            "putIntInArray", "(Ljava/lang/Object;JI)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putIntInArrayVolatile,                    "putIntInArrayVolatile", "(Ljava/lang/Object;JI)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putLongInArray,                           "putLongInArray", "(Ljava/lang/Object;JJ)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putLongInArrayVolatile,                   "putLongInArrayVolatile", "(Ljava/lang/Object;JJ)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putObjectInArray,                         "putObjectInArray", "(Ljava/lang/Object;JLjava/lang/Object;)V")},
-      {x(TR::com_ibm_jit_JITHelpers_putObjectInArrayVolatile,                 "putObjectInArrayVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapIntInArray,                 "compareAndSwapIntInArray", "(Ljava/lang/Object;JII)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapLongInArray,                "compareAndSwapLongInArray", "(Ljava/lang/Object;JJJ)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInArray,              "compareAndSwapObjectInArray", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_byteToCharUnsigned,                       "byteToCharUnsigned", "(B)C")},
-      {X(TR::com_ibm_jit_JITHelpers_acmplt,                                   "acmplt", "(Ljava/lang/Object;Ljava/lang/Object;)Z", AllPastJavaVer)},
-      {x(TR::com_ibm_jit_JITHelpers_getClassInitializeStatus,                 "getClassInitializeStatus", "(Ljava/lang/Class;)I")},
-      {x(TR::com_ibm_jit_JITHelpers_supportsIntrinsicCaseConversion,          "supportsIntrinsicCaseConversion", "()Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicLatin1,                   "toUpperIntrinsicLatin1", "([B[BI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicLatin1,                   "toUpperIntrinsicLatin1", "([C[CI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicLatin1,                   "toLowerIntrinsicLatin1", "([B[BI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicLatin1,                   "toLowerIntrinsicLatin1", "([C[CI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicUTF16,                    "toUpperIntrinsicUTF16", "([B[BI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicUTF16,                    "toUpperIntrinsicUTF16", "([C[CI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicUTF16,                    "toLowerIntrinsicUTF16", "([B[BI)Z")},
-      {x(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicUTF16,                    "toLowerIntrinsicUTF16", "([C[CI)Z")},
-      { TR::unknownMethod}
+      X(TR::com_ibm_jit_JITHelpers_getSuperclass,                            "getSuperclass", "(Ljava/lang/Class;)Ljava/lang/Class;"),
+      X(TR::com_ibm_jit_JITHelpers_optimizedClone,                           "optimizedClone", "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::com_ibm_jit_JITHelpers_getPackedDataSizeFromJ9Class32,           "getPackedDataSizeFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getPackedDataSizeFromJ9Class64,           "getPackedDataSizeFromJ9Class64", "(J)J"),
+      X(TR::com_ibm_jit_JITHelpers_getComponentTypeFromJ9Class32,            "getComponentTypeFromJ9Class32", "(I)I"),
+      X(TR::com_ibm_jit_JITHelpers_getComponentTypeFromJ9Class64,            "getComponentTypeFromJ9Class64", "(J)J"),
+      X(TR::com_ibm_jit_JITHelpers_transformedEncodeUTF16Big,                "transformedEncodeUTF16Big",       "(JJI)I", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_transformedEncodeUTF16Little,             "transformedEncodeUTF16Little",    "(JJI)I", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getIntFromObject,                         "getIntFromObject", "(Ljava/lang/Object;J)I"),
+      X(TR::com_ibm_jit_JITHelpers_getIntFromObjectVolatile,                 "getIntFromObjectVolatile", "(Ljava/lang/Object;J)I"),
+      X(TR::com_ibm_jit_JITHelpers_getLongFromObject,                        "getLongFromObject", "(Ljava/lang/Object;J)J"),
+      X(TR::com_ibm_jit_JITHelpers_getLongFromObjectVolatile,                "getLongFromObjectVolatile", "(Ljava/lang/Object;J)J"),
+      X(TR::com_ibm_jit_JITHelpers_getObjectFromObject,                      "getObjectFromObject", "(Ljava/lang/Object;J)Ljava/lang/Object;"),
+      X(TR::com_ibm_jit_JITHelpers_getObjectFromObjectVolatile,              "getObjectFromObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;"),
+      X(TR::com_ibm_jit_JITHelpers_putIntInObject,                           "putIntInObject", "(Ljava/lang/Object;JI)V"),
+      X(TR::com_ibm_jit_JITHelpers_putIntInObjectVolatile,                   "putIntInObjectVolatile", "(Ljava/lang/Object;JI)V"),
+      X(TR::com_ibm_jit_JITHelpers_putLongInObject,                          "putLongInObject", "(Ljava/lang/Object;JJ)V"),
+      X(TR::com_ibm_jit_JITHelpers_putLongInObjectVolatile,                  "putLongInObjectVolatile", "(Ljava/lang/Object;JJ)V"),
+      X(TR::com_ibm_jit_JITHelpers_putObjectInObject,                        "putObjectInObject", "(Ljava/lang/Object;JLjava/lang/Object;)V"),
+      X(TR::com_ibm_jit_JITHelpers_putObjectInObjectVolatile,                "putObjectInObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapIntInObject,                "compareAndSwapIntInObject", "(Ljava/lang/Object;JII)Z"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapLongInObject,               "compareAndSwapLongInObject", "(Ljava/lang/Object;JJJ)Z"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInObject,             "compareAndSwapObjectInObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::com_ibm_jit_JITHelpers_getByteFromArray,                         "getByteFromArray", "(Ljava/lang/Object;J)B"),
+      X(TR::com_ibm_jit_JITHelpers_getByteFromArrayByIndex,                  "getByteFromArrayByIndex", "(Ljava/lang/Object;I)B"),
+      X(TR::com_ibm_jit_JITHelpers_getByteFromArrayVolatile,                 "getByteFromArrayVolatile", "(Ljava/lang/Object;J)B"),
+      X(TR::com_ibm_jit_JITHelpers_getCharFromArray,                         "getCharFromArray", "(Ljava/lang/Object;J)C"),
+      X(TR::com_ibm_jit_JITHelpers_getCharFromArrayByIndex,                  "getCharFromArrayByIndex", "(Ljava/lang/Object;I)C"),
+      X(TR::com_ibm_jit_JITHelpers_getCharFromArrayVolatile,                 "getCharFromArrayVolatile", "(Ljava/lang/Object;J)C"),
+      X(TR::com_ibm_jit_JITHelpers_getIntFromArray,                          "getIntFromArray", "(Ljava/lang/Object;J)I"),
+      X(TR::com_ibm_jit_JITHelpers_getIntFromArrayVolatile,                  "getIntFromArrayVolatile", "(Ljava/lang/Object;J)I"),
+      X(TR::com_ibm_jit_JITHelpers_getLongFromArray,                         "getLongFromArray", "(Ljava/lang/Object;J)J"),
+      X(TR::com_ibm_jit_JITHelpers_getLongFromArrayVolatile,                 "getLongFromArrayVolatile", "(Ljava/lang/Object;J)J"),
+      X(TR::com_ibm_jit_JITHelpers_getObjectFromArray,                       "getObjectFromArray", "(Ljava/lang/Object;J)Ljava/lang/Object;"),
+      X(TR::com_ibm_jit_JITHelpers_getObjectFromArrayVolatile,               "getObjectFromArrayVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;"),
+      X(TR::com_ibm_jit_JITHelpers_putByteInArray,                           "putByteInArray", "(Ljava/lang/Object;JB)V"),
+      X(TR::com_ibm_jit_JITHelpers_putByteInArrayByIndex,                    "putByteInArrayByIndex", "(Ljava/lang/Object;IB)V"),
+      X(TR::com_ibm_jit_JITHelpers_putByteInArrayVolatile,                   "putByteInArrayVolatile", "(Ljava/lang/Object;JB)V"),
+      X(TR::com_ibm_jit_JITHelpers_putCharInArray,                           "putCharInArray", "(Ljava/lang/Object;JC)V"),
+      X(TR::com_ibm_jit_JITHelpers_putCharInArrayByIndex,                    "putCharInArrayByIndex", "(Ljava/lang/Object;IC)V"),
+      X(TR::com_ibm_jit_JITHelpers_putCharInArrayVolatile,                   "putCharInArrayVolatile", "(Ljava/lang/Object;JC)V"),
+      X(TR::com_ibm_jit_JITHelpers_putIntInArray,                            "putIntInArray", "(Ljava/lang/Object;JI)V"),
+      X(TR::com_ibm_jit_JITHelpers_putIntInArrayVolatile,                    "putIntInArrayVolatile", "(Ljava/lang/Object;JI)V"),
+      X(TR::com_ibm_jit_JITHelpers_putLongInArray,                           "putLongInArray", "(Ljava/lang/Object;JJ)V"),
+      X(TR::com_ibm_jit_JITHelpers_putLongInArrayVolatile,                   "putLongInArrayVolatile", "(Ljava/lang/Object;JJ)V"),
+      X(TR::com_ibm_jit_JITHelpers_putObjectInArray,                         "putObjectInArray", "(Ljava/lang/Object;JLjava/lang/Object;)V"),
+      X(TR::com_ibm_jit_JITHelpers_putObjectInArrayVolatile,                 "putObjectInArrayVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapIntInArray,                 "compareAndSwapIntInArray", "(Ljava/lang/Object;JII)Z"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapLongInArray,                "compareAndSwapLongInArray", "(Ljava/lang/Object;JJJ)Z"),
+      X(TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInArray,              "compareAndSwapObjectInArray", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::com_ibm_jit_JITHelpers_byteToCharUnsigned,                       "byteToCharUnsigned", "(B)C"),
+      X(TR::com_ibm_jit_JITHelpers_acmplt,                                   "acmplt", "(Ljava/lang/Object;Ljava/lang/Object;)Z", AllPastJavaVer),
+      X(TR::com_ibm_jit_JITHelpers_getClassInitializeStatus,                 "getClassInitializeStatus", "(Ljava/lang/Class;)I"),
+      X(TR::com_ibm_jit_JITHelpers_supportsIntrinsicCaseConversion,          "supportsIntrinsicCaseConversion", "()Z"),
+      X(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicLatin1,                   "toUpperIntrinsicLatin1", "([B[BI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicLatin1,                   "toUpperIntrinsicLatin1", "([C[CI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicLatin1,                   "toLowerIntrinsicLatin1", "([B[BI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicLatin1,                   "toLowerIntrinsicLatin1", "([C[CI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicUTF16,                    "toUpperIntrinsicUTF16", "([B[BI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toUpperIntrinsicUTF16,                    "toUpperIntrinsicUTF16", "([C[CI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicUTF16,                    "toLowerIntrinsicUTF16", "([B[BI)Z"),
+      X(TR::com_ibm_jit_JITHelpers_toLowerIntrinsicUTF16,                    "toLowerIntrinsicUTF16", "([C[CI)Z"),
+      X(TR::unknownMethod)
       };
 
    static X StringLatin1Methods[] =
       {
-      { x(TR::java_lang_StringLatin1_indexOf,                                 "indexOf",       "([BI[BII)I")},
-      { TR::unknownMethod }
+      X(TR::java_lang_StringLatin1_indexOf,                                 "indexOf",       "([BI[BII)I"),
+      X(TR::unknownMethod)
       };
 
    static X StringUTF16Methods[] =
       {
-      { x(TR::java_lang_StringUTF16_getChar,                                  "getChar",        "([BI)C")},
-      { x(TR::java_lang_StringUTF16_indexOf,                                  "indexOf",        "([BI[BII)I")},
-      { x(TR::java_lang_StringUTF16_toBytes,                                  "toBytes",        "([CII)[B")},
-      { TR::unknownMethod }
+      X(TR::java_lang_StringUTF16_getChar,                                  "getChar",        "([BI)C"),
+      X(TR::java_lang_StringUTF16_indexOf,                                  "indexOf",        "([BI[BII)I"),
+      X(TR::java_lang_StringUTF16_toBytes,                                  "toBytes",        "([CII)[B"),
+      X(TR::unknownMethod)
       };
 
    static X DecimalFormatHelperMethods[] =
       {
-      {x(TR::com_ibm_jit_DecimalFormatHelper_formatAsDouble,                  "formatAsDouble", "(Ljava/text/DecimalFormat;Ljava/math/BigDecimal;)Ljava/lang/String;")},
-      {x(TR::com_ibm_jit_DecimalFormatHelper_formatAsFloat,                   "formatAsFloat", "(Ljava/text/DecimalFormat;Ljava/math/BigDecimal;)Ljava/lang/String;")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_jit_DecimalFormatHelper_formatAsDouble,                  "formatAsDouble", "(Ljava/text/DecimalFormat;Ljava/math/BigDecimal;)Ljava/lang/String;"),
+      X(TR::com_ibm_jit_DecimalFormatHelper_formatAsFloat,                   "formatAsFloat", "(Ljava/text/DecimalFormat;Ljava/math/BigDecimal;)Ljava/lang/String;"),
+      X(TR::unknownMethod)
       };
 
    static X FastPathForCollocatedMethods[] =
       {
-      {x(TR::com_ibm_rmi_io_FastPathForCollocated_isVMDeepCopySupported,    "isVMDeepCopySupported", "()Z")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_rmi_io_FastPathForCollocated_isVMDeepCopySupported,    "isVMDeepCopySupported", "()Z"),
+      X(TR::unknownMethod)
       };
 
    static X WASMethods[] =
       {
-         {x(TR::com_ibm_ws_webcontainer_channel_WCCByteBufferOutputStream_printUnencoded, "printUnencoded", "(Ljava/lang/String;II)V")},
-         {TR::unknownMethod}
+         X(TR::com_ibm_ws_webcontainer_channel_WCCByteBufferOutputStream_printUnencoded, "printUnencoded", "(Ljava/lang/String;II)V"),
+         X(TR::unknownMethod)
       };
 
    static X IntegerMethods[] =
       {
-      {x(TR::java_lang_Integer_bitCount,                "bitCount",              "(I)I")},
-      {x(TR::java_lang_Integer_highestOneBit,           "highestOneBit",         "(I)I")},
-      {x(TR::java_lang_Integer_lowestOneBit,            "lowestOneBit",          "(I)I")},
-      {x(TR::java_lang_Integer_numberOfLeadingZeros,    "numberOfLeadingZeros",  "(I)I")},
-      {x(TR::java_lang_Integer_numberOfTrailingZeros,   "numberOfTrailingZeros", "(I)I")},
-      {x(TR::java_lang_Integer_reverseBytes,            "reverseBytes",          "(I)I")},
-      {x(TR::java_lang_Integer_rotateLeft,              "rotateLeft",            "(II)I")},
-      {x(TR::java_lang_Integer_rotateRight,             "rotateRight",           "(II)I")},
-      {x(TR::java_lang_Integer_valueOf,                 "valueOf",               "(I)Ljava/lang/Integer;")},
-      {X(TR::java_lang_Integer_init, "<init>")},
-      {x(TR::java_lang_Integer_toUnsignedLong,          "toUnsignedLong",         "(I)J")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Integer_bitCount,                "bitCount",              "(I)I"),
+      X(TR::java_lang_Integer_highestOneBit,           "highestOneBit",         "(I)I"),
+      X(TR::java_lang_Integer_lowestOneBit,            "lowestOneBit",          "(I)I"),
+      X(TR::java_lang_Integer_numberOfLeadingZeros,    "numberOfLeadingZeros",  "(I)I"),
+      X(TR::java_lang_Integer_numberOfTrailingZeros,   "numberOfTrailingZeros", "(I)I"),
+      X(TR::java_lang_Integer_reverseBytes,            "reverseBytes",          "(I)I"),
+      X(TR::java_lang_Integer_rotateLeft,              "rotateLeft",            "(II)I"),
+      X(TR::java_lang_Integer_rotateRight,             "rotateRight",           "(II)I"),
+      X(TR::java_lang_Integer_valueOf,                 "valueOf",               "(I)Ljava/lang/Integer;"),
+      X(TR::java_lang_Integer_init, "<init>"),
+      X(TR::java_lang_Integer_toUnsignedLong,          "toUnsignedLong",         "(I)J"),
+      X(TR::unknownMethod)
       };
 
    static X LongMethods[] =
       {
-      {x(TR::java_lang_Long_bitCount,                   "bitCount",              "(J)I")},
-      {x(TR::java_lang_Long_highestOneBit,              "highestOneBit",         "(J)J")},
-      {x(TR::java_lang_Long_lowestOneBit,               "lowestOneBit",          "(J)J")},
-      {x(TR::java_lang_Long_numberOfLeadingZeros,       "numberOfLeadingZeros",  "(J)I")},
-      {x(TR::java_lang_Long_numberOfTrailingZeros,      "numberOfTrailingZeros", "(J)I")},
-      {x(TR::java_lang_Long_reverseBytes,              "reverseBytes",           "(J)J")},
-      {x(TR::java_lang_Long_rotateLeft,                 "rotateLeft",            "(JI)J")},
-      {x(TR::java_lang_Long_rotateRight,                "rotateRight",           "(JI)J")},
-      {X(TR::java_lang_Long_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Long_bitCount,                   "bitCount",              "(J)I"),
+      X(TR::java_lang_Long_highestOneBit,              "highestOneBit",         "(J)J"),
+      X(TR::java_lang_Long_lowestOneBit,               "lowestOneBit",          "(J)J"),
+      X(TR::java_lang_Long_numberOfLeadingZeros,       "numberOfLeadingZeros",  "(J)I"),
+      X(TR::java_lang_Long_numberOfTrailingZeros,      "numberOfTrailingZeros", "(J)I"),
+      X(TR::java_lang_Long_reverseBytes,              "reverseBytes",           "(J)J"),
+      X(TR::java_lang_Long_rotateLeft,                 "rotateLeft",            "(JI)J"),
+      X(TR::java_lang_Long_rotateRight,                "rotateRight",           "(JI)J"),
+      X(TR::java_lang_Long_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X BooleanMethods[] =
       {
-      {X(TR::java_lang_Boolean_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Boolean_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X CharacterMethods[] =
       {
-      {X(TR::java_lang_Character_init, "<init>")},
-      {x(TR::java_lang_Character_isDigit,             "isDigit",              "(I)Z")},
-      {x(TR::java_lang_Character_isLetter,            "isLetter",             "(I)Z")},
-      {x(TR::java_lang_Character_isUpperCase,         "isUpperCase",          "(I)Z")},
-      {x(TR::java_lang_Character_isLowerCase,         "isLowerCase",          "(I)Z")},
-      {x(TR::java_lang_Character_isWhitespace,        "isWhitespace",         "(I)Z")},
-      {x(TR::java_lang_Character_isAlphabetic,        "isAlphabetic",         "(I)Z")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Character_init, "<init>"),
+      X(TR::java_lang_Character_isDigit,             "isDigit",              "(I)Z"),
+      X(TR::java_lang_Character_isLetter,            "isLetter",             "(I)Z"),
+      X(TR::java_lang_Character_isUpperCase,         "isUpperCase",          "(I)Z"),
+      X(TR::java_lang_Character_isLowerCase,         "isLowerCase",          "(I)Z"),
+      X(TR::java_lang_Character_isWhitespace,        "isWhitespace",         "(I)Z"),
+      X(TR::java_lang_Character_isAlphabetic,        "isAlphabetic",         "(I)Z"),
+      X(TR::unknownMethod)
       };
 
    static X CRC32Methods[] =
       {
-      {X(TR::java_util_zip_CRC32_update,              "update",               "(II)I", AllPastJavaVer)},
-      {X(TR::java_util_zip_CRC32_updateBytes,         "updateBytes",          "(I[BII)I", AllPastJavaVer, 8)},
-      {X(TR::java_util_zip_CRC32_updateByteBuffer,    "updateByteBuffer",     "(IJII)I", AllPastJavaVer, 8)},
-      {  TR::unknownMethod}
+      X(TR::java_util_zip_CRC32_update,              "update",               "(II)I", AllPastJavaVer),
+      X(TR::java_util_zip_CRC32_updateBytes,         "updateBytes",          "(I[BII)I", AllPastJavaVer, 8),
+      X(TR::java_util_zip_CRC32_updateByteBuffer,    "updateByteBuffer",     "(IJII)I", AllPastJavaVer, 8),
+      X(TR::unknownMethod)
       };
 
    static X ByteMethods[] =
       {
-      {X(TR::java_lang_Byte_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Byte_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X ShortMethods[] =
       {
-      {x(TR::java_lang_Short_reverseBytes,             "reverseBytes",         "(S)S")},
-      {X(TR::java_lang_Short_init, "<init>")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_Short_reverseBytes,             "reverseBytes",         "(S)S"),
+      X(TR::java_lang_Short_init, "<init>"),
+      X(TR::unknownMethod)
       };
 
    static X ReflectionMethods[] =
       {
-      {X(TR::sun_reflect_Reflection_getCallerClass, "getCallerClass", "(I)Ljava/lang/Class;", AllPastJavaVer, 8)},
-      {X(TR::sun_reflect_Reflection_getClassAccessFlags, "getClassAccessFlags", "(Ljava/lang/Class;)I", AllPastJavaVer, 8)},
-      {  TR::unknownMethod}
+      X(TR::sun_reflect_Reflection_getCallerClass, "getCallerClass", "(I)Ljava/lang/Class;", AllPastJavaVer, 8),
+      X(TR::sun_reflect_Reflection_getClassAccessFlags, "getClassAccessFlags", "(Ljava/lang/Class;)I", AllPastJavaVer, 8),
+      X(TR::unknownMethod)
       };
 
    static X X10Methods [] =
       {
-      {x(TR::x10JITHelpers_speculateIndex, "speculateIndex","(II)I")},
-      {x(TR::x10JITHelpers_getCPU, "getCPU", "()I")},
-      {x(TR::x10JITHelpers_noBoundsCheck, "noBoundsCheck", "(I)I")},
-      {x(TR::x10JITHelpers_noNullCheck, "noNullCheck", "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::x10JITHelpers_noCastCheck, "noCastCheck", "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::x10JITHelpers_checkLowBounds, "checkLowBound", "(II)I")},
-      {x(TR::x10JITHelpers_checkHighBounds, "checkHighBound", "(II)I")},
-      { TR::unknownMethod}
+      X(TR::x10JITHelpers_speculateIndex, "speculateIndex","(II)I"),
+      X(TR::x10JITHelpers_getCPU, "getCPU", "()I"),
+      X(TR::x10JITHelpers_noBoundsCheck, "noBoundsCheck", "(I)I"),
+      X(TR::x10JITHelpers_noNullCheck, "noNullCheck", "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::x10JITHelpers_noCastCheck, "noCastCheck", "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::x10JITHelpers_checkLowBounds, "checkLowBound", "(II)I"),
+      X(TR::x10JITHelpers_checkHighBounds, "checkHighBound", "(II)I"),
+      X(TR::unknownMethod)
       };
 
    static X SubMapMethods[] =
       {
-      {x(TR::java_util_TreeMapSubMap_setLastKey,      "setLastKey",      "()V")},
-      {x(TR::java_util_TreeMapSubMap_setFirstKey,     "setFirstKey",     "()V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_TreeMapSubMap_setLastKey,      "setLastKey",      "()V"),
+      X(TR::java_util_TreeMapSubMap_setFirstKey,     "setFirstKey",     "()V"),
+      X(TR::unknownMethod)
       };
 
    static X VMInternalsMethods[] =
       {
-      {X(TR::java_lang_Class_newInstanceImpl,      "newInstanceImpl",      "(Ljava/lang/Class;)Ljava/lang/Object;", AllPastJavaVer)},
-      {x(TR::java_lang_J9VMInternals_is32Bit,                             "is32Bit", "()Z")},
-      {x(TR::java_lang_J9VMInternals_isClassModifierPublic,               "isClassModifierPublic", "(I)Z")},
-      {x(TR::java_lang_J9VMInternals_getArrayLengthAsObject,              "getArrayLengthAsObject", "(Ljava/lang/Object;)I")},
-      {x(TR::java_lang_J9VMInternals_rawNewInstance,                      "rawNewInstance", "(Ljava/lang/Class;)Ljava/lang/Object;")},
-      {x(TR::java_lang_J9VMInternals_rawNewArrayInstance,                 "rawNewArrayInstance", "(ILjava/lang/Class;)Ljava/lang/Object;")},
-      {x(TR::java_lang_J9VMInternals_defaultClone,                        "defaultClone", "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_lang_J9VMInternals_getNumBitsInReferenceField,          "getNumBitsInReferenceField", "()I")},
-      {x(TR::java_lang_J9VMInternals_getNumBytesInReferenceField,         "getNumBytesInReferenceField", "()I")},
-      {x(TR::java_lang_J9VMInternals_getNumBitsInDescriptionWord,         "getNumBitsInDescriptionWord", "()I")},
-      {x(TR::java_lang_J9VMInternals_getNumBytesInDescriptionWord,        "getNumBytesInDescriptionWord", "()I")},
-      {x(TR::java_lang_J9VMInternals_getNumBytesInJ9ObjectHeader,         "getNumBytesInJ9ObjectHeader", "()I")},
+      X(TR::java_lang_Class_newInstanceImpl,      "newInstanceImpl",      "(Ljava/lang/Class;)Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::java_lang_J9VMInternals_is32Bit,                             "is32Bit", "()Z"),
+      X(TR::java_lang_J9VMInternals_isClassModifierPublic,               "isClassModifierPublic", "(I)Z"),
+      X(TR::java_lang_J9VMInternals_getArrayLengthAsObject,              "getArrayLengthAsObject", "(Ljava/lang/Object;)I"),
+      X(TR::java_lang_J9VMInternals_rawNewInstance,                      "rawNewInstance", "(Ljava/lang/Class;)Ljava/lang/Object;"),
+      X(TR::java_lang_J9VMInternals_rawNewArrayInstance,                 "rawNewArrayInstance", "(ILjava/lang/Class;)Ljava/lang/Object;"),
+      X(TR::java_lang_J9VMInternals_defaultClone,                        "defaultClone", "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_lang_J9VMInternals_getNumBitsInReferenceField,          "getNumBitsInReferenceField", "()I"),
+      X(TR::java_lang_J9VMInternals_getNumBytesInReferenceField,         "getNumBytesInReferenceField", "()I"),
+      X(TR::java_lang_J9VMInternals_getNumBitsInDescriptionWord,         "getNumBitsInDescriptionWord", "()I"),
+      X(TR::java_lang_J9VMInternals_getNumBytesInDescriptionWord,        "getNumBytesInDescriptionWord", "()I"),
+      X(TR::java_lang_J9VMInternals_getNumBytesInJ9ObjectHeader,         "getNumBytesInJ9ObjectHeader", "()I"),
 
-      {x(TR::java_lang_J9VMInternals_getJ9ClassFromClass32,               "getJ9ClassFromClass32", "(Ljava/lang/Class;)I")},
-      {x(TR::java_lang_J9VMInternals_getTotalInstanceSizeFromJ9Class32,   "getTotalInstanceSizeFromJ9Class32", "(I)I")},
-      {x(TR::java_lang_J9VMInternals_getInstanceDescriptionFromJ9Class32, "getInstanceDescriptionFromJ9Class32", "(I)I")},
-      {x(TR::java_lang_J9VMInternals_getDescriptionWordFromPtr32,         "getDescriptionWordFromPtr32", "(I)I")},
+      X(TR::java_lang_J9VMInternals_getJ9ClassFromClass32,               "getJ9ClassFromClass32", "(Ljava/lang/Class;)I"),
+      X(TR::java_lang_J9VMInternals_getTotalInstanceSizeFromJ9Class32,   "getTotalInstanceSizeFromJ9Class32", "(I)I"),
+      X(TR::java_lang_J9VMInternals_getInstanceDescriptionFromJ9Class32, "getInstanceDescriptionFromJ9Class32", "(I)I"),
+      X(TR::java_lang_J9VMInternals_getDescriptionWordFromPtr32,         "getDescriptionWordFromPtr32", "(I)I"),
 
-      {x(TR::java_lang_J9VMInternals_getJ9ClassFromClass64,               "getJ9ClassFromClass64", "(Ljava/lang/Class;)J")},
-      {x(TR::java_lang_J9VMInternals_getTotalInstanceSizeFromJ9Class64,   "getTotalInstanceSizeFromJ9Class64", "(J)J")},
-      {x(TR::java_lang_J9VMInternals_getInstanceDescriptionFromJ9Class64, "getInstanceDescriptionFromJ9Class64", "(J)J")},
-      {x(TR::java_lang_J9VMInternals_getDescriptionWordFromPtr64,         "getDescriptionWordFromPtr64", "(J)J")},
-      {X(TR::java_lang_J9VMInternals_getSuperclass,                       "getSuperclass", "(Ljava/lang/Class;)Ljava/lang/Class;", AllPastJavaVer)},
-      {X(TR::java_lang_J9VMInternals_identityHashCode,                    "identityHashCode", "(Ljava/lang/Object;)I", AllPastJavaVer)},
-      {x(TR::java_lang_J9VMInternals_fastIdentityHashCode,                "fastIdentityHashCode", "(Ljava/lang/Object;)I")},
-      {X(TR::java_lang_J9VMInternals_primitiveClone,                      "primitiveClone", "(Ljava/lang/Object;)Ljava/lang/Object;", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_J9VMInternals_getJ9ClassFromClass64,               "getJ9ClassFromClass64", "(Ljava/lang/Class;)J"),
+      X(TR::java_lang_J9VMInternals_getTotalInstanceSizeFromJ9Class64,   "getTotalInstanceSizeFromJ9Class64", "(J)J"),
+      X(TR::java_lang_J9VMInternals_getInstanceDescriptionFromJ9Class64, "getInstanceDescriptionFromJ9Class64", "(J)J"),
+      X(TR::java_lang_J9VMInternals_getDescriptionWordFromPtr64,         "getDescriptionWordFromPtr64", "(J)J"),
+      X(TR::java_lang_J9VMInternals_getSuperclass,                       "getSuperclass", "(Ljava/lang/Class;)Ljava/lang/Class;", AllPastJavaVer),
+      X(TR::java_lang_J9VMInternals_identityHashCode,                    "identityHashCode", "(Ljava/lang/Object;)I", AllPastJavaVer),
+      X(TR::java_lang_J9VMInternals_fastIdentityHashCode,                "fastIdentityHashCode", "(Ljava/lang/Object;)I"),
+      X(TR::java_lang_J9VMInternals_primitiveClone,                      "primitiveClone", "(Ljava/lang/Object;)Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X ReferenceMethods [] =
       {
-      {X(TR::java_lang_ref_Reference_getImpl, "getImpl", "()Ljava/lang/Object;", AllPastJavaVer)},
-      {x(TR::java_lang_ref_Reference_reachabilityFence, "reachabilityFence", "(Ljava/lang/Object;)V")},
-      {TR::unknownMethod}
+      X(TR::java_lang_ref_Reference_getImpl, "getImpl", "()Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::java_lang_ref_Reference_reachabilityFence, "reachabilityFence", "(Ljava/lang/Object;)V"),
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicFencesMethods[] =
       {
-      {x(TR::java_util_concurrent_atomic_Fences_postLoadFence,                            "postLoadFence",         "()V")},
-      {x(TR::java_util_concurrent_atomic_Fences_preStoreFence,                            "preStoreFence",         "()V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence,                    "postStorePreLoadFence", "()V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObject,                   "postLoadFence",         "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObject,                   "preStoreFence",         "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObject,           "postStorePreLoadFence", "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObjectjlrField,           "postLoadFence",         "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObjectjlrField,           "preStoreFence",         "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObjectjlrField,   "postStorePreLoadFence", "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObjectI,                  "postLoadFence",         "([Ljava/lang/Object;I)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObjectI,                  "preStoreFence",         "([Ljava/lang/Object;I)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObjectI,          "postStorePreLoadFence", "([Ljava/lang/Object;I)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_orderAccesses,                            "orderAccesses",         "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_orderReads,                               "orderReads",            "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_orderWrites,                              "orderWrites",           "(Ljava/lang/Object;)V")},
-      {x(TR::java_util_concurrent_atomic_Fences_reachabilityFence,                        "reachabilityFence",     "(Ljava/lang/Object;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_concurrent_atomic_Fences_postLoadFence,                            "postLoadFence",         "()V"),
+      X(TR::java_util_concurrent_atomic_Fences_preStoreFence,                            "preStoreFence",         "()V"),
+      X(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence,                    "postStorePreLoadFence", "()V"),
+      X(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObject,                   "postLoadFence",         "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObject,                   "preStoreFence",         "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObject,           "postStorePreLoadFence", "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObjectjlrField,           "postLoadFence",         "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObjectjlrField,           "preStoreFence",         "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObjectjlrField,   "postStorePreLoadFence", "(Ljava/lang/Object;Ljava/lang/reflect/Field;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_postLoadFence_jlObjectI,                  "postLoadFence",         "([Ljava/lang/Object;I)V"),
+      X(TR::java_util_concurrent_atomic_Fences_preStoreFence_jlObjectI,                  "preStoreFence",         "([Ljava/lang/Object;I)V"),
+      X(TR::java_util_concurrent_atomic_Fences_postStorePreLoadFence_jlObjectI,          "postStorePreLoadFence", "([Ljava/lang/Object;I)V"),
+      X(TR::java_util_concurrent_atomic_Fences_orderAccesses,                            "orderAccesses",         "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_orderReads,                               "orderReads",            "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_orderWrites,                              "orderWrites",           "(Ljava/lang/Object;)V"),
+      X(TR::java_util_concurrent_atomic_Fences_reachabilityFence,                        "reachabilityFence",     "(Ljava/lang/Object;)V"),
+      X(TR::unknownMethod)
       };
 
    //1421
    static X JavaUtilConcurrentAtomicIntegerMethods[] =
       {
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_getAndAdd,          "getAndAdd",          "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_getAndIncrement,    "getAndIncrement",    "()I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_getAndDecrement,    "getAndDecrement",    "()I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_getAndSet,          "getAndSet",          "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_addAndGet,          "addAndGet",          "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_incrementAndGet,    "incrementAndGet",    "()I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_decrementAndGet,    "decrementAndGet",    "()I")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_weakCompareAndSet,  "weakCompareAndSet",  "(II)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicInteger_lazySet,            "lazySet",            "(I)V")},
+      X(TR::java_util_concurrent_atomic_AtomicInteger_getAndAdd,          "getAndAdd",          "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_getAndIncrement,    "getAndIncrement",    "()I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_getAndDecrement,    "getAndDecrement",    "()I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_getAndSet,          "getAndSet",          "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_addAndGet,          "addAndGet",          "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_incrementAndGet,    "incrementAndGet",    "()I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_decrementAndGet,    "decrementAndGet",    "()I"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_weakCompareAndSet,  "weakCompareAndSet",  "(II)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicInteger_lazySet,            "lazySet",            "(I)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicIntegerArrayMethods[] =
       {
 /*
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndAdd,          "getAndAdd",          "(II)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndIncrement,    "getAndIncrement",    "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndDecrement,    "getAndDecrement",    "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndSet,          "getAndSet",          "(II)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_addAndGet,          "addAndGet",          "(II)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_incrementAndGet,    "incrementAndGet",    "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_decrementAndGet,    "decrementAndGet",    "(I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_weakCompareAndSet,  "weakCompareAndSet",  "(III)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerArray_lazySet,            "lazySet",            "(II)V")},
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndAdd,          "getAndAdd",          "(II)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndIncrement,    "getAndIncrement",    "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndDecrement,    "getAndDecrement",    "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_getAndSet,          "getAndSet",          "(II)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_addAndGet,          "addAndGet",          "(II)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_incrementAndGet,    "incrementAndGet",    "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_decrementAndGet,    "decrementAndGet",    "(I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_weakCompareAndSet,  "weakCompareAndSet",  "(III)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerArray_lazySet,            "lazySet",            "(II)V"),
 */
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicIntegerFieldUpdaterMethods[] =
       {
 
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndAdd,          "getAndAdd",          "(Ljava/lang/Object;I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndIncrement,    "getAndIncrement",    "(Ljava/lang/Object;)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndDecrement,    "getAndDecrement",    "(Ljava/lang/Object;)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndSet,          "getAndSet",          "(Ljava/lang/Object;I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_addAndGet,          "addAndGet",          "(Ljava/lang/Object;I)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_incrementAndGet,    "incrementAndGet",    "(Ljava/lang/Object;)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_decrementAndGet,    "decrementAndGet",    "(Ljava/lang/Object;)I")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_weakCompareAndSet,  "weakCompareAndSet",  "(Ljava/lang/Object;II)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_lazySet,            "lazySet",            "(Ljava/lang/Object;I)V")},
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndAdd,          "getAndAdd",          "(Ljava/lang/Object;I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndIncrement,    "getAndIncrement",    "(Ljava/lang/Object;)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndDecrement,    "getAndDecrement",    "(Ljava/lang/Object;)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_getAndSet,          "getAndSet",          "(Ljava/lang/Object;I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_addAndGet,          "addAndGet",          "(Ljava/lang/Object;I)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_incrementAndGet,    "incrementAndGet",    "(Ljava/lang/Object;)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_decrementAndGet,    "decrementAndGet",    "(Ljava/lang/Object;)I"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_weakCompareAndSet,  "weakCompareAndSet",  "(Ljava/lang/Object;II)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicIntegerFieldUpdater_lazySet,            "lazySet",            "(Ljava/lang/Object;I)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicBooleanMethods[] =
       {
-      {x(TR::java_util_concurrent_atomic_AtomicBoolean_getAndSet,          "getAndSet",          "(Z)Z")},
-      {TR::unknownMethod}
+      X(TR::java_util_concurrent_atomic_AtomicBoolean_getAndSet,          "getAndSet",          "(Z)Z"),
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicReferenceMethods[] =
       {
 /*    These are disabled because the codegens don't recognize them anymore.
  *    The reason codegens stopped recognizing these is because of missing wrtbar support.
- *    {x(TR::java_util_concurrent_atomic_AtomicReference_getAndSet,        "getAndSet",          "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_concurrent_atomic_AtomicReference_weakCompareAndSet,"weakCompareAndSet",  "(Ljava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicReference_lazySet,          "lazySet",            "(Ljava/lang/Object;)V")},
+ *    x(TR::java_util_concurrent_atomic_AtomicReference_getAndSet,        "getAndSet",          "(Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_concurrent_atomic_AtomicReference_weakCompareAndSet,"weakCompareAndSet",  "(Ljava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicReference_lazySet,          "lazySet",            "(Ljava/lang/Object;)V"),
 */
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicReferenceArrayMethods[] =
       {
 /*
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceArray_getAndSet,        "getAndSet",          "(ILjava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceArray_weakCompareAndSet,"weakCompareAndSet",  "(ILjava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceArray_lazySet,          "lazySet",            "(ILjava/lang/Object;)V")},
+      X(TR::java_util_concurrent_atomic_AtomicReferenceArray_getAndSet,        "getAndSet",          "(ILjava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_concurrent_atomic_AtomicReferenceArray_weakCompareAndSet,"weakCompareAndSet",  "(ILjava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicReferenceArray_lazySet,          "lazySet",            "(ILjava/lang/Object;)V"),
 */
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicReferenceFieldUpdaterMethods[] =
       {
 
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_getAndSet,        "getAndSet",          "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_weakCompareAndSet,"weakCompareAndSet",  "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_lazySet,          "lazySet",            "(Ljava/lang/Object;Ljava/lang/Object;)V")},
+      X(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_getAndSet,        "getAndSet",          "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+      X(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_weakCompareAndSet,"weakCompareAndSet",  "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicReferenceFieldUpdater_lazySet,          "lazySet",            "(Ljava/lang/Object;Ljava/lang/Object;)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicLongMethods[] =
       {
 
-      {x(TR::java_util_concurrent_atomic_AtomicLong_addAndGet,             "addAndGet",          "(J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_decrementAndGet,       "decrementAndGet",    "()J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_getAndAdd,             "getAndAdd",          "(J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_getAndDecrement,       "getAndDecrement",    "()J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_getAndIncrement,       "getAndIncrement",    "()J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_getAndSet,             "getAndSet",          "(J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_incrementAndGet,       "incrementAndGet",    "()J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_weakCompareAndSet,     "weakCompareAndSet",  "(JJ)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicLong_lazySet,               "lazySet",            "(J)V")},
+      X(TR::java_util_concurrent_atomic_AtomicLong_addAndGet,             "addAndGet",          "(J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_decrementAndGet,       "decrementAndGet",    "()J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_getAndAdd,             "getAndAdd",          "(J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_getAndDecrement,       "getAndDecrement",    "()J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_getAndIncrement,       "getAndIncrement",    "()J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_getAndSet,             "getAndSet",          "(J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_incrementAndGet,       "incrementAndGet",    "()J"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_weakCompareAndSet,     "weakCompareAndSet",  "(JJ)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicLong_lazySet,               "lazySet",            "(J)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicLongArrayMethods[] =
       {
 /*
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_getAndAdd,          "getAndAdd",          "(IJ)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_getAndIncrement,    "getAndIncrement",    "(I)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_getAndDecrement,    "getAndDecrement",    "(I)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_getAndSet,          "getAndSet",          "(IJ)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_addAndGet,          "addAndGet",          "(IJ)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_incrementAndGet,    "incrementAndGet",    "(I)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_decrementAndGet,    "decrementAndGet",    "(I)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_weakCompareAndSet,  "weakCompareAndSet",  "(IJJ)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongArray_lazySet,            "lazySet",            "(IJ)V")},
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_getAndAdd,          "getAndAdd",          "(IJ)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_getAndIncrement,    "getAndIncrement",    "(I)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_getAndDecrement,    "getAndDecrement",    "(I)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_getAndSet,          "getAndSet",          "(IJ)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_addAndGet,          "addAndGet",          "(IJ)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_incrementAndGet,    "incrementAndGet",    "(I)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_decrementAndGet,    "decrementAndGet",    "(I)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_weakCompareAndSet,  "weakCompareAndSet",  "(IJJ)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicLongArray_lazySet,            "lazySet",            "(IJ)V"),
 */
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentAtomicLongFieldUpdaterMethods[] =
       {
 
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndAdd,          "getAndAdd",          "(Ljava/lang/Object;J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndIncrement,    "getAndIncrement",    "(Ljava/lang/Object;)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndDecrement,    "getAndDecrement",    "(Ljava/lang/Object;)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndSet,          "getAndSet",          "(Ljava/lang/Object;J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_addAndGet,          "addAndGet",          "(Ljava/lang/Object;J)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_incrementAndGet,    "incrementAndGet",    "(Ljava/lang/Object;)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_decrementAndGet,    "decrementAndGet",    "(Ljava/lang/Object;)J")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_weakCompareAndSet,  "weakCompareAndSet",  "(Ljava/lang/Object;JJ)Z")},
-      {x(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_lazySet,            "lazySet",            "(Ljava/lang/Object;J)V")},
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndAdd,          "getAndAdd",          "(Ljava/lang/Object;J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndIncrement,    "getAndIncrement",    "(Ljava/lang/Object;)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndDecrement,    "getAndDecrement",    "(Ljava/lang/Object;)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_getAndSet,          "getAndSet",          "(Ljava/lang/Object;J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_addAndGet,          "addAndGet",          "(Ljava/lang/Object;J)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_incrementAndGet,    "incrementAndGet",    "(Ljava/lang/Object;)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_decrementAndGet,    "decrementAndGet",    "(Ljava/lang/Object;)J"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_weakCompareAndSet,  "weakCompareAndSet",  "(Ljava/lang/Object;JJ)Z"),
+      X(TR::java_util_concurrent_atomic_AtomicLongFieldUpdater_lazySet,            "lazySet",            "(Ljava/lang/Object;J)V"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentConcurrentHashMapMethods[] =
       {
-      {x(TR::java_util_concurrent_ConcurrentHashMap_addCount,    "addCount",     "(JI)V")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_tryPresize,  "tryPresize",   "(I)V")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_transfer,    "transfer",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_fullAddCount,"fullAddCount", "(JZ)V")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_helpTransfer,"helpTransfer", "([Ljava/util/concurrent/ConcurrentHashMap$Node;Ljava/util/concurrent/ConcurrentHashMap$Node;)[Ljava/util/concurrent/ConcurrentHashMap$Node;")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_initTable,   "initTable",    "()[Ljava/util/concurrent/ConcurrentHashMap$Node;")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_tabAt,       "tabAt",        "([Ljava/util/concurrent/ConcurrentHashMap$Node;I)Ljava/util/concurrent/ConcurrentHashMap$Node;")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_casTabAt,    "casTabAt",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;ILjava/util/concurrent/ConcurrentHashMap$Node;Ljava/util/concurrent/ConcurrentHashMap$Node;)Z")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_setTabAt,    "setTabAt",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;ILjava/util/concurrent/ConcurrentHashMap$Node;)V")},
-      {TR::unknownMethod}
+      X(TR::java_util_concurrent_ConcurrentHashMap_addCount,    "addCount",     "(JI)V"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_tryPresize,  "tryPresize",   "(I)V"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_transfer,    "transfer",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;[Ljava/util/concurrent/ConcurrentHashMap$Node;)V"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_fullAddCount,"fullAddCount", "(JZ)V"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_helpTransfer,"helpTransfer", "([Ljava/util/concurrent/ConcurrentHashMap$Node;Ljava/util/concurrent/ConcurrentHashMap$Node;)[Ljava/util/concurrent/ConcurrentHashMap$Node;"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_initTable,   "initTable",    "()[Ljava/util/concurrent/ConcurrentHashMap$Node;"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_tabAt,       "tabAt",        "([Ljava/util/concurrent/ConcurrentHashMap$Node;I)Ljava/util/concurrent/ConcurrentHashMap$Node;"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_casTabAt,    "casTabAt",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;ILjava/util/concurrent/ConcurrentHashMap$Node;Ljava/util/concurrent/ConcurrentHashMap$Node;)Z"),
+      X(TR::java_util_concurrent_ConcurrentHashMap_setTabAt,    "setTabAt",     "([Ljava/util/concurrent/ConcurrentHashMap$Node;ILjava/util/concurrent/ConcurrentHashMap$Node;)V"),
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilConcurrentConcurrentHashMapTreeBinMethods[] =
       {
-      {x(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_lockRoot,      "lockRoot",      "")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_contendedLock, "contendedLock", "")},
-      {x(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_find,          "find",          "")},
-      {TR::unknownMethod}
+      X(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_lockRoot,      "lockRoot",      ""),
+      X(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_contendedLock, "contendedLock", ""),
+      X(TR::java_util_concurrent_ConcurrentHashMap_TreeBin_find,          "find",          ""),
+      X(TR::unknownMethod)
       };
 
    // Transactional Memory
    static X JavaUtilConcurrentConcurrentLinkedQueueMethods[] =
       {
-      {x(TR::java_util_concurrent_ConcurrentLinkedQueue_tmOffer,     "tmOffer", "(Ljava/util/concurrent/ConcurrentLinkedQueue$Node;)I")},
-      {x(TR::java_util_concurrent_ConcurrentLinkedQueue_tmPoll,      "tmPoll",  "()Ljava/lang/Object;")},
-      {x(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z")},
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmOffer,     "tmOffer", "(Ljava/util/concurrent/ConcurrentLinkedQueue$Node;)I"),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmPoll,      "tmPoll",  "()Ljava/lang/Object;"),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z"),
 
-      {TR::unknownMethod}
+      X(TR::unknownMethod)
       };
 
    static X QuadMethods[] =
       {
-      {x(TR::com_ibm_Compiler_Internal_Quad_enableQuadOptimization, "enableQuadOptimization", "()Z")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_add_ql,                 "add",                    "(Lcom/ibm/Compiler/Internal/Quad;J)Lcom/ibm/Compiler/Internal/Quad;")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_add_ll,                 "add",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_sub_ql,                 "sub",                    "(Lcom/ibm/Compiler/Internal/Quad;J)Lcom/ibm/Compiler/Internal/Quad;")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_sub_ll,                 "sub",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_mul_ll,                 "mul",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_hi,                     "hi",                     "(Lcom/ibm/Compiler/Internal/Quad;)J")},
-      {x(TR::com_ibm_Compiler_Internal_Quad_lo,                     "lo",                     "(Lcom/ibm/Compiler/Internal/Quad;)J")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_Compiler_Internal_Quad_enableQuadOptimization, "enableQuadOptimization", "()Z"),
+      X(TR::com_ibm_Compiler_Internal_Quad_add_ql,                 "add",                    "(Lcom/ibm/Compiler/Internal/Quad;J)Lcom/ibm/Compiler/Internal/Quad;"),
+      X(TR::com_ibm_Compiler_Internal_Quad_add_ll,                 "add",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;"),
+      X(TR::com_ibm_Compiler_Internal_Quad_sub_ql,                 "sub",                    "(Lcom/ibm/Compiler/Internal/Quad;J)Lcom/ibm/Compiler/Internal/Quad;"),
+      X(TR::com_ibm_Compiler_Internal_Quad_sub_ll,                 "sub",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;"),
+      X(TR::com_ibm_Compiler_Internal_Quad_mul_ll,                 "mul",                    "(JJ)Lcom/ibm/Compiler/Internal/Quad;"),
+      X(TR::com_ibm_Compiler_Internal_Quad_hi,                     "hi",                     "(Lcom/ibm/Compiler/Internal/Quad;)J"),
+      X(TR::com_ibm_Compiler_Internal_Quad_lo,                     "lo",                     "(Lcom/ibm/Compiler/Internal/Quad;)J"),
+      X(TR::unknownMethod)
       };
 
    static X MethodHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_MethodHandle_doCustomizationLogic     , "doCustomizationLogic")},
-      {X(TR::java_lang_invoke_MethodHandle_undoCustomizationLogic   , "undoCustomizationLogic")},
-      {X(TR::java_lang_invoke_MethodHandle_invoke                   , "invoke", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_MethodHandle_invoke                   , "invokeGeneric")}, // Older name from early versions of the jsr292 spec
-      {X(TR::java_lang_invoke_MethodHandle_invokeExact              , "invokeExact", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress , "invokeExactTargetAddress")},
-      {X(TR::java_lang_invoke_MethodHandle_invokeWithArgumentsHelper,   "invokeWithArgumentsHelper",  "(Ljava/lang/invoke/MethodHandle;[Ljava/lang/Object;)Ljava/lang/Object;", AllPastJavaVer)},
-      {x(TR::java_lang_invoke_MethodHandle_asType, "asType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
-      {x(TR::java_lang_invoke_MethodHandle_asType_instance, "asType", "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_MethodHandle_doCustomizationLogic     , "doCustomizationLogic"),
+      X(TR::java_lang_invoke_MethodHandle_undoCustomizationLogic   , "undoCustomizationLogic"),
+      X(TR::java_lang_invoke_MethodHandle_invoke                   , "invoke", AllPastJavaVer),
+      X(TR::java_lang_invoke_MethodHandle_invoke                   , "invokeGeneric"), // Older name from early versions of the jsr292 spec
+      X(TR::java_lang_invoke_MethodHandle_invokeExact              , "invokeExact", AllPastJavaVer),
+      X(TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress , "invokeExactTargetAddress"),
+      X(TR::java_lang_invoke_MethodHandle_invokeWithArgumentsHelper,   "invokeWithArgumentsHelper",  "(Ljava/lang/invoke/MethodHandle;[Ljava/lang/Object;)Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::java_lang_invoke_MethodHandle_asType, "asType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;"),
+      X(TR::java_lang_invoke_MethodHandle_asType_instance, "asType", "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;"),
+      X(TR::unknownMethod)
       };
 
    static X PrimitiveHandleMethods[] =
       {
-      {x(TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired,  "initializeClassIfRequired",       "()V")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired,  "initializeClassIfRequired",       "()V"),
+      X(TR::unknownMethod)
       };
 
    static X VarHandleMethods[] =
@@ -4041,394 +4039,394 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
       // Resolved VarHandle access methods are suffixed with _impl in their names
       // A list for unresolved VarHandle access methods is in VarHandleTransformer.cpp,
       // changes in the following list need to be reflected in the other
-      {X(TR::java_lang_invoke_VarHandle_get                       , "get_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_set                       , "set_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getVolatile               , "getVolatile_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_setVolatile               , "setVolatile_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getOpaque                 , "getOpaque_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_setOpaque                 , "setOpaque_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAcquire                , "getAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_setRelease                , "setRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_compareAndSet             , "compareAndSet_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_compareAndExchange        , "compareAndExchange_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_compareAndExchangeAcquire , "compareAndExchangeAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_compareAndExchangeRelease , "compareAndExchangeRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_weakCompareAndSet         , "weakCompareAndSet_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_weakCompareAndSetAcquire  , "weakCompareAndSetAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_weakCompareAndSetRelease  , "weakCompareAndSetRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_weakCompareAndSetPlain    , "weakCompareAndSetPlain_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndSet                 , "getAndSet_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndSetAcquire          , "getAndSetAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndSetRelease          , "getAndSetRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndAdd                 , "getAndAdd_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndAddAcquire          , "getAndAddAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndAddRelease          , "getAndAddRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseAnd          , "getAndBitwiseAnd_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseAndAcquire   , "getAndBitwiseAndAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseAndRelease   , "getAndBitwiseAndRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseOr           , "getAndBitwiseOr_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseOrAcquire    , "getAndBitwiseOrAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseOrRelease    , "getAndBitwiseOrRelease_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseXor          , "getAndBitwiseXor_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseXorAcquire   , "getAndBitwiseXorAcquire_impl", 9)},
-      {X(TR::java_lang_invoke_VarHandle_getAndBitwiseXorRelease   , "getAndBitwiseXorRelease_impl", 9)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_VarHandle_get                       , "get_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_set                       , "set_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getVolatile               , "getVolatile_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_setVolatile               , "setVolatile_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getOpaque                 , "getOpaque_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_setOpaque                 , "setOpaque_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAcquire                , "getAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_setRelease                , "setRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_compareAndSet             , "compareAndSet_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_compareAndExchange        , "compareAndExchange_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_compareAndExchangeAcquire , "compareAndExchangeAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_compareAndExchangeRelease , "compareAndExchangeRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_weakCompareAndSet         , "weakCompareAndSet_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_weakCompareAndSetAcquire  , "weakCompareAndSetAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_weakCompareAndSetRelease  , "weakCompareAndSetRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_weakCompareAndSetPlain    , "weakCompareAndSetPlain_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndSet                 , "getAndSet_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndSetAcquire          , "getAndSetAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndSetRelease          , "getAndSetRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndAdd                 , "getAndAdd_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndAddAcquire          , "getAndAddAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndAddRelease          , "getAndAddRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseAnd          , "getAndBitwiseAnd_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseAndAcquire   , "getAndBitwiseAndAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseAndRelease   , "getAndBitwiseAndRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseOr           , "getAndBitwiseOr_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseOrAcquire    , "getAndBitwiseOrAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseOrRelease    , "getAndBitwiseOrRelease_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseXor          , "getAndBitwiseXor_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseXorAcquire   , "getAndBitwiseXorAcquire_impl", 9),
+      X(TR::java_lang_invoke_VarHandle_getAndBitwiseXorRelease   , "getAndBitwiseXorRelease_impl", 9),
+      X(TR::unknownMethod)
       };
 
    static X ILGenMacrosMethods[] =
       {
-      {X(TR::java_lang_invoke_ILGenMacros_placeholder , "placeholder", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_numArguments, "numArguments", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_populateArray, "populateArray", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_arrayElements, "arrayElements", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_arrayLength,           "arrayLength",      "(Ljava/lang/Object;)I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_firstN, "firstN", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_dropFirstN, "dropFirstN", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_getField, "getField")},
-      {X(TR::java_lang_invoke_ILGenMacros_invokeExact_X,         "invokeExact_X",    "(Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer)},
-      {x(TR::java_lang_invoke_ILGenMacros_invokeExactAndFixup,   "invokeExact",      "(Ljava/lang/invoke/MethodHandle;I)I")},
-      {X(TR::java_lang_invoke_ILGenMacros_isCustomThunk,         "isCustomThunk",    "()Z", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_isShareableThunk,      "isShareableThunk", "()Z", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_lastN, "lastN", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_middleN, "middleN", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_rawNew,                "rawNew",           "(Ljava/lang/Class;)Ljava/lang/Object;", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_parameterCount,        "parameterCount",   "(Ljava/lang/invoke/MethodHandle;)I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_push, "push", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_pop, "pop_I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_pop, "pop_J", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_pop, "pop_F", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_pop, "pop_D", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_pop, "pop_L", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_ILGenMacros_typeCheck,             "typeCheck",        "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)V", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_ILGenMacros_placeholder , "placeholder", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_numArguments, "numArguments", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_populateArray, "populateArray", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_arrayElements, "arrayElements", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_arrayLength,           "arrayLength",      "(Ljava/lang/Object;)I", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_firstN, "firstN", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_dropFirstN, "dropFirstN", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_getField, "getField"),
+      X(TR::java_lang_invoke_ILGenMacros_invokeExact_X,         "invokeExact_X",    "(Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_invokeExactAndFixup,   "invokeExact",      "(Ljava/lang/invoke/MethodHandle;I)I"),
+      X(TR::java_lang_invoke_ILGenMacros_isCustomThunk,         "isCustomThunk",    "()Z", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_isShareableThunk,      "isShareableThunk", "()Z", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_lastN, "lastN", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_middleN, "middleN", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_rawNew,                "rawNew",           "(Ljava/lang/Class;)Ljava/lang/Object;", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_parameterCount,        "parameterCount",   "(Ljava/lang/invoke/MethodHandle;)I", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_push, "push", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_pop, "pop_I", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_pop, "pop_J", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_pop, "pop_F", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_pop, "pop_D", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_pop, "pop_L", AllPastJavaVer),
+      X(TR::java_lang_invoke_ILGenMacros_typeCheck,             "typeCheck",        "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)V", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X CollectHandleMethods[] =
       {
-      {x(TR::java_lang_invoke_CollectHandle_numArgsToPassThrough,          "numArgsToPassThrough",        "()I")},
-      {X(TR::java_lang_invoke_CollectHandle_numArgsToCollect,              "numArgsToCollect",            "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_CollectHandle_collectionStart,     	       "collectionStart",             "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_CollectHandle_numArgsAfterCollectArray,      "numArgsAfterCollectArray",    "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_CollectHandle_invokeExact, "invokeExact_thunkArchetype_X")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_CollectHandle_numArgsToPassThrough,          "numArgsToPassThrough",        "()I"),
+      X(TR::java_lang_invoke_CollectHandle_numArgsToCollect,              "numArgsToCollect",            "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_CollectHandle_collectionStart,     	       "collectionStart",             "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_CollectHandle_numArgsAfterCollectArray,      "numArgsAfterCollectArray",    "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_CollectHandle_invokeExact, "invokeExact_thunkArchetype_X"),
+      X(TR::unknownMethod)
       };
 
    static X AsTypeHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_AsTypeHandle_convertArgs, "convertArgs", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_AsTypeHandle_convertArgs, "convertArgs", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X EncodeMethods[] =
       {
-      {x(TR::sun_nio_cs_ISO_8859_1_Encoder_encodeArrayLoop,       "encodeArrayLoop", "(Ljava/nio/CharBuffer;Ljava/nio/ByteBuffer;)Ljava/nio/charset/CoderResult;")},
-      {x(TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray,        "encodeISOArray",         "([CI[BII)I")},
-      {x(TR::sun_nio_cs_ISO_8859_1_Decoder_decodeISO8859_1,       "decodeISO8859_1",      "([BII[CI)I")},
-      {x(TR::sun_nio_cs_US_ASCII_Encoder_encodeASCII,             "encodeASCII",             "([CII[BI)I")},
-      {x(TR::sun_nio_cs_US_ASCII_Decoder_decodeASCII,             "decodeASCII",             "([BII[CI)I")},
-      {x(TR::sun_nio_cs_ext_SBCS_Encoder_encodeSBCS,              "encodeSBCS",              "([CII[BI[B)I")},
-      {x(TR::sun_nio_cs_ext_SBCS_Decoder_decodeSBCS,              "decodeSBCS",           "([BII[CI[C)I")},
-      {x(TR::sun_nio_cs_UTF_8_Encoder_encodeUTF_8,                "encodeUTF_8",     "([CII[BI)I")},
-      {x(TR::sun_nio_cs_UTF_8_Decoder_decodeUTF_8,                "decodeUTF_8",          "([BII[CI)I")},
-      {x(TR::sun_nio_cs_UTF_16_Encoder_encodeUTF16Big,            "encodeUTF16Big",       "([CII[BI)I")},
-      {x(TR::sun_nio_cs_UTF_16_Encoder_encodeUTF16Little,         "encodeUTF16Little",    "([CII[BI)I")},
-      {  TR::unknownMethod}
+      X(TR::sun_nio_cs_ISO_8859_1_Encoder_encodeArrayLoop,       "encodeArrayLoop", "(Ljava/nio/CharBuffer;Ljava/nio/ByteBuffer;)Ljava/nio/charset/CoderResult;"),
+      X(TR::sun_nio_cs_ISO_8859_1_Encoder_encodeISOArray,        "encodeISOArray",         "([CI[BII)I"),
+      X(TR::sun_nio_cs_ISO_8859_1_Decoder_decodeISO8859_1,       "decodeISO8859_1",      "([BII[CI)I"),
+      X(TR::sun_nio_cs_US_ASCII_Encoder_encodeASCII,             "encodeASCII",             "([CII[BI)I"),
+      X(TR::sun_nio_cs_US_ASCII_Decoder_decodeASCII,             "decodeASCII",             "([BII[CI)I"),
+      X(TR::sun_nio_cs_ext_SBCS_Encoder_encodeSBCS,              "encodeSBCS",              "([CII[BI[B)I"),
+      X(TR::sun_nio_cs_ext_SBCS_Decoder_decodeSBCS,              "decodeSBCS",           "([BII[CI[C)I"),
+      X(TR::sun_nio_cs_UTF_8_Encoder_encodeUTF_8,                "encodeUTF_8",     "([CII[BI)I"),
+      X(TR::sun_nio_cs_UTF_8_Decoder_decodeUTF_8,                "decodeUTF_8",          "([BII[CI)I"),
+      X(TR::sun_nio_cs_UTF_16_Encoder_encodeUTF16Big,            "encodeUTF16Big",       "([CII[BI)I"),
+      X(TR::sun_nio_cs_UTF_16_Encoder_encodeUTF16Little,         "encodeUTF16Little",    "([CII[BI)I"),
+      X(TR::unknownMethod)
       };
 
    static X IBM1388EncoderMethods[] =
       {
-      {x(TR::sun_nio_cs_ext_IBM1388_Encoder_encodeArrayLoop,      "encodeArrayLoop", "(Ljava/nio/CharBuffer;Ljava/nio/ByteBuffer;)Ljava/nio/charset/CoderResult;")},
-      {  TR::unknownMethod}
+      X(TR::sun_nio_cs_ext_IBM1388_Encoder_encodeArrayLoop,      "encodeArrayLoop", "(Ljava/nio/CharBuffer;Ljava/nio/ByteBuffer;)Ljava/nio/charset/CoderResult;"),
+      X(TR::unknownMethod)
       };
 
    static X ExplicitCastHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_ExplicitCastHandle_convertArgs, "convertArgs", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_ExplicitCastHandle_convertArgs, "convertArgs", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X ArgumentMoverHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_ArgumentMoverHandle_permuteArgs,  "permuteArgs",   "(I)I", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_ArgumentMoverHandle_permuteArgs,  "permuteArgs",   "(I)I", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X BruteArgumentMoverHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_BruteArgumentMoverHandle_permuteArgs, "permuteArgs", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_BruteArgumentMoverHandle_permuteArgs, "permuteArgs", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X PermuteHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_PermuteHandle_permuteArgs, "permuteArgs", "(I)I", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_PermuteHandle_permuteArgs, "permuteArgs", "(I)I", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X GuardWithTestHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_GuardWithTestHandle_numGuardArgs,  "numGuardArgs", "()I", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_GuardWithTestHandle_numGuardArgs,  "numGuardArgs", "()I", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X InsertHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_InsertHandle_numPrefixArgs,      "numPrefixArgs",     "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_InsertHandle_numSuffixArgs,      "numSuffixArgs",     "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_InsertHandle_numValuesToInsert,  "numValuesToInsert", "()I", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_InsertHandle_numPrefixArgs,      "numPrefixArgs",     "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_InsertHandle_numSuffixArgs,      "numSuffixArgs",     "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_InsertHandle_numValuesToInsert,  "numValuesToInsert", "()I", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X DirectHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_DirectHandle_isAlreadyCompiled,   "isAlreadyCompiled",  "(J)Z", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_DirectHandle_compiledEntryPoint,  "compiledEntryPoint", "(J)J", AllPastJavaVer)},
-      {x(TR::java_lang_invoke_DirectHandle_nullCheckIfRequired,  "nullCheckIfRequired", "(Ljava/lang/Object;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_DirectHandle_isAlreadyCompiled,   "isAlreadyCompiled",  "(J)Z", AllPastJavaVer),
+      X(TR::java_lang_invoke_DirectHandle_compiledEntryPoint,  "compiledEntryPoint", "(J)J", AllPastJavaVer),
+      X(TR::java_lang_invoke_DirectHandle_nullCheckIfRequired,  "nullCheckIfRequired", "(Ljava/lang/Object;)V"),
+      X(TR::unknownMethod)
       };
 
    static X SpreadHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_SpreadHandle_numArgsToPassThrough,  "numArgsToPassThrough",   "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_SpreadHandle_numArgsToSpread,       "numArgsToSpread",        "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_SpreadHandle_spreadStart,           "spreadStart",            "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_SpreadHandle_numArgsAfterSpreadArray,       "numArgsAfterSpreadArray",        "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_SpreadHandle_arrayArg, "arrayArg", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_SpreadHandle_numArgsToPassThrough,  "numArgsToPassThrough",   "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_SpreadHandle_numArgsToSpread,       "numArgsToSpread",        "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_SpreadHandle_spreadStart,           "spreadStart",            "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_SpreadHandle_numArgsAfterSpreadArray,       "numArgsAfterSpreadArray",        "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_SpreadHandle_arrayArg, "arrayArg", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X FoldHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_FoldHandle_foldPosition,               "foldPosition",            "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FoldHandle_argIndices,                 "argIndices",               "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FoldHandle_argumentsForCombiner, "argumentsForCombiner", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_FoldHandle_foldPosition,               "foldPosition",            "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FoldHandle_argIndices,                 "argIndices",               "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FoldHandle_argumentsForCombiner, "argumentsForCombiner", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
    static X FilterArgumentsWithCombinerHandleMethods[] =
       {
-      {x(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_filterPosition,               "filterPosition",            "()I")},
-      {x(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_argumentIndices,               "argumentIndices",            "()I")},
-      {x(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_numSuffixArgs,      "numSuffixArgs",     "()I")},
-      {X(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_argumentsForCombiner, "argumentsForCombiner")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_filterPosition,               "filterPosition",            "()I"),
+      X(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_argumentIndices,               "argumentIndices",            "()I"),
+      X(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_numSuffixArgs,      "numSuffixArgs",     "()I"),
+      X(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_argumentsForCombiner, "argumentsForCombiner"),
+      X(TR::unknownMethod)
       };
 
    static X FinallyHandleMethods[]=
       {
-      {X(TR::java_lang_invoke_FinallyHandle_numFinallyTargetArgsToPassThrough,    "numFinallyTargetArgsToPassThrough",   "()I", 9)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_FinallyHandle_numFinallyTargetArgsToPassThrough,    "numFinallyTargetArgsToPassThrough",   "()I", 9),
+      X(TR::unknownMethod)
       };
 
     static X FilterArgumentsHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_FilterArgumentsHandle_numPrefixArgs,         "numPrefixArgs",    "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FilterArgumentsHandle_numSuffixArgs,         "numSuffixArgs",    "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FilterArgumentsHandle_numArgsToFilter,       "numArgsToFilter",  "()I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FilterArgumentsHandle_filterArguments,       "filterArguments",  "([Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer)},
-      {X(TR::java_lang_invoke_FilterArgumentsHandle_invokeExact, "invokeExact_thunkArchetype_X")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_FilterArgumentsHandle_numPrefixArgs,         "numPrefixArgs",    "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FilterArgumentsHandle_numSuffixArgs,         "numSuffixArgs",    "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FilterArgumentsHandle_numArgsToFilter,       "numArgsToFilter",  "()I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FilterArgumentsHandle_filterArguments,       "filterArguments",  "([Ljava/lang/invoke/MethodHandle;I)I", AllPastJavaVer),
+      X(TR::java_lang_invoke_FilterArgumentsHandle_invokeExact, "invokeExact_thunkArchetype_X"),
+      X(TR::unknownMethod)
       };
 
    static X CatchHandleMethods[] =
       {
-      {X(TR::java_lang_invoke_CatchHandle_numCatchTargetArgsToPassThrough,       "numCatchTargetArgsToPassThrough",  "()I", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_CatchHandle_numCatchTargetArgsToPassThrough,       "numCatchTargetArgsToPassThrough",  "()I", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X MethodHandlesMethods[] =
       {
-      {X(TR::java_lang_invoke_MethodHandles_getStackClass,   "getStackClass",  "(I)Ljava/lang/Class;", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_MethodHandles_getStackClass,   "getStackClass",  "(I)Ljava/lang/Class;", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
    static X MutableCallSiteMethods[] =
       {
-      {x(TR::java_lang_invoke_MutableCallSite_getTarget,   "getTarget",  "()Ljava/lang/invoke/MethodHandle;")},
-      {  TR::unknownMethod}
+      X(TR::java_lang_invoke_MutableCallSite_getTarget,   "getTarget",  "()Ljava/lang/invoke/MethodHandle;"),
+      X(TR::unknownMethod)
       };
 
    static X GregorianCalendarMethods [] =
       {
-      {x(TR::java_util_GregorianCalendar_computeFields, "computeFields", "(II)I")},
-      {  TR::unknownMethod}
+      X(TR::java_util_GregorianCalendar_computeFields, "computeFields", "(II)I"),
+      X(TR::unknownMethod)
       };
 
    static X NativeThreadMethods[] =
       {
-      {X(TR::sun_nio_ch_NativeThread_current, "current", "()J", AllPastJavaVer)},
-      {  TR::unknownMethod}
+      X(TR::sun_nio_ch_NativeThread_current, "current", "()J", AllPastJavaVer),
+      X(TR::unknownMethod)
       };
 
 
    static X  GPUMethods [] =
       {
-      {x(TR::com_ibm_gpu_Kernel_blockIdxX,                   "getBlockIdxX",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_blockIdxY,                   "getBlockIdxY",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_blockIdxZ,                   "getBlockIdxZ",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_blockDimX,                   "getBlockDimX",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_blockDimY,                   "getBlockDimY",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_blockDimZ,                   "getBlockDimZ",   "()I")},
-      {x(TR::com_ibm_gpu_Kernel_threadIdxX,                  "getThreadIdxX",  "()I")},
-      {x(TR::com_ibm_gpu_Kernel_threadIdxY,                  "getThreadIdxY",  "()I")},
-      {x(TR::com_ibm_gpu_Kernel_threadIdxZ,                  "getThreadIdxZ",  "()I")},
-      {x(TR::com_ibm_gpu_Kernel_syncThreads,                 "syncThreads",    "()V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_gpu_Kernel_blockIdxX,                   "getBlockIdxX",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_blockIdxY,                   "getBlockIdxY",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_blockIdxZ,                   "getBlockIdxZ",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_blockDimX,                   "getBlockDimX",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_blockDimY,                   "getBlockDimY",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_blockDimZ,                   "getBlockDimZ",   "()I"),
+      X(TR::com_ibm_gpu_Kernel_threadIdxX,                  "getThreadIdxX",  "()I"),
+      X(TR::com_ibm_gpu_Kernel_threadIdxY,                  "getThreadIdxY",  "()I"),
+      X(TR::com_ibm_gpu_Kernel_threadIdxZ,                  "getThreadIdxZ",  "()I"),
+      X(TR::com_ibm_gpu_Kernel_syncThreads,                 "syncThreads",    "()V"),
+      X(TR::unknownMethod)
       };
 
 
    static X SIMDMethods [] =
       {
       // ---- Integer Type Operations
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddInt,           "vectorAddInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSubInt,           "vectorSubInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMulInt,           "vectorMulInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorDivInt,           "vectorDivInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorRemInt,           "vectorRemInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNegInt,           "vectorNegInt",    "([II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsInt,        "vectorSplatsInt", "([III)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMinInt,           "vectorMinInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMaxInt,           "vectorMaxInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreInt,         "vectorCopyInt",   "([II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreInt,         "vectorStoreInt",   "([II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpEqInt,         "vectorCmpEqInt",   "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpGeInt,         "vectorCmpGeInt",   "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpGtInt,         "vectorCmpGtInt",   "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpLeInt,         "vectorCmpLeInt",   "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpLtInt,         "vectorCmpLtInt",   "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllEqInt,      "vectorCmpAllEqInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGeInt,      "vectorCmpAllGeInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGtInt,      "vectorCmpAllGtInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLeInt,      "vectorCmpAllLeInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLtInt,      "vectorCmpAllLtInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyEqInt,      "vectorCmpAnyEqInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGeInt,      "vectorCmpAnyGeInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGtInt,      "vectorCmpAnyGtInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLeInt,      "vectorCmpAnyLeInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLtInt,      "vectorCmpAnyLtInt",   "([II[II)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAndInt,           "vectorAndInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorOrInt,           "vectorOrInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorXorInt,           "vectorXorInt",    "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNotInt,           "vectorNotInt",    "([II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorGetElementInt,    "vectorGetElementInt", "([II)I")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSetElementInt,    "vectorSetElementInt", "([III)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMergeHighInt,     "vectorMergeHighInt", "([II[II[II)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMergeLowInt,      "vectorMergeLowInt",  "([II[II[II)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddInt,           "vectorAddInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSubInt,           "vectorSubInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMulInt,           "vectorMulInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorDivInt,           "vectorDivInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorRemInt,           "vectorRemInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNegInt,           "vectorNegInt",    "([II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsInt,        "vectorSplatsInt", "([III)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMinInt,           "vectorMinInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMaxInt,           "vectorMaxInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreInt,         "vectorCopyInt",   "([II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreInt,         "vectorStoreInt",   "([II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpEqInt,         "vectorCmpEqInt",   "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpGeInt,         "vectorCmpGeInt",   "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpGtInt,         "vectorCmpGtInt",   "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpLeInt,         "vectorCmpLeInt",   "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpLtInt,         "vectorCmpLtInt",   "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllEqInt,      "vectorCmpAllEqInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGeInt,      "vectorCmpAllGeInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGtInt,      "vectorCmpAllGtInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLeInt,      "vectorCmpAllLeInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLtInt,      "vectorCmpAllLtInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyEqInt,      "vectorCmpAnyEqInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGeInt,      "vectorCmpAnyGeInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGtInt,      "vectorCmpAnyGtInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLeInt,      "vectorCmpAnyLeInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLtInt,      "vectorCmpAnyLtInt",   "([II[II)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorAndInt,           "vectorAndInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorOrInt,           "vectorOrInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorXorInt,           "vectorXorInt",    "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNotInt,           "vectorNotInt",    "([II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorGetElementInt,    "vectorGetElementInt", "([II)I"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSetElementInt,    "vectorSetElementInt", "([III)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMergeHighInt,     "vectorMergeHighInt", "([II[II[II)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMergeLowInt,      "vectorMergeLowInt",  "([II[II[II)V"),
 
       // ---- Long Type Operations
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddLong,           "vectorAddLong",    "([JI[JI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSubLong,           "vectorSubLong",    "([JI[JI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMulLong,           "vectorMulLong",    "([JI[JI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorDivLong,           "vectorDivLong",    "([JI[JI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorRemLong,           "vectorRemLong",    "([JI[JI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNegLong,           "vectorNegLong",    "([JI[JI)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddLong,           "vectorAddLong",    "([JI[JI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSubLong,           "vectorSubLong",    "([JI[JI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMulLong,           "vectorMulLong",    "([JI[JI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorDivLong,           "vectorDivLong",    "([JI[JI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorRemLong,           "vectorRemLong",    "([JI[JI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNegLong,           "vectorNegLong",    "([JI[JI)V"),
 
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreByte,         "vectorStoreByte",   "([BI[BI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreChar,         "vectorStoreChar",   "([CI[CI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreShort,        "vectorStoreShort",  "([SI[SI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreLong,         "vectorStoreLong",   "([JI[JI)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreByte,         "vectorStoreByte",   "([BI[BI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreChar,         "vectorStoreChar",   "([CI[CI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreShort,        "vectorStoreShort",  "([SI[SI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreLong,         "vectorStoreLong",   "([JI[JI)V"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsByte,        "vectorSplatsByte",  "([BIB)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsChar,        "vectorSplatsChar",  "([CIC)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsShort,       "vectorSplatsShort", "([SIS)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsLong,        "vectorSplatsLong",  "([JIJ)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsByte,        "vectorSplatsByte",  "([BIB)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsChar,        "vectorSplatsChar",  "([CIC)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsShort,       "vectorSplatsShort", "([SIS)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsLong,        "vectorSplatsLong",  "([JIJ)V"),
 
       // ---- Float Type Operations
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddFloat,           "vectorAddFloat",    "([FI[FI[FI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSubFloat,           "vectorSubFloat",    "([FI[FI[FI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMulFloat,           "vectorMulFloat",    "([FI[FI[FI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorDivFloat,           "vectorDivFloat",    "([FI[FI[FI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNegFloat,           "vectorNegFloat",    "([FI[FI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsFloat,        "vectorSplatsFloat", "([FIF)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddFloat,           "vectorAddFloat",    "([FI[FI[FI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSubFloat,           "vectorSubFloat",    "([FI[FI[FI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMulFloat,           "vectorMulFloat",    "([FI[FI[FI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorDivFloat,           "vectorDivFloat",    "([FI[FI[FI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNegFloat,           "vectorNegFloat",    "([FI[FI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsFloat,        "vectorSplatsFloat", "([FIF)V"),
 
       // ---- Double Type Operations
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddDouble,           "vectorAddDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMinDouble,           "vectorMinDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMaxDouble,           "vectorMaxDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddress,             "vectorAddress", "([D)J")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddDouble,           "vectorAddDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMinDouble,           "vectorMinDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMaxDouble,           "vectorMaxDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddress,             "vectorAddress", "([D)J"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorAddReduceDouble,     "vectorAddReduceDouble", "([DI)D")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpEqDouble,         "vectorCmpEqDouble",   "([JI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpGeDouble,         "vectorCmpGeDouble",   "([JI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpGtDouble,         "vectorCmpGtDouble",   "([JI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpLeDouble,         "vectorCmpLeDouble",   "([JI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpLtDouble,         "vectorCmpLtDouble",   "([JI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllEqDouble,      "vectorCmpAllEqDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGeDouble,      "vectorCmpAllGeDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGtDouble,      "vectorCmpAllGtDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLeDouble,      "vectorCmpAllLeDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLtDouble,      "vectorCmpAllLtDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyEqDouble,      "vectorCmpAnyEqDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGeDouble,      "vectorCmpAnyGeDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGtDouble,      "vectorCmpAnyGtDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLeDouble,      "vectorCmpAnyLeDouble",   "([DI[DI)Z")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLtDouble,      "vectorCmpAnyLtDouble",   "([DI[DI)Z")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorAddReduceDouble,     "vectorAddReduceDouble", "([DI)D"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpEqDouble,         "vectorCmpEqDouble",   "([JI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpGeDouble,         "vectorCmpGeDouble",   "([JI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpGtDouble,         "vectorCmpGtDouble",   "([JI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpLeDouble,         "vectorCmpLeDouble",   "([JI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpLtDouble,         "vectorCmpLtDouble",   "([JI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllEqDouble,      "vectorCmpAllEqDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGeDouble,      "vectorCmpAllGeDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllGtDouble,      "vectorCmpAllGtDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLeDouble,      "vectorCmpAllLeDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAllLtDouble,      "vectorCmpAllLtDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyEqDouble,      "vectorCmpAnyEqDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGeDouble,      "vectorCmpAnyGeDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyGtDouble,      "vectorCmpAnyGtDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLeDouble,      "vectorCmpAnyLeDouble",   "([DI[DI)Z"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorCmpAnyLtDouble,      "vectorCmpAnyLtDouble",   "([DI[DI)Z"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorDivDouble,           "vectorDivDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorGetElementDouble,    "vectorGetElementDouble", "([DI)D")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSetElementDouble,    "vectorSetElementDouble", "([DID)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorDivDouble,           "vectorDivDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorGetElementDouble,    "vectorGetElementDouble", "([DI)D"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSetElementDouble,    "vectorSetElementDouble", "([DID)V"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorLoadWithStrideDouble, "vectorLoadWithStrideDouble", "([DI[DII)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorLogDouble,            "vectorLogDouble",             "([DI[DI)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorLoadWithStrideDouble, "vectorLoadWithStrideDouble", "([DI[DII)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorLogDouble,            "vectorLogDouble",             "([DI[DI)V"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMaddDouble,          "vectorMaddDouble",      "([DI[DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMergeHighDouble,     "vectorMergeHighDouble", "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMergeLowDouble,      "vectorMergeLowDouble",  "([DI[DI[DI)V")},
+      X(TR::com_ibm_dataaccess_SIMD_vectorMaddDouble,          "vectorMaddDouble",      "([DI[DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMergeHighDouble,     "vectorMergeHighDouble", "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMergeLowDouble,      "vectorMergeLowDouble",  "([DI[DI[DI)V"),
 
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMulDouble,           "vectorMulDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNegDouble,           "vectorNegDouble",    "([DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorNmsubDouble,         "vectorNmsubDouble",   "([DI[DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorMsubDouble,          "vectorMsubDouble",   "([DI[DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSelDouble,           "vectorSelDouble",   "([DI[DI[DI[JI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSplatsDouble,        "vectorSplatsDouble", "([DID)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreDouble,         "vectorStoreDouble",  "([DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorStoreDouble,         "vectorCopyDouble",   "([DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSubDouble,           "vectorSubDouble",    "([DI[DI[DI)V")},
-      // {x(TR::com_ibm_dataaccess_SIMD_vectorRemDouble,           "vectorRemDouble",    "([DI[DI[DI)V")},
-      {x(TR::com_ibm_dataaccess_SIMD_vectorSqrtDouble,           "vectorSqrtDouble",    "([DI[DI)V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_dataaccess_SIMD_vectorMulDouble,           "vectorMulDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNegDouble,           "vectorNegDouble",    "([DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorNmsubDouble,         "vectorNmsubDouble",   "([DI[DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorMsubDouble,          "vectorMsubDouble",   "([DI[DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSelDouble,           "vectorSelDouble",   "([DI[DI[DI[JI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSplatsDouble,        "vectorSplatsDouble", "([DID)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreDouble,         "vectorStoreDouble",  "([DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorStoreDouble,         "vectorCopyDouble",   "([DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSubDouble,           "vectorSubDouble",    "([DI[DI[DI)V"),
+      // x(TR::com_ibm_dataaccess_SIMD_vectorRemDouble,           "vectorRemDouble",    "([DI[DI[DI)V"),
+      X(TR::com_ibm_dataaccess_SIMD_vectorSqrtDouble,           "vectorSqrtDouble",    "([DI[DI)V"),
+      X(TR::unknownMethod)
       };
 
 #if defined(ENABLE_SPMD_SIMD)
    static X SPMDKernelBaseMethods [] =
       {
-      {x(TR::com_ibm_simt_SPMDKernel_execute,   "execute",   "(II)V")},
-      {x(TR::com_ibm_simt_SPMDKernel_kernel,    "kernel",   "()V")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_simt_SPMDKernel_execute,   "execute",   "(II)V"),
+      X(TR::com_ibm_simt_SPMDKernel_kernel,    "kernel",   "()V"),
+      X(TR::unknownMethod)
       };
 #endif
 
    static X JavaUtilStreamAbstractPipelineMethods [] =
       {
-      {x(TR::java_util_stream_AbstractPipeline_evaluate, "evaluate", "(Ljava/util/stream/TerminalOp;)Ljava/lang/Object;")},
-      {  TR::unknownMethod}
+      X(TR::java_util_stream_AbstractPipeline_evaluate, "evaluate", "(Ljava/util/stream/TerminalOp;)Ljava/lang/Object;"),
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilStreamIntPipelineMethods [] =
       {
-      {x(TR::java_util_stream_IntPipeline_forEach, "forEach", "(Ljava/util/function/IntConsumer;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_stream_IntPipeline_forEach, "forEach", "(Ljava/util/function/IntConsumer;)V"),
+      X(TR::unknownMethod)
       };
 
    static X JavaUtilStreamIntPipelineHeadMethods [] =
       {
-      {x(TR::java_util_stream_IntPipelineHead_forEach, "forEach", "(Ljava/util/function/IntConsumer;)V")},
-      {  TR::unknownMethod}
+      X(TR::java_util_stream_IntPipelineHead_forEach, "forEach", "(Ljava/util/function/IntConsumer;)V"),
+      X(TR::unknownMethod)
       };
 
    static X MTTenantContext[] =
       {
-      {x(TR::com_ibm_tenant_TenantContext_switchTenant, "switchTenant", "(Lcom/ibm/tenant/TenantContext;)V")},
-      {x(TR::com_ibm_tenant_TenantContext_attach, "attach", "()V")},
-      {x(TR::com_ibm_tenant_TenantContext_detach, "detach", "()V")},
-      {x(TR::com_ibm_tenant_InternalTenantContext_setCurrent, "setCurrent", "(Lcom/ibm/tenant/TenantContext;)I")},
-      {  TR::unknownMethod}
+      X(TR::com_ibm_tenant_TenantContext_switchTenant, "switchTenant", "(Lcom/ibm/tenant/TenantContext;)V"),
+      X(TR::com_ibm_tenant_TenantContext_attach, "attach", "()V"),
+      X(TR::com_ibm_tenant_TenantContext_detach, "detach", "()V"),
+      X(TR::com_ibm_tenant_InternalTenantContext_setCurrent, "setCurrent", "(Lcom/ibm/tenant/TenantContext;)I"),
+      X(TR::unknownMethod)
       };
 
    static X JavaLangRefSoftReferenceMethods [] =
       {
-      {x(TR::java_lang_ref_SoftReference_get, "get", "()Ljava/lang/Object;")},
-      {  TR::unknownMethod},
+      X(TR::java_lang_ref_SoftReference_get, "get", "()Ljava/lang/Object;"),
+      X(TR::unknownMethod),
       };
 
    struct Y { const char * _class; X * _methods; };
