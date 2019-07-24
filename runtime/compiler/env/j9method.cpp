@@ -4253,7 +4253,11 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
    static X NativeThreadMethods[] =
       {
+#if defined(WINDOWS)
+      X(TR::sun_nio_ch_NativeThread_current, "current", "()J"),
+#else
       X(TR::sun_nio_ch_NativeThread_current, "current", "()J", AllPastJavaVer),
+#endif
       X(TR::unknownMethod)
       };
 
