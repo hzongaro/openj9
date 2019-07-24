@@ -3995,7 +3995,7 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
       {
       X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmOffer,     "tmOffer", "(Ljava/util/concurrent/ConcurrentLinkedQueue$Node;)I", AllPastJavaVer),
       X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmPoll,      "tmPoll",  "()Ljava/lang/Object;", AllPastJavaVer),
-      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z", AllPastJavaVer),
+      X(TR::java_util_concurrent_ConcurrentLinkedQueue_tmEnabled,   "tmEnabled",  "()Z"),
 
       X(TR::unknownMethod)
       };
