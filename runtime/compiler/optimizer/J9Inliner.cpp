@@ -338,12 +338,22 @@ static void populateOSRCallSiteRematTable(TR::Optimizer* optimizer, TR_CallTarge
       // since it was anchored.
       //
       int32_t callerIndex = child->getByteCodeInfo().getCallerIndex();
+
+      // TODO:  Once OMR introduces a definition of INLINER_OSR_CALLING_METHOD,
+      //        the #else part of this #if can be removed.
+#if defined(INLINER_OSR_CALLING_METHOD)
       if (child->getOpCode().hasSymbolReference()
           && (child->getSymbol()->isParm()
              || (child->getSymbol()->isAuto()
-      && child->getSymbolReference()->getCPIndex() <
-               (( (callerIndex == -1) ? comp->getMethodSymbol()
-                                      : comp->getInlinedResolvedMethodSymbol(callerIndex) )->getFirstJitTempIndex()))))
+                 && child->getSymbolReference()->getCPIndex() <
+                    (( (callerIndex == -1) ? comp->getMethodSymbol()
+                                           : comp->getInlinedResolvedMethodSymbol(callerIndex) )->getFirstJitTempIndex()))))
+#else /* !defined(INLINER_OSR_CALLING_METHOD) */
+      if (child->getOpCode().hasSymbolReference()
+          && (child->getSymbol()->isParm()
+             || (child->getSymbol()->isAuto()
+                 && child->getSymbolReference()->getCPIndex() < child->getSymbolReference()->getOwningMethodSymbol(comp)->getFirstJitTempIndex())))
+#endif /* defined(INLINER_OSR_CALLING_METHOD) */
          {
          if (comp->trace(OMR::inlining))
             traceMsg(comp, "callSiteRemat: found potential pending push #%d with store #%d\n", store->getSymbolReference()->getReferenceNumber(),
