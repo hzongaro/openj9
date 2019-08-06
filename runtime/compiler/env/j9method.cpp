@@ -23,6 +23,7 @@
 #include "env/j9method.h"
 
 #include <stddef.h>
+#include <limits>
 #include "bcnames.h"
 #include "fastJNI.h"
 #include "j9.h"
@@ -2372,11 +2373,17 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
    struct X
       {
+      typedef int8_t javaVersion_t;
+      #define AllPastJavaVer (std::numeric_limits<int8_t>::min())
+      #define AllFutureJavaVer (std::numeric_limits<int8_t>::max())
+
       TR::RecognizedMethod _enum;
       char _nameLen;
       const char * _name;
       int16_t _sigLen;
       const char * _sig;
+      javaVersion_t _nativeMinVersion;
+      javaVersion_t _nativeMaxVersion;
    };
 
    static X ArrayListMethods[] =
