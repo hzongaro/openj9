@@ -2391,7 +2391,7 @@ TR_ResolvedJ9Method::TR_ResolvedJ9Method(TR_OpaqueMethodBlock * aMethod, TR_Fron
 
 // xClMeth, xSig, xWCSig and xNonNativeRange are intermediate macros used in
 // the macros used to initialize entries in the tables of recognized methods
-#define xClMeth(cl, meth) cl, sizeof(meth), meth
+#define xClMeth(cl, meth) cl, sizeof(meth) - 1, meth
 #define xSig(sig)         (int16_t) strlen(sig), sig
 #define xWCSig            (int16_t) -1, "*"
 #define xNonNativeRange   AllPastJavaVer, AllPastJavaVer
