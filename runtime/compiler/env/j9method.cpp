@@ -2658,6 +2658,30 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod}
       };
 
+   static X FdLibmCbrtMethods[] =
+      {
+      {x(TR::java_lang_StrictMath_cbrt,  "compute", "(D)D")},
+      {  TR::unknownMethod}
+      };
+
+   static X FdLibmExpMethods[] =
+      {
+      {x(TR::java_lang_StrictMath_exp,   "compute", "(D)D")},
+      {  TR::unknownMethod}
+      };
+
+   static X FdLibmHypotMethods[] =
+      {
+      {x(TR::java_lang_StrictMath_hypot, "compute", "(DD)D")},
+      {  TR::unknownMethod}
+      };
+
+   static X FdLibmPowMethods[] =
+      {
+      {x(TR::java_lang_StrictMath_pow,   "compute", "(DD)D")},
+      {  TR::unknownMethod}
+      };
+
    static X ObjectMethods[] =
       {
       {xAnySig(TR::java_lang_Object_init, "<init>")},
@@ -4420,6 +4444,8 @@ void TR_ResolvedJ9Method::construct()
       { "java/lang/StrictMath", StrictMathMethods },
       { "java/math/BigDecimal", BigDecimalMethods },
       { "java/math/BigInteger", BigIntegerMethods },
+      { "java/lang/FdLibm$Exp", FdLibmExpMethods },
+      { "java/lang/FdLibm$Pow", FdLibmPowMethods },
       { 0 }
       };
 
@@ -4427,6 +4453,7 @@ void TR_ResolvedJ9Method::construct()
       {
       { "java/lang/ClassLoader", ClassLoaderMethods },
       { "java/lang/StringUTF16", StringUTF16Methods },
+      { "java/lang/FdLibm$Cbrt", FdLibmCbrtMethods },
       { 0 }
       };
 
@@ -4438,6 +4465,7 @@ void TR_ResolvedJ9Method::construct()
       { "com/ibm/jit/JITHelpers", JITHelperMethods},
       { "java/lang/StringCoding", StringCodingMethods },
       { "java/lang/StringLatin1", StringLatin1Methods },
+      { "java/lang/FdLibm$Hypot", FdLibmHypotMethods },
       { 0 }
       };
 
