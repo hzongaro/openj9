@@ -4889,12 +4889,26 @@ TR_J9InlinerUtil::computePrexInfo(TR_CallTarget *target)
    // looks like constraint merging, and is redundant with what VP already does.
    //
    TR_PrexArgInfo *argInfo = target->_prexArgInfo;
-   if (!argInfo)
-      argInfo = new (inliner()->trStackMemory()) TR_PrexArgInfo(site->_callNode->getNumArguments(), trMemory());
-
    bool tracePrex = comp()->trace(OMR::inlining) || comp()->trace(OMR::invariantArgumentPreexistence);
+
    if (tracePrex)
+      {
       traceMsg(comp(), "PREX.inl: Populating prex argInfo for [%p] %s %s\n", site->_callNode, site->_callNode->getOpCode().getName(), site->_callNode->getSymbol()->castToMethodSymbol()->getMethod()->signature(trMemory(), stackAlloc));
+
+      if (argInfo)
+         {
+         traceMsg(comp(), "PREX.inl:  Has existing argInfo %p\n", argInfo);
+         }
+      }
+
+   if (!argInfo)
+      {
+      argInfo = new (inliner()->trStackMemory()) TR_PrexArgInfo(site->_callNode->getNumArguments(), trMemory());
+      if (tracePrex)
+         {
+         traceMsg(comp(), "PREX.inl:  Allocating new argInfo %p\n", argInfo);
+         }
+      }
 
    // At this stage, we can improve the type of the virtual guard we are going to use
    // For a non-overridden guard or for an interface guard, if it makes sense, try to use a vft-test
@@ -4925,10 +4939,25 @@ TR_J9InlinerUtil::computePrexInfo(TR_CallTarget *target)
       TR::Node *argument = site->_callNode->getChild(c);
       if (tracePrex)
          {
-         traceMsg(comp(), "PREX.inl:    Child %d [%p] arg %p %s%s %s\n",
+         traceMsg(comp(), "PREX.inl:    Child %d [%p] arg %p %s%s %s",
             c, argument, prexArgument, TR_PrexArgument::priorKnowledgeStrings[priorKnowledge],
             argument->getOpCode().getName(),
             argument->getOpCode().hasSymbolReference()? argument->getSymbolReference()->getName(comp()->getDebug()) : "");
+         if (priorKnowledge == KNOWN_OBJECT)
+            {
+            if (argument.hasSymbolReference())
+               {
+               traceMsg(comp(), " known object obj%d\n", argument->getSymbolReference()->getKnownObjectIndex());
+               }
+            else
+               {
+               traceMsg(comp(), " prior knowledge indicates known object, but argument has no symbol reference\n");
+               }
+            }
+         else
+            {
+            traceMsg(comp(), "\n");
+            }
          }
 
       if (c == site->_callNode->getFirstArgumentIndex()) // if the argument is the this-child
