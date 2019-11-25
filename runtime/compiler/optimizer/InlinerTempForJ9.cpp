@@ -4945,7 +4945,7 @@ TR_J9InlinerUtil::computePrexInfo(TR_CallTarget *target)
             argument->getOpCode().hasSymbolReference()? argument->getSymbolReference()->getName(comp()->getDebug()) : "");
          if (priorKnowledge == KNOWN_OBJECT)
             {
-            if (argument.hasSymbolReference())
+            if (argument->getOpCode().hasSymbolReference())
                {
                traceMsg(comp(), " known object obj%d\n", argument->getSymbolReference()->getKnownObjectIndex());
                }
