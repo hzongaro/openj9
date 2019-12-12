@@ -23,6 +23,7 @@
 #include "env/j9method.h"
 
 #include <stddef.h>
+#include <stdint.h>
 #include "bcnames.h"
 #include "fastJNI.h"
 #include "j9.h"
