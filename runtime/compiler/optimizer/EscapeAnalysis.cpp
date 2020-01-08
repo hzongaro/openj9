@@ -7055,7 +7055,7 @@ void TR_EscapeAnalysis::makeNonContiguousLocalAllocation(Candidate *candidate)
 
 void TR_EscapeAnalysis::heapifyForColdBlocks(Candidate *candidate)
    {
-   static char *disableTernaryOpForEA = feGetEnv("TR_disableTernaryOpForEA");
+   static char *disableTernaryOpForEA = "yes"; // feGetEnv("TR_disableTernaryOpForEA");
    bool useTernaryOp = !disableTernaryOpForEA && cg()->getSupportsTernary();
 
    if (comp()->suppressAllocationInlining())
