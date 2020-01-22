@@ -591,6 +591,22 @@ class TR_EscapeAnalysis : public TR::Optimization
    void     makeContiguousLocalAllocation(Candidate *candidate);
    void     makeNonContiguousLocalAllocation(Candidate *candidate);
    void     heapifyForColdBlocks(Candidate *candidate);
+
+   /**
+    * \brief Store the supplied address to the specified temporary
+    *
+    * \param candidate
+    *     The candidate that is being heapified
+    *
+    * \param addr
+    *     The address of the possibly heapified object
+    *
+    * \param symRef
+    *     The \ref TR::SymbolReference for the temporay
+    *
+    * \return A pointer to the \ref TR::TreeTop containing the store
+    */
+   TR::TreeTop *storeHeapifiedToTemp(Candidate *candidate, TR::Node *addr, TR::SymbolReference *symRef);
    bool     inlineCallSites();
    void     scanForExtraCallsToInline();
    bool     alwaysWorthInlining(TR::Node *callNode);
