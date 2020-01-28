@@ -1847,6 +1847,11 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
 bool TR_EscapeAnalysis::isEscapePointCold(Candidate *candidate, TR::Node *node)
    {
    static const char *disableColdEsc = feGetEnv("TR_DisableColdEscape");
+
+if (trace())
+{
+traceMsg(comp(), "HZ:  isEscapePointCold for candidate [%p] node [%p] - _inColdBlock %d; isInsideALoop %d; frequency test %d; _origKind == TR::New == %d\n", candidate->_node, node, _inColdBlock, candidate->isInsideALoop(), (candidate->_block->getFrequency() > 4*_curBlock->getFrequency()), (candidate->_origKind == TR::New));
+}
    if (!disableColdEsc &&
        (_inColdBlock ||
         (candidate->isInsideALoop() &&
@@ -3544,9 +3549,19 @@ bool TR_EscapeAnalysis::restrictCandidates(TR::Node *node, TR::Node *reason, res
 
 bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node *node)
    {
+if (trace())
+{
+traceMsg(comp(), "HZ:  checkIfEscapePointIsCold for candidate [%p] node [%p]\n", candidate->_node, node);
+}
    if (_curBlock->isOSRCodeBlock() ||
        _curBlock->isOSRCatchBlock())
+{
+if (trace())
+{
+traceMsg(comp(), "HZ:  OSR code block or catch block - not cold escape\n");
+}
       return false;
+}
 
    if (isEscapePointCold(candidate, node))
       {
@@ -3600,6 +3615,10 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
             }
          }
 
+if (trace())
+{
+traceMsg(comp(), "HZ:  canStoreToHeap %d for candidate [%p] node [%p]\n", canStoreToHeap, candidate->_node, node);
+}
       if (canStoreToHeap)
          {
          candidate->setObjectIsReferenced();
@@ -3615,6 +3634,10 @@ bool TR_EscapeAnalysis::checkIfEscapePointIsCold(Candidate *candidate, TR::Node 
          return true;
          }
       }
+if (trace())
+{
+traceMsg(comp(), "HZ:   Not cold escape\n");
+}
    return false;
    }
 
