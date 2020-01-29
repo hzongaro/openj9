@@ -4757,7 +4757,7 @@ void TR_ResolvedJ9Method::construct()
 
                         // Sanity check that the expectation of whether this
                         // method is native matches the reality?
-                        static char *tryIsNativeAssert = feGetEnv("TR_CheckRecognizedMethodNativeness");
+                        static char *tryIsNativeAssert = "yes"; // feGetEnv("TR_CheckRecognizedMethodNativeness");
                         if (tryIsNativeAssert)
                            {
                            TR_ASSERT_FATAL(expectNative == isNative(), "Java method %s.%s%s - setting of isNative() == %d did not match expectNative == %d (native version range == [%d,%d] - JAVA_SPEC_VERSION == %d)\n", cl->_class, m->_name, m->_sig, isNative(), expectNative, m->_nativeMinVersion, m->_nativeMaxVersion, JAVA_SPEC_VERSION);
