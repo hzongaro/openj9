@@ -3274,12 +3274,14 @@ void TR_EscapeAnalysis::forceEscape(TR::Node *node, TR::Node *reason, bool force
       next = candidate->getNext();
       if (usesValueNumber(candidate, valueNumber))
          {
+if (trace())
+traceMsg(comp(), "   HZ:  forceFail == %d, checkIfEscapePointIsCold(%p, %p) == ", forceFail, candidate->_node, reason, checkIfEscapePointIsCold(candidate, reason));
          if (!forceFail && checkIfEscapePointIsCold(candidate, reason))
             {
             if (!isImmutableObject(candidate))
                {
                if (trace())
-                  traceMsg(comp(), "   Make [%p] contiguous because of node [%p]\n", candidate->_node, reason);
+                  traceMsg(comp(), "   1 Make [%p] contiguous because of node [%p]\n", candidate->_node, reason);
                candidate->setMustBeContiguousAllocation();
                //candidate->setLocalAllocation(false);
                }
@@ -3523,7 +3525,7 @@ bool TR_EscapeAnalysis::restrictCandidates(TR::Node *node, TR::Node *reason, res
               else
                  {
                  if (trace())
-                     traceMsg(comp(), "   Make [%p] contiguous because of node [%p]\n", candidate->_node, reason);
+                     traceMsg(comp(), "   2 Make [%p] contiguous because of node [%p]\n", candidate->_node, reason);
                  candidate->setMustBeContiguousAllocation();
                  }
 
@@ -4827,7 +4829,7 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                   //
                   candidate->setMustBeContiguousAllocation();
                   if (trace())
-                     traceMsg(comp(), "   Make [%p] contiguous because of node [%p]\n", candidate->_node, node);
+                     traceMsg(comp(), "   3 Make [%p] contiguous because of node [%p]\n", candidate->_node, node);
                   continue;
                   }
                }
