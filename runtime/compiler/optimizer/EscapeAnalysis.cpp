@@ -4451,7 +4451,11 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
 if (trace())
 {
 traceMsg(comp(), "HZ:  About to call forceEscape or restrictCandidates\n");
-traceMsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizableLocalObjectsValueNumbers == %d; resolvedBaseObject == %p; hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", _nonColdLocalObjectsValueNumbers, _notOptimizableLocalObjectsValueNumbers, resolvedBaseObject, resolvedBaseObject ? resolvedBaseObject->getOpCode().hasSymbolReference() : false, _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)), (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
+traceMsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizableLocalObjectsValueNumbers == %d; resolvedBaseObject == %p\n",_nonColdLocalObjectsValueNumbers, _notOptimizableLocalObjectsValueNumbers, resolvedBaseObject); 
+if (_nonColdLocalObjectsValueNumbers
+       && _notOptimizableLocalObjectsValueNumbers
+       && resolvedBaseObject)
+traceMsg(comp(), "       hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", resolvedBaseObject->getOpCode().hasSymbolReference(), _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)) , (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
 
                        stringCopyOwningMethod ||
                       _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))) &&
