@@ -4472,7 +4472,7 @@ if (trace())
 {
 traceMsg(comp(), "1 Calling forceescape(%p, %p)\n", node->getSecondChild(), node);
 }
-                  forceescape(node->getSecondChild(), node);
+                  forceEscape(node->getSecondChild(), node);
                }
                else
                   {
@@ -4575,7 +4575,7 @@ traceMsg(comp(), "4 Calling restrictCandidates(%p, %p, %d)\n", child, node, Make
 {
 if (trace())
 {
-traceMsg(comp(), "5 Calling forceescape(%p, %p)\n", node->getFirstchild(), node);
+traceMsg(comp(), "5 Calling forceescape(%p, %p)\n", node->getFirstChild(), node);
 }
                forceEscape(node->getFirstChild(), node);
 }
