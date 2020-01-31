@@ -341,6 +341,7 @@ J9::Recompilation::endOfCompilation()
 bool
 J9::Recompilation::switchToProfiling(uint32_t f, uint32_t c)
    {
+return false;
    if (_compilation->fej9()->isAOT_DEPRECATED_DO_NOT_USE())
       {
       return false;
