@@ -4455,11 +4455,17 @@ traceMsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizable
 if (_nonColdLocalObjectsValueNumbers
        && _notOptimizableLocalObjectsValueNumbers
        && resolvedBaseObject)
+{
 traceMsg(comp(), "       hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", resolvedBaseObject->getOpCode().hasSymbolReference(), _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)) , (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
 
                        stringCopyOwningMethod ||
                       _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))) &&
                      _notOptimizableLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))));
+traceMsg(comp(), "       rest parts:  getRecognizedField != Java_lang_String_value == %d; stringCopyOwningMethod == %d; _notOptimizableLocalStringObjectsValueNumbers->get == %p; _notOptimizableLocalObjectsValueNumbers->get == %p\n", (node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value),
+stringCopyOwningMethod,
+_notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)),
+_notOptimizableLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)));
+}
 }
                if ((!_nonColdLocalObjectsValueNumbers ||
                     !_notOptimizableLocalObjectsValueNumbers ||
