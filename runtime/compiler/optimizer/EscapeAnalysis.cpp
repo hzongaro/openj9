@@ -4448,6 +4448,15 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
                      }
                   }
 
+if (trace())
+{
+traceMsg(comp(), "HZ:  About to call forceEscape or restrictCandidates\n");
+tracemsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizableLocalObjectsValueNumbers == %d; resolvedBaseObject == %p; hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", _nonColdLocalObjectsValueNumbers, _notOptimizableLocalObjectsValueNumbers, resolvedBaseObject, resolvedBaseObject ? resolvedBaseObject->getOpCode().hasSymbolReference() : false, _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)), (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
+
+                       stringCopyOwningMethod ||
+                      _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))) &&
+                     _notOptimizableLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))));
+}
                if ((!_nonColdLocalObjectsValueNumbers ||
                     !_notOptimizableLocalObjectsValueNumbers ||
                     !resolvedBaseObject ||
@@ -4459,10 +4468,18 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
                       _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))) &&
                      _notOptimizableLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)))))
                {
-                  forceEscape(node->getSecondChild(), node);
+if (trace())
+{
+traceMsg(comp(), "1 Calling forceescape(%p, %p)\n", node->getsecondchild(), node);
+}
+                  forceescape(node->getsecondchild(), node);
                }
                else
                   {
+if (trace())
+{
+traceMsg(comp(), "1 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondchild(), node, MakeContiguous);
+}
                   seenStoreToLocalObject = true;
                   restrictCandidates(node->getSecondChild(), node, MakeContiguous);
                   }
@@ -4474,10 +4491,20 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
                   {
                   seenSelfStore = true;
                   if (baseObject->getOpCode().hasSymbolReference())
+{
+if (trace())
+{
+traceMsg(comp(), "2 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondchild(), node, MakeContiguous);
+}
                      restrictCandidates(node->getSecondChild(), node, MakeContiguous);
+}
                   }
                else
                   {
+if (trace())
+{
+traceMsg(comp(), "2 Calling forceescape(%p, %p)\n", node->getsecondchild(), node);
+}
                   forceEscape(node->getSecondChild(), node);
                   }
                }
@@ -4504,7 +4531,13 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
          // force the allocation to be contiguous.
          //
          if (node->getSymbolReference()->isUnresolved())
+{
+if (trace())
+{
+traceMsg(comp(), "3 Calling restrictCandidates(%p, %p, %d)\n", child, node, MakeContiguous);
+}
             restrictCandidates(child, node, MakeContiguous);
+}
          // Similarly if the field is not a regular field make the allocation
          // contiguous (unless it's a class load for a vcall or inline finalizable test)
          // (If it's an inline finalizable test we have to clean the test up since the object will no longer exist)
@@ -4514,6 +4547,10 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
             if (!node->getSymbolReference()->getSymbol()->isClassObject() || node->getOpCode().isStore() ||
                 (!classObjectLoadForVirtualCall && !isFinalizableInlineTest(comp(), child, _curTree->getNode(), node)))
                {
+if (trace())
+{
+traceMsg(comp(), "4 Calling restrictCandidates(%p, %p, %d)\n", child, node, MakeContiguous);
+}
                restrictCandidates(child, node, MakeContiguous);
                }
             }
@@ -4535,18 +4572,36 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
                 ((_methodSymbol->getRecognizedMethod() != TR::java_math_BigDecimal_add) &&
                  (_methodSymbol->getRecognizedMethod() != TR::java_math_BigDecimal_longAdd) &&
                  (_methodSymbol->getRecognizedMethod() != TR::java_math_BigDecimal_slAdd))))
+{
+if (trace())
+{
+traceMsg(comp(), "5 Calling forceescape(%p, %p)\n", node->getFirstchild(), node);
+}
                forceEscape(node->getFirstChild(), node);
+}
 
             // PR 93460
             if (node->getSymbolReference()->getSymbol()->isAuto() &&
 				node->getSymbol()->castToAutoSymbol()->isPinningArrayPointer())
+{
+if (trace())
+{
+traceMsg(comp(), "5 Calling restrictCandidates(%p, %p, %d)\n", node->getFirstChild(), node, MakeContiguous);
+}
             	restrictCandidates(node->getFirstChild(), node, MakeContiguous);
+}
 
             // Handle escapes via store into a parameter for a called method
             // (this is conservative, but hopefully it doesn't happen too often)
             //
             if (_parms)
+{
+if (trace())
+{
+traceMsg(comp(), "6 Calling forceescape(%p, %p)\n", node, node);
+}
                forceEscape(node, node);
+}
             }
          }
       return;
