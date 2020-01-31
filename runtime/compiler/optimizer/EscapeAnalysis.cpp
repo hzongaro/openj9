@@ -4451,7 +4451,7 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
 if (trace())
 {
 traceMsg(comp(), "HZ:  About to call forceEscape or restrictCandidates\n");
-tracemsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizableLocalObjectsValueNumbers == %d; resolvedBaseObject == %p; hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", _nonColdLocalObjectsValueNumbers, _notOptimizableLocalObjectsValueNumbers, resolvedBaseObject, resolvedBaseObject ? resolvedBaseObject->getOpCode().hasSymbolReference() : false, _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)), (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
+traceMsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizableLocalObjectsValueNumbers == %d; resolvedBaseObject == %p; hasSymbolReference == %d; nonColdValueNumbers == %p; rest == %d \n", _nonColdLocalObjectsValueNumbers, _notOptimizableLocalObjectsValueNumbers, resolvedBaseObject, resolvedBaseObject ? resolvedBaseObject->getOpCode().hasSymbolReference() : false, _nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)), (((node->getSymbolReference()->getSymbol()->getRecognizedField() != TR::Symbol::Java_lang_String_value) ||
 
                        stringCopyOwningMethod ||
                       _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject))) &&
@@ -4470,15 +4470,15 @@ tracemsg(comp(), "       _nonColdLocalObjectsValueNumbers == %d; _notOptimizable
                {
 if (trace())
 {
-traceMsg(comp(), "1 Calling forceescape(%p, %p)\n", node->getsecondchild(), node);
+traceMsg(comp(), "1 Calling forceescape(%p, %p)\n", node->getSecondChild(), node);
 }
-                  forceescape(node->getsecondchild(), node);
+                  forceescape(node->getSecondChild(), node);
                }
                else
                   {
 if (trace())
 {
-traceMsg(comp(), "1 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondchild(), node, MakeContiguous);
+traceMsg(comp(), "1 Calling restrictCandidates(%p, %p, %d)\n", node->getSecondChild(), node, MakeContiguous);
 }
                   seenStoreToLocalObject = true;
                   restrictCandidates(node->getSecondChild(), node, MakeContiguous);
@@ -4494,7 +4494,7 @@ traceMsg(comp(), "1 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondch
 {
 if (trace())
 {
-traceMsg(comp(), "2 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondchild(), node, MakeContiguous);
+traceMsg(comp(), "2 Calling restrictCandidates(%p, %p, %d)\n", node->getSecondChild(), node, MakeContiguous);
 }
                      restrictCandidates(node->getSecondChild(), node, MakeContiguous);
 }
@@ -4503,7 +4503,7 @@ traceMsg(comp(), "2 Calling restrictCandidates(%p, %p, %d)\n", node->getsecondch
                   {
 if (trace())
 {
-traceMsg(comp(), "2 Calling forceescape(%p, %p)\n", node->getsecondchild(), node);
+traceMsg(comp(), "2 Calling forceescape(%p, %p)\n", node->getSecondChild(), node);
 }
                   forceEscape(node->getSecondChild(), node);
                   }
