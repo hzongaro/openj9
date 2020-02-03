@@ -1976,6 +1976,10 @@ traceMsg(comp(), "HZ:  storeOfObjectIntoField\n");
 if (trace())
 {
 traceMsg(comp(), "HZ:  baseChild [%p]\n", baseChild);
+if (baseChild)
+{
+traceMsg(comp(), "HZ:     (baseChild->getOpCodeValue() == TR::loadaddr) == %d;\n        baseChild->getSymbolReference()->getSymbol()->isAuto() == %d;\n         baseChild->getSymbolReference()->getSymbol()->isLocalObject() == %d;\n        baseChild->cannotTrackLocalUses() == %d\n", baseChild->getOpCodeValue() == TR::loadaddr, baseChild->getSymbolReference()->getSymbol()->isAuto(), baseChild->getSymbolReference()->getSymbol()->isLocalObject(), baseChild->cannotTrackLocalUses());
+}
 }
 
             if ((baseChild && (baseChild->getOpCodeValue() == TR::loadaddr) &&
@@ -2007,10 +2011,18 @@ traceMsg(comp(), "HZ:  2 Adding VN %d for node [%p] to _notOptimizableLocalObjec
             else if (baseChild && _useDefInfo)
                {
                uint16_t baseIndex = baseChild->getUseDefIndex();
+if (trace())
+{
+traceMsg(comp(), "HZ:    isUseIndex(baseIndex) == %d\n", _useDefInfo->isUseIndex(baseIndex));
+}
                if (_useDefInfo->isUseIndex(baseIndex))
                   {
                   TR_UseDefInfo::BitVector defs(comp()->allocator());
                   _useDefInfo->getUseDef(defs, baseIndex);
+if (trace())
+{
+traceMsg(comp(), "HZ:    defs.IsZero() == %d\n", defs.IsZero());
+}
                   if (!defs.IsZero())
                      {
                      TR_UseDefInfo::BitVector::Cursor cursor(defs);
@@ -2091,6 +2103,17 @@ traceMsg(comp(), "HZ:  6 Adding VN %d for node [%p] to _notOptimizableLocalObjec
                            }
                         }
                      }
+/*
+                  else if ((baseChild->getOpCodeValue() == TR::loadaddr) &&
+                            baseChild->getSymbolReference()->getSymbol()->isAuto() &&
+                            baseChild->getSymbolReference()->getSymbol()->isLocalObject() &&
+                            baseChild->cannotTrackLocalUses())
+                     {
+                     _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
+                     _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
+                     storeOfObjectIntoField = false;
+                     }
+*/
                   }
                }
             }
