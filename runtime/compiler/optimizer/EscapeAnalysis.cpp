@@ -1978,7 +1978,14 @@ if (trace())
 traceMsg(comp(), "HZ:  baseChild [%p]\n", baseChild);
 if (baseChild)
 {
-traceMsg(comp(), "HZ:     (baseChild->getOpCodeValue() == TR::loadaddr) == %d;\n        baseChild->getSymbolReference()->getSymbol()->isAuto() == %d;\n         baseChild->getSymbolReference()->getSymbol()->isLocalObject() == %d;\n        baseChild->cannotTrackLocalUses() == %d\n", baseChild->getOpCodeValue() == TR::loadaddr, baseChild->getSymbolReference()->getSymbol()->isAuto(), baseChild->getSymbolReference()->getSymbol()->isLocalObject(), baseChild->cannotTrackLocalUses());
+traceMsg(comp(), "HZ:     (baseChild->getOpCodeValue() == TR::loadaddr) == %d;\n", baseChild->getOpCodeValue() == TR::loadaddr);
+if (baseChild->getOpCodeValue() == TR::loadaddr)
+{
+traceMsg(comp(), "HZ:     baseChild->getSymbolReference()->getSymbol()->isAuto() == %d;\n", baseChild->getSymbolReference()->getSymbol()->isAuto());
+traceMsg(comp(), "HZ:     baseChild->getSymbolReference()->getSymbol()->isLocalObject() == %d;\n", baseChild->getSymbolReference()->getSymbol()->isLocalObject());
+traceMsg(comp(), "HZ:     baseChild->cannotTrackLocalUses() == %d;\n",
+baseChild->getSymbolReference()->getSymbol()->isLocalObject(), baseChild->cannotTrackLocalUses());
+}
 }
 }
 
