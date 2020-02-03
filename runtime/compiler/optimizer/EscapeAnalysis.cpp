@@ -1453,6 +1453,10 @@ void TR_EscapeAnalysis::findLocalObjectsValueNumbers(TR::Node *node, TR::NodeChe
                //dumpOptDetails(comp(), "Local object %p value number %d detected\n", node, _valueNumberInfo->getValueNumber(node));
 
                _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(node));
+if (trace())
+{
+traceMsg(comp(), "HZ:  1 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(node), node);
+}
                }
 
             if (node->cannotTrackLocalStringUses())
@@ -1965,6 +1969,10 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                if (node->getOpCodeValue() == TR::arraycopy)
                   {
                   _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
+if (trace())
+{
+traceMsg(comp(), "HZ:  2 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN, baseChild);
+}
                   _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                   storeOfObjectIntoField = false;
                   if (trace())
@@ -2022,7 +2030,15 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                               else
                                  {
                                  _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
+if (trace())
+{
+traceMsg(comp(), "HZ:  3 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
+}
                                  _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
+if (trace())
+{
+traceMsg(comp(), "HZ:  4 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
+}
                                  _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
                                  _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
                                  storeOfObjectIntoField = false;
@@ -2032,7 +2048,15 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                            else
                               {
                               _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
+if (trace())
+{
+traceMsg(comp(), "HZ:  5 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
+}
                               _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
+if (trace())
+{
+traceMsg(comp(), "HZ:  6 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
+}
                               _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
                               _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
                               storeOfObjectIntoField = false;
@@ -2271,6 +2295,10 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                   if (resolvedBaseObject)
                      {
                      _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(resolvedBaseObject));
+if (trace())
+{
+traceMsg(comp(), "HZ:  7 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(resolvedBaseObject), resolvedBaseObject);
+}
                      _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(resolvedBaseObject));
                      }
                   }
@@ -2285,6 +2313,10 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                   else
                      {
                      _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
+if (trace())
+{
+traceMsg(comp(), "HZ:  8 Adding value number %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
+}
                      _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                      }
                   }
@@ -2363,6 +2395,10 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                      }
 
                   _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
+if (trace())
+{
+traceMsg(comp(), "HZ:  9 Adding value number %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
+}
                   _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                   }
                }
@@ -4465,6 +4501,8 @@ traceMsg(comp(), "       rest parts:  getRecognizedField != Java_lang_String_val
 stringCopyOwningMethod,
 _notOptimizableLocalStringObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)),
 _notOptimizableLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(resolvedBaseObject)));
+traceMsg(comp(), "       resolvedBaseObject == %p\n", resolvedBaseObject);
+traceMsg(comp(), "       _valueNumberInfo->getValueNumber(resolvedBaseObject) == %d\n", _valueNumberInfo->getValueNumber(resolvedBaseObject));
 }
 }
                if ((!_nonColdLocalObjectsValueNumbers ||
