@@ -1455,7 +1455,7 @@ void TR_EscapeAnalysis::findLocalObjectsValueNumbers(TR::Node *node, TR::NodeChe
                _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(node));
 if (trace())
 {
-traceMsg(comp(), "HZ:  1 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(node), node);
+traceMsg(comp(), "HZ:  1 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(node), node);
 }
                }
 
@@ -1935,6 +1935,10 @@ void TR_EscapeAnalysis::checkDefsAndUses()
           (node->getOpCodeValue() == TR::arraycopy))
          {
          TR::Node *baseObject = node;
+if (trace())
+{
+traceMsg(comp(), "HZ:  In checkDefsAndUses for node [%p]\n", node);
+}
 
          if (node->getSymbol()->isArrayShadowSymbol() &&
              node->getFirstChild()->getOpCode().isArrayRef())
@@ -1946,10 +1950,20 @@ void TR_EscapeAnalysis::checkDefsAndUses()
             else if (node->getFirstChild()->getOpCode().isArrayRef())
                baseObject = node->getFirstChild();
             }
+if (trace())
+{
+traceMsg(comp(), "HZ:  baseObject [%p]\n", baseObject);
+}
 
          if (node->getOpCode().isStoreIndirect() &&
              (baseObject->getFirstChild() == node->getSecondChild()))
+{
             storeOfObjectIntoField = true;
+if (trace())
+{
+traceMsg(comp(), "HZ:  storeOfObjectIntoField\n");
+}
+}
          else
             {
             TR::Node *baseChild = baseObject;
@@ -1959,6 +1973,10 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                 baseChild = baseObject->getFirstChild();
 
             baseChild = resolveSniffedNode(baseChild);
+if (trace())
+{
+traceMsg(comp(), "HZ:  baseChild [%p]\n", baseChild);
+}
 
             if ((baseChild && (baseChild->getOpCodeValue() == TR::loadaddr) &&
                 baseChild->getSymbolReference()->getSymbol()->isAuto() &&
@@ -1971,7 +1989,7 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                   _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
 if (trace())
 {
-traceMsg(comp(), "HZ:  2 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN, baseChild);
+traceMsg(comp(), "HZ:  2 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN, baseChild);
 }
                   _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                   storeOfObjectIntoField = false;
@@ -2014,6 +2032,10 @@ traceMsg(comp(), "HZ:  2 Adding value number %d for node [%p] to _notOptimizable
                             (defNode->getNumChildren() > 0))
                            {
                            TR::Node *defChild = defNode->getFirstChild();
+if (trace())
+{
+traceMsg(comp(), "HZ:  Looking at store for defChild %p\n", defChild);
+}
 
                            if (defChild && (defChild->getOpCodeValue() == TR::loadaddr) &&
                                defChild->getSymbolReference()->getSymbol()->isAuto() &&
@@ -2024,6 +2046,10 @@ traceMsg(comp(), "HZ:  2 Adding value number %d for node [%p] to _notOptimizable
                                   (_valueNumberInfo->getValueNumber(defChild) == _valueNumberInfo->getValueNumber(baseChild)))
                                  {
                                  baseChildVN = _valueNumberInfo->getValueNumber(baseChild);
+if (trace())
+{
+traceMsg(comp(), "HZ:  2.99 VN %d for node [%p] is storeOfObjectIntoField\n", baseChildVN, baseChild);
+}
                                  storeOfObjectIntoField = true;
                                  storeIntoOtherLocalObject = true;
                                  }
@@ -2032,12 +2058,12 @@ traceMsg(comp(), "HZ:  2 Adding value number %d for node [%p] to _notOptimizable
                                  _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
 if (trace())
 {
-traceMsg(comp(), "HZ:  3 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
+traceMsg(comp(), "HZ:  3 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
 }
                                  _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
 if (trace())
 {
-traceMsg(comp(), "HZ:  4 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
+traceMsg(comp(), "HZ:  4 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
 }
                                  _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
                                  _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
@@ -2050,12 +2076,12 @@ traceMsg(comp(), "HZ:  4 Adding value number %d for node [%p] to _notOptimizable
                               _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
 if (trace())
 {
-traceMsg(comp(), "HZ:  5 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
+traceMsg(comp(), "HZ:  5 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(baseChild), baseChild);
 }
                               _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
 if (trace())
 {
-traceMsg(comp(), "HZ:  6 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
+traceMsg(comp(), "HZ:  6 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(defChild), defChild);
 }
                               _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(baseChild));
                               _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(defChild));
@@ -2072,6 +2098,10 @@ traceMsg(comp(), "HZ:  6 Adding value number %d for node [%p] to _notOptimizable
 
       if (storeOfObjectIntoField)
         {
+if (trace())
+{
+traceMsg(comp(), "HZ:  Handling storeOfObjectInfoField\n");
+}
             int32_t valueNumber = _valueNumberInfo->getValueNumber(node->getSecondChild());
             Candidate *candidate, *next;
             bool foundAccess = false;
@@ -2297,7 +2327,7 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                      _notOptimizableLocalObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(resolvedBaseObject));
 if (trace())
 {
-traceMsg(comp(), "HZ:  7 Adding value number %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(resolvedBaseObject), resolvedBaseObject);
+traceMsg(comp(), "HZ:  7 Adding VN %d for node [%p] to _notOptimizableLocalObjectsValueNumbers\n", _valueNumberInfo->getValueNumber(resolvedBaseObject), resolvedBaseObject);
 }
                      _notOptimizableLocalStringObjectsValueNumbers->set(_valueNumberInfo->getValueNumber(resolvedBaseObject));
                      }
@@ -2315,7 +2345,7 @@ traceMsg(comp(), "HZ:  7 Adding value number %d for node [%p] to _notOptimizable
                      _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
 if (trace())
 {
-traceMsg(comp(), "HZ:  8 Adding value number %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
+traceMsg(comp(), "HZ:  8 Adding VN %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
 }
                      _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                      }
@@ -2397,7 +2427,7 @@ traceMsg(comp(), "HZ:  8 Adding value number %d for node [??] to _notOptimizable
                   _notOptimizableLocalObjectsValueNumbers->set(baseChildVN);
 if (trace())
 {
-traceMsg(comp(), "HZ:  9 Adding value number %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
+traceMsg(comp(), "HZ:  9 Adding VN %d for node [??] to _notOptimizableLocalObjectsValueNumbers\n", baseChildVN);
 }
                   _notOptimizableLocalStringObjectsValueNumbers->set(baseChildVN);
                   }
