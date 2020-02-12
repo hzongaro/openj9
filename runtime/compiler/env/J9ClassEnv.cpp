@@ -449,7 +449,8 @@ J9::ClassEnv::enumerateFields(TR::Region& region, TR_OpaqueClassBlock * opaqueCl
             dataType = TR::Double;
             break;
             }
-         case 'L': 
+         case 'L':
+         case 'Q':
          case '[':
             {
             dataType = TR::Address;
