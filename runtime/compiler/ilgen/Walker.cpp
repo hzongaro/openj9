@@ -560,6 +560,18 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
             }
 #endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
          case J9BCwithfield:
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
+            {
+#if 0  // Need a way to test at run-time whether value types are supported
+            if (cg()->supportsValueTypes())
+#endif
+               {
+               genWithField(next2Bytes());
+               _bcIndex += 3;
+               break;
+               }
+            }
+#endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
          case J9BCbreakpoint:
             fej9()->unsupportedByteCode(comp(), opcode);
          case J9BCunknown:
@@ -4920,14 +4932,18 @@ TR_J9ByteCodeIlGenerator::loadAuto(TR::DataType type, int32_t slot, bool isAdjun
    push(load);
    }
 
-
 void
 TR_J9ByteCodeIlGenerator::loadInstance(int32_t cpIndex)
    {
    if (_generateReadBarriersForFieldWatch && comp()->compileRelocatableCode())
       comp()->failCompilation<J9::AOTNoSupportForAOTFailure>("NO support for AOT in field watch");
-
    TR::SymbolReference * symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, cpIndex, false);
+   loadInstance(symRef);
+   }
+
+void
+TR_J9ByteCodeIlGenerator::loadInstance(TR::SymbolReference * symRef)
+   {
    TR::Symbol * symbol = symRef->getSymbol();
    TR::DataType type = symbol->getDataType();
 
@@ -4964,7 +4980,7 @@ TR_J9ByteCodeIlGenerator::loadInstance(int32_t cpIndex)
              !strncmp(className, BDCLASS, BDCLASSLEN))
          {
          int32_t fieldLen=0;
-         char * fieldName =  _methodSymbol->getResolvedMethod()->fieldNameChars(cpIndex, fieldLen);
+         char * fieldName =  _methodSymbol->getResolvedMethod()->fieldNameChars(symRef->getCPIndex(), fieldLen);
          if (fieldName != NULL && BDFIELDLEN == strlen(fieldName) && !strncmp(fieldName, BDFIELD, BDFIELDLEN))
             {
             load->setIsBigDecimalLoad();
@@ -5979,6 +5995,93 @@ TR_J9ByteCodeIlGenerator::genNew(TR::ILOpCodes opCode)
 
       if (!skipFlush)
          genFlush(0);
+   }
+
+void
+TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
+   {
+   const int32_t bcIndex = currentByteCodeIndex();
+   int32_t classCpIndex = method()->classCPIndexOfFieldOrStatic(fieldCpIndex);
+   TR_OpaqueClassBlock *valueClass = method()->getClassFromConstantPool(comp(), classCpIndex, true);
+   if (!valueClass)
+      {
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/withfield/class/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/withfield/class/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for withfieldbytecode instruction");
+      }
+
+   bool isStore = false;
+   TR::SymbolReference * symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, fieldCpIndex, isStore);
+   if (symRef->isUnresolved())
+      {
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/withfield/field/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/withfield/field/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved field encountered for withfield bytecode instruction");
+      }
+
+   TR::Node *newFieldValue = pop();
+   TR::Node *originalObject = pop();
+
+   loadClassObject(valueClass);
+   const TR::TypeLayout *typeLayout = comp()->typeLayout(valueClass);
+   size_t fieldCount = typeLayout->count();
+
+   for (size_t idx = 0; idx < fieldCount; idx++)
+      {
+      const TR::TypeLayoutEntry &fieldEntry = typeLayout->entry(idx);
+      if (fieldEntry._offset == symRef->getOffset())
+         push(newFieldValue);
+      else
+         {
+         auto* fieldSymRef = comp()->getSymRefTab()->findOrFabricateShadowSymbol(valueClass,
+                                                                     fieldEntry._datatype,
+                                                                     fieldEntry._offset,
+                                                                     fieldEntry._isVolatile,
+                                                                     fieldEntry._isPrivate,
+                                                                     fieldEntry._isFinal,
+                                                                     fieldEntry._fieldname,
+                                                                     fieldEntry._typeSignature
+                                                                     );
+         push(originalObject);
+         loadInstance(fieldSymRef);
+         }
+      }
+
+   TR::Node *newValueNode = genNodeAndPopChildren(TR::newvalue, fieldCount+1, symRefTab()->findOrCreateNewValueSymbolRef(_methodSymbol));
+   newValueNode->setIdentityless(true);
+   genTreeTop(newValueNode);
+   push(newValueNode);
+   genFlush(0);
    }
 
 void
