@@ -2314,6 +2314,18 @@ J9::SymbolReferenceTable::findOrCreateArrayComponentTypeSymbolRef()
    return element(componentClassSymbol);
    }
 
+TR::SymbolReference *
+J9::SymbolReferenceTable::findOrCreateSubstitutabilityComparisonSymbolRef()
+   {
+   TR::SymbolReference *symRef = element(substitutabilityComparisonSymbol);
+   if (symRef != NULL)
+      return symRef;
+
+   symRef = self()->findOrCreateCodeGenInlinedHelper(substitutabilityComparisonSymbol);
+   symRef->setCanGCandReturn();
+   symRef->setCanGCandExcept();
+   return symRef;
+   }
 
 TR::ParameterSymbol *
 J9::SymbolReferenceTable::createParameterSymbol(

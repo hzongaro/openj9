@@ -267,6 +267,15 @@ class SymbolReferenceTable : public OMR::SymbolReferenceTableConnector
 
    TR::SymbolReference * findOrCreateCheckCastForArrayStoreSymbolRef(TR::ResolvedMethodSymbol *owningMethodSymbol);
 
+   /** \brief
+    *     Finds the <isReferenceSubstitutable> "nonhelper" symbol reference,
+    *     creating it if necessary.
+    *
+    *  \return
+    *     The <isReferenceSubstitutable> symbol reference.
+    */
+   TR::SymbolReference *findOrCreateSubstitutabilityComparisonSymbolRef();
+
    /**
     * \brief
     *    Creates a new symbol for a parameter within the supplied owning method of the
