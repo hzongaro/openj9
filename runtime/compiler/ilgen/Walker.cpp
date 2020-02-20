@@ -5993,12 +5993,12 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
    {
    if (valueTypeClass == NULL)
       {
-      TR_ASSERT_FATAL(false, "Handling of unresolved case is not yet implemented\n");
+      comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
 
    TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, valueTypeClass);
 
-   if (trace())
+   if (comp()->getOption(TR_TraceILGen))
       {
       traceMsg(comp(), "Handling defaultvalue for valueClass %s\n", comp()->getDebug()->getName(valueClassSymRef));
       }
@@ -6009,7 +6009,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
 
    if (valueClassSymRef->isUnresolved())
       {
-      TR_ASSERT_FATAL(false, "Handling of unresolved case is not yet implemented\n");
+      comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
    else
       {
@@ -6020,9 +6020,9 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
          {
          const TR::TypeLayoutEntry &entry = typeLayout->entry(idx);
 
-         if (trace())
+         if (comp()->getOption(TR_TraceILGen))
             {
-            traceMsg(comp(), "Handling defaultvalue for valueClass %s\n - field[%d] type %d offset %d\n", comp()->getDebug()->getName(valueClassSymRef), idx, entry._datatype.getDataType(), entry._offset);
+            traceMsg(comp(), "Handling defaultvalue for valueClass %s\n - field[%d] name %s type %d offset %d\n", comp()->getDebug()->getName(valueClassSymRef), idx, entry._fieldname, entry._datatype.getDataType(), entry._offset);
             }
 
          switch (entry._datatype.getDataType())
@@ -6036,7 +6036,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                }
             case TR::Int64:
                {
-               loadConstant(TR::lconst, 0);
+               loadConstant(TR::lconst, (int64_t) 0ll);
                break;
                }
             case TR::Float:
