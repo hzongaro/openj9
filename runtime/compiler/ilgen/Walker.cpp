@@ -6012,7 +6012,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                comp()->signature()));
          }
 
-      comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
 
    TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, valueTypeClass);
@@ -6028,8 +6028,6 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
 
    if (valueClassSymRef->isUnresolved())
       {
-      comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
-
       const int32_t bcIndex = currentByteCodeIndex();
       if (isOutermostMethod())
          {
@@ -6048,6 +6046,8 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                bcIndex,
                comp()->signature()));
          }
+
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
    else
       {
