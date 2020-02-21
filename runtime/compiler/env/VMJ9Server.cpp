@@ -812,7 +812,7 @@ TR_J9ServerVM::canAllocateInlineClass(TR_OpaqueClassBlock *clazz)
      }
 
    if (isClassInitialized)
-      return ((modifiers & (J9AccAbstract | J9AccInterface ))?false:true);
+      return ((modifiers & (J9AccAbstract | J9AccInterface | J9AccValueType))?false:true);
 
    return false;
    }
