@@ -5993,6 +5993,25 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
    {
    if (valueTypeClass == NULL)
       {
+      const int32_t bcIndex = currentByteCodeIndex();
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
+
       comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
 
@@ -6010,6 +6029,25 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
    if (valueClassSymRef->isUnresolved())
       {
       comp()->failCompilation<TR::ILGenFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+
+      const int32_t bcIndex = currentByteCodeIndex();
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
       }
    else
       {
