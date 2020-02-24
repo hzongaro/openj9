@@ -826,6 +826,9 @@ const uint8_t TR_J9ByteCodeIterator::_estimatedCodeSize[] =
   25, // J9BCmonitorenter
   25, // J9BCmonitorexit
    0, // J9BCwide
+   0, // J9BCasyncCheck
+   1, // J9BCdefaultvalue
+   1, // J9BCwithfield
    0, // J9BCunknown
    };
 

@@ -30,6 +30,7 @@
 #include "env/CompilerEnv.hpp"
 #include "env/PersistentCHTable.hpp"
 #include "env/StackMemoryRegion.hpp"
+#include "env/TypeLayout.hpp"
 #include "env/jittypes.h"
 #include "env/VMAccessCriticalSection.hpp"
 #include "exceptions/AOTFailure.hpp"
@@ -546,6 +547,18 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
             break;
 
          case J9BCdefaultvalue:
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
+            {
+#if 0  // Need a way to test at run-time whether value types are supported
+            if (cg()->supportsValueTypes())
+#endif
+               {
+               genDefaultValue(next2Bytes());
+               _bcIndex += 3;
+               break;
+               }
+            }
+#endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
          case J9BCwithfield:
          case J9BCbreakpoint:
             fej9()->unsupportedByteCode(comp(), opcode);
@@ -5687,7 +5700,7 @@ TR_J9ByteCodeIlGenerator::loadFromCP(TR::DataType type, int32_t cpIndex)
             }
          break;
       default:
-      	break;
+         break;
       }
    }
 
@@ -5966,6 +5979,147 @@ TR_J9ByteCodeIlGenerator::genNew(TR::ILOpCodes opCode)
 
       if (!skipFlush)
          genFlush(0);
+   }
+
+void
+TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
+   {
+   TR_OpaqueClassBlock *valueTypeClass = method()->getClassFromConstantPool(comp(), cpIndex);
+   genDefaultValue(valueTypeClass);
+   }
+
+void
+TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
+   {
+   if (valueTypeClass == NULL)
+      {
+      const int32_t bcIndex = currentByteCodeIndex();
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
+
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+      }
+
+   TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, valueTypeClass);
+
+   if (comp()->getOption(TR_TraceILGen))
+      {
+      traceMsg(comp(), "Handling defaultvalue for valueClass %s\n", comp()->getDebug()->getName(valueClassSymRef));
+      }
+
+   loadSymbol(TR::loadaddr, valueClassSymRef);
+
+   TR::Node *newValueNode = NULL;
+
+   if (valueClassSymRef->isUnresolved())
+      {
+      const int32_t bcIndex = currentByteCodeIndex();
+      if (isOutermostMethod())
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+                  "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d",
+                  comp()->signature(),
+                  bcIndex));
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp(),
+            TR::DebugCounter::debugCounterName(comp(),
+               "ilgen.abort/unresolved/defaultvalue/(%s)/bc=%d/root=(%s)",
+               _method->signature(comp()->trMemory()),
+               bcIndex,
+               comp()->signature()));
+         }
+
+      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+      }
+   else
+      {
+      const TR::TypeLayout *typeLayout = comp()->typeLayout(valueTypeClass);
+      size_t fieldCount = typeLayout->count();
+
+      for (size_t idx = 0; idx < fieldCount; idx++)
+         {
+         const TR::TypeLayoutEntry &entry = typeLayout->entry(idx);
+
+         if (comp()->getOption(TR_TraceILGen))
+            {
+            traceMsg(comp(), "Handling defaultvalue for valueClass %s\n - field[%d] name %s type %d offset %d\n", comp()->getDebug()->getName(valueClassSymRef), idx, entry._fieldname, entry._datatype.getDataType(), entry._offset);
+            }
+
+         switch (entry._datatype.getDataType())
+            {
+            case TR::Int8:
+            case TR::Int16:
+            case TR::Int32:
+               {
+               loadConstant(TR::iconst, 0);
+               break;
+               }
+            case TR::Int64:
+               {
+               loadConstant(TR::lconst, (int64_t) 0ll);
+               break;
+               }
+            case TR::Float:
+               {
+               loadConstant(TR::fconst, 0.0f);
+               break;
+               }
+            case TR::Double:
+               {
+               loadConstant(TR::dconst, 0.0);
+               break;
+               }
+            case TR::Address:
+               {
+               const char *fieldSignature = entry._typeSignature;
+
+               if (fieldSignature[0] == 'Q')
+                  {
+                  TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature), comp()->getCurrentMethod());
+                  genDefaultValue(fieldClass);
+                  }
+               else if (comp()->target().is64Bit())
+                  {
+                  loadConstant(TR::aconst, (int64_t)0);
+                  }
+               else
+                  {
+                  loadConstant(TR::aconst, (int32_t)0);
+                  }
+               break;
+               }
+            default:
+               {
+               TR_ASSERT_FATAL(false, "Unexpected type for defaultvalue field\n");
+               }
+            }
+         }
+
+         newValueNode = genNodeAndPopChildren(TR::newvalue, fieldCount+1, symRefTab()->findOrCreateNewValueSymbolRef(_methodSymbol));
+         newValueNode->setIdentityless(true);
+      }
+
+   genTreeTop(newValueNode);
+   push(newValueNode);
+   genFlush(0);
    }
 
 void
