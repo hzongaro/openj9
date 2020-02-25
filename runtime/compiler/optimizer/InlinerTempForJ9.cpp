@@ -5204,7 +5204,7 @@ TR_PrexArgInfo* TR_PrexArgInfo::buildPrexArgInfoForMethodSymbol(TR::ResolvedMeth
       int32_t len = 0;
       const char *sig = p->getTypeSignature(len);
 
-      if (*sig == 'L')
+      if (*sig == 'L' || *sig == 'Q')
          {
          TR_OpaqueClassBlock *clazz = tracer->fe()->getClassFromSignature(sig, len, feMethod);
          if (clazz)
