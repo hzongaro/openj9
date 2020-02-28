@@ -78,7 +78,7 @@ J9::CodeGenerator::CodeGenerator() :
    _liveMonitors(NULL),
    _nodesSpineCheckedList(getTypedAllocator<TR::Node*>(TR::comp()->allocator())),
    _jniCallSites(getTypedAllocator<TR_Pair<TR_ResolvedMethod,TR::Instruction> *>(TR::comp()->allocator())),
-   _monitorMapping(self()->comp()->trMemory(), 256),
+   _monitorMapping(MonitorTypeMap(std::less<ncount_t>(), MonitorMapAllocator(self()->comp()->trMemory()->heapMemoryRegion()))),
    _dummyTempStorageRefNode(NULL)
    {
    }
@@ -1089,10 +1089,9 @@ J9::CodeGenerator::lowerTreeIfNeeded(
       TR_OpaqueClassBlock * monClass = node->getMonitorClass(self()->comp()->getCurrentMethod());
       if (monClass)
          self()->addMonClass(node, monClass);
-
-      // Clear the hidden second child that may be used by code generation
-      //
-      node->setMonitorInfo(0);
+      else if (node->isMonitorIdentityType())
+         self()->addMonClass(node, (TR_OpaqueClassBlock* )IDENTITY_CLASS_PLACEHOLDER);
+      node->setMonitorInfoInNode(NULL);
       }
 
 
@@ -4999,15 +4998,25 @@ J9::CodeGenerator::generatePoisonNode(TR::Block *currentBlock, TR::SymbolReferen
 void
 J9::CodeGenerator::addMonClass(TR::Node* monNode, TR_OpaqueClassBlock* clazz)
    {
-   _monitorMapping.add(monNode);
-   _monitorMapping.add(clazz);
+   _monitorMapping[monNode->getGlobalIndex()] = clazz;
    }
 
 TR_OpaqueClassBlock *
 J9::CodeGenerator::getMonClass(TR::Node* monNode)
    {
-   for (int i = 0; i < _monitorMapping.size(); i += 2)
-      if (_monitorMapping[i] == monNode)
-         return (TR_OpaqueClassBlock *) _monitorMapping[i+1];
-   return 0;
+   if (_monitorMapping.find(monNode->getGlobalIndex()) == _monitorMapping.end())
+      return NULL;
+   TR_OpaqueClassBlock * clazz = (TR_OpaqueClassBlock *) _monitorMapping[monNode->getGlobalIndex()];
+   return clazz != (TR_OpaqueClassBlock*) IDENTITY_CLASS_PLACEHOLDER? clazz: NULL;
+   }
+
+TR_YesNoMaybe
+J9::CodeGenerator::isMonitorValueType(TR::Node* monNode)
+   {
+   if (_monitorMapping.find(monNode->getGlobalIndex()) == _monitorMapping.end())
+      return TR_maybe;
+   TR_OpaqueClassBlock *clazz = _monitorMapping[monNode->getGlobalIndex()];
+   if (clazz != (TR_OpaqueClassBlock *) IDENTITY_CLASS_PLACEHOLDER && TR::Compiler->cls.isValueTypeClass(clazz))
+      return TR_yes;
+   return TR_no;
    }
