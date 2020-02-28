@@ -6541,6 +6541,18 @@ TR_J9VMBase::isInterfaceClass(TR_OpaqueClassBlock * clazzPointer)
    }
 
 bool
+TR_J9VMBase::isValueTypeClass(TR_OpaqueClassBlock * clazzPointer)
+   {
+   return (TR::Compiler->cls.romClassOf(clazzPointer)->modifiers & J9AccValueType) ? true : false;
+   }
+
+bool
+TR_J9VMBase::hasUnflattenedFlattenableFields(TR_OpaqueClassBlock * clazzPointer)
+   {
+   return (TR::Compiler->cls.romClassOf(clazzPointer)->modifiers & J9ClassContainsUnflattenedFlattenables) ? true : false;
+   }
+
+bool
 TR_J9VMBase::isEnumClass(TR_OpaqueClassBlock * clazzPointer, TR_ResolvedMethod *method)
    {
    int32_t modifiersForClass = 0;
