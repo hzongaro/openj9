@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corp. and others
+ * Copyright (c) 2000, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -77,7 +77,7 @@ typedef enum {
    compilationAOTNoSupportForAOTFailure            = 51,
    compilationAOTValidateTMFailure                 = 52,
    compilationILGenUnresolvedValueTypeFailure      = 53,
-#if defined(JITSERVER_SUPPORT)
+#if defined(J9VM_OPT_JITSERVER)
    compilationFirstJITServerFailure,
    compilationStreamFailure                        = compilationFirstJITServerFailure,
    compilationStreamLostMessage                    = compilationFirstJITServerFailure+1,
