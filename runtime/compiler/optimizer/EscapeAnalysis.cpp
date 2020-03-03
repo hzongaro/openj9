@@ -1076,6 +1076,19 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
                traceMsg(comp(), "   Make [%p] non-local because we can't have locking when candidate escapes in cold blocks\n", candidate->_node);
             }
 
+         if (candidate->_kind == TR::New)
+            {
+            TR_OpaqueClassBlock *clazz = (TR_OpaqueClassBlock *)candidate->_node->getFirstChild()->getSymbol()->getStaticSymbol()->getStaticAddress();
+            if (comp()->fej9()->hasUnflattenedFlattenableFields(clazz))
+               {
+               if (trace())
+                  traceMsg(comp(), "   Fail [%p] because candidate has a field that is an unflattened flattenable (value type)\n", candidate->_node);
+               rememoize(candidate);
+               _candidates.remove(candidate);
+               continue;
+               }
+            }
+
          // If a contiguous candidate has reference slots, then stack-allocating it means putting
          // stores in the first block of the method.  If the first block is really hot, those stores
          // are expensive, and stack-allocation is probably not worthwhile.
@@ -1156,7 +1169,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
          {
          // Array Candidates for contiguous allocation that have unresolved
          // base classes must be rejected, since we cannot initialize the array
-         // header
+         // header.  If the component type is a value type, reject the array
+         // as we can't initialize the elements to the default value yet.
          //
          if (candidate->isContiguousAllocation())
             {
@@ -1168,6 +1182,16 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
                   traceMsg(comp(), "   Fail [%p] because base class is unresolved\n", candidate->_node);
                rememoize(candidate);
                _candidates.remove(candidate);
+               }
+            else
+               {
+               TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
+               TR_OpaqueClassBlock *clazz = (TR_OpaqueClassBlock*)classNode->getSymbol()->castToStaticSymbol()->getStaticAddress();
+               if (fej9->isValueTypeClass(clazz))
+                  {
+                  if (trace())
+                     traceMsg(comp(), "   Fail [%p] because component type of array is a value type\n", candidate->_node);
+                  }
                }
             }
          }
