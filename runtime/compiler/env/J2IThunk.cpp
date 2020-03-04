@@ -107,6 +107,7 @@ char TR_J2IThunkTable::terseTypeChar(char *type)
       {
       case '[':
       case 'L':
+      case 'Q':
          return TR::Compiler->target.is64Bit()? 'L' : 'I';
       case 'Z':
       case 'B':

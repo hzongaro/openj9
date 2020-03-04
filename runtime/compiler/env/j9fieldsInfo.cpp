@@ -36,7 +36,7 @@
 
 static int isReferenceSignature(char *signature)
 {
-     return ( (signature[0] == 'L' )  || (signature[0] == '[') );
+     return ( (signature[0] == 'L' )  || (signature[0] == '[') || (signature[0] == 'Q'));
 }
 
 int TR_VMField::isReference()
