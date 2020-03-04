@@ -617,6 +617,8 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
 
    bool generateArraylets = self()->generateArraylets();
 
+   bool areValueTypesEnabled = TR::Compiler->om.areValueTypesEnabled();
+
    if (node->getOpCodeValue() == TR::New)
       {
 
@@ -665,11 +667,12 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
       {
       classRef      = node->getSecondChild();
 
-      // In the case of dynamic array allocation, return 0 indicating variable dynamic array allocation
+      // In the case of dynamic array allocation, return 0 indicating variable dynamic array allocation,
+      // unless value types are enabled, in which case return -1 to prevent inline allocation
       if (classRef->getOpCodeValue() != TR::loadaddr)
          {
          classInfo = NULL;
-         return 0;
+         return areValueTypesEnabled ? -1 : 0;
          }
 
       classSymRef   = classRef->getSymbolReference();
@@ -679,8 +682,17 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
       if (clazz == NULL)
          return -1;
 
+      // Arrays of value type classes must have all their elements initialized with the
+      // default value of the component type.  For now, prevent inline allocation of them.
+      //
+      if (areValueTypesEnabled && self()->fej9()->isValueTypeClass(reinterpret_cast<TR_OpaqueClassBlock*>(clazz)))
+         {
+         return -1;
+         }
+
       auto classOffset = self()->fej9()->getArrayClassFromComponentClass(TR::Compiler->cls.convertClassPtrToClassOffset(clazz));
       clazz = TR::Compiler->cls.convertClassOffsetToClassPtr(classOffset);
+
       if (!clazz)
          return -1;
 
