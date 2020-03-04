@@ -156,6 +156,20 @@ static TR::Node *lowerCASValues(
    }
 
 
+void
+J9::CodeGenerator::lowerNonhelperCallIfNeeded(TR::Node *node, TR::TreeTop *tt)
+   {
+   if (TR::Compiler->om.areValueTypesEnabled() &&
+       comp()->getSymRefTab()->isNonHelper(
+       node->getSymbolReference(),
+       TR::SymbolReferenceTable::substitutabilityComparisonSymbol))
+      {
+      // for now, just turn the non-helper call into a jit-helper call
+      node->setSymbolReference(comp()->getSymRefTab()->findOrCreateAcmpHelperSymbolRef());
+      }
+   }
+
+
 // J9
 //
 // convert dual operators from DAG representation to cyclic representation by cloning
@@ -808,6 +822,11 @@ J9::CodeGenerator::lowerTreeIfNeeded(
    {
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(self()->comp()->fe());
    OMR::CodeGeneratorConnector::lowerTreeIfNeeded(node, childNumberOfNode, parent, tt);
+
+   if (node->getOpCode().isCall())
+      {
+      lowerNonhelperCallIfNeeded(node, tt);
+      }
 
    // J9
    //
