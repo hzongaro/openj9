@@ -162,6 +162,11 @@ ppc64le_linux:
   build_env:
     vars: 'PATH+GCC7=/usr/local/gcc-7.5.0/bin LD_LIBRARY_PATH=/usr/local/gcc-7.5.0/lib64:$LD_LIBRARY_PATH'
 #========================================#
+# Linux PPCLE 64bits Compressed Pointers /w cmake
+#========================================#
+ppc64le_linux_cm:
+  extends: ['ppc64le_linux', 'cmake']
+#========================================#
 # Linux PPCLE 64bits Large Heap
 #========================================#
 ppc64le_linux_xl:
@@ -196,9 +201,6 @@ s390x_linux:
     build: 'ci.role.build && hw.arch.s390x && sw.os.rhel.7'
   build_env:
     cmd: 'source /home/jenkins/set_gcc7.5.0_env'
-  excluded_tests:
-    11:
-      - special.system
 #========================================#
 # Linux S390 64bits Large Heap
 # Note: boot_jdk 8 must use an Adopt JDK8 build rather than an
@@ -207,7 +209,7 @@ s390x_linux:
 s390x_linux_xl:
   extends: ['s390x_linux', 'largeheap']
   excluded_tests:
-    8:
+    11:
       - special.system
 #========================================#
 # Linux S390 64bits Compressed Pointers /w JITSERVER
@@ -243,8 +245,6 @@ ppc64_aix:
       14: 'PATH+XLC=/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin CC=xlclang CXX=xlclang++'
       next: 'PATH+XLC=/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin CC=xlclang CXX=xlclang++'
   excluded_tests:
-    8:
-      - special.system
     11:
       - special.system
 #========================================#
