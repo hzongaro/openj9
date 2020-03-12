@@ -2953,7 +2953,7 @@ verifyQualifiedName(J9VMThread *vmThread, j9object_t string);
 
 /* ---------------- swalk.c ---------------- */
 
-#if (!defined(J9VM_INTERP_STACKWALK_TRACING))
+//#if (!defined(J9VM_INTERP_STACKWALK_TRACING))
 /**
 * @brief
 * @param currentThread
@@ -2962,7 +2962,7 @@ verifyQualifiedName(J9VMThread *vmThread, j9object_t string);
 */
 void
 freeStackWalkCaches(J9VMThread * currentThread, J9StackWalkState * walkState);
-#endif /* J9VM_!INTERP_STACKWALK_TRACING */
+//#endif /* J9VM_!INTERP_STACKWALK_TRACING */
 
 
 #if defined(J9VM_INTERP_STACKWALK_TRACING)

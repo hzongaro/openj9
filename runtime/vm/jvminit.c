@@ -59,7 +59,15 @@
 #include "j9user.h"
 #include "j9.h"
 #include "omr.h"
+#ifdef J9VM_INTERP_STACKWALK_TRACING
+#define walkFrame walkFrameVerbose
+#define walkStackFrames walkStackFramesVerbose
+#endif
 #include "j9protos.h"
+#ifdef J9VM_INTERP_STACKWALK_TRACING
+#undef walkFrame
+#undef walkStackFrames
+#endif
 #include "jni.h"
 #include "j9port.h"
 #include "omrthread.h"
@@ -5862,8 +5870,13 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 #endif
 
+#ifdef J9VM_INTERP_STACKWALK_TRACING
+	vm->walkStackFrames = walkStackFramesVerbose;
+	vm->walkFrame = walkFrameVerbose;
+#else
 	vm->walkStackFrames = walkStackFrames;
 	vm->walkFrame = walkFrame;
+#endif
 
 #if defined(COUNT_BYTECODE_PAIRS)
 	if (JNI_OK != initializeBytecodePairs(vm)) {

@@ -26,6 +26,9 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 		<export name='JVM_OnLoad'/>
 		<export name='JVM_OnUnload'/>
 		<export name='J9VMDllMain'/>
+		<export name='j9vrb_UtModuleInfo'/>
+		<export name='j9vrb_UtActive'/>
+		<export name='jitWalkStackFramesVerbose'/>
 	</exports>
 
 	<artifact type="shared" name="j9vrb" bundle="jvm" loadgroup="">

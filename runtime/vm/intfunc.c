@@ -20,6 +20,10 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
+#if defined(J9VM_INTERP_STACKWALK_TRACING)
+#define walkBytecodeFrameSlots walkBytecodeFrameSlotsVerbose
+#endif
+
 #include "j9protos.h"
 
 #if defined(J9VM_OPT_VM_LOCAL_STORAGE)

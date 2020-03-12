@@ -31,7 +31,7 @@
 #include "linearswalk.h"
 #endif
 #include "j9modron.h"
-#include "ut_j9vrb.h"
+#include "../verbose/ut_j9vrb.h"
 #else
 #include "ut_j9vm.h"
 #endif
@@ -558,7 +558,7 @@ static UDATA allocateCache(J9StackWalkState * walkState)
 
 
 
-#if (!defined(J9VM_INTERP_STACKWALK_TRACING)) 
+//#if (!defined(J9VM_INTERP_STACKWALK_TRACING)) 
 void freeStackWalkCaches(J9VMThread * currentThread, J9StackWalkState * walkState)
 {
 	if (walkState->cache && (walkState->flags & J9_STACKWALK_CACHE_ALLOCATED)) {
@@ -570,7 +570,7 @@ void freeStackWalkCaches(J9VMThread * currentThread, J9StackWalkState * walkStat
 	walkState->flags &= ~J9_STACKWALK_CACHE_ALLOCATED;
 }
 
-#endif /* J9VM_!INTERP_STACKWALK_TRACING */
+//#endif /* J9VM_!INTERP_STACKWALK_TRACING */
 
 
 static void walkObjectPushes(J9StackWalkState * walkState)
@@ -1100,7 +1100,7 @@ void swPrintMethod(J9StackWalkState * walkState) {
 	J9Method * method = walkState->method;
 
 	if (method) {
-		PORT_ACCESS_FROM_WALKSTATE(walkState);
+//		PORT_ACCESS_FROM_WALKSTATE(walkState);
 		J9UTF8 * className = J9ROMCLASS_CLASSNAME(UNTAGGED_METHOD_CP(method)->ramClass->romClass);
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 		J9UTF8 * name = J9ROMMETHOD_NAME(romMethod);
@@ -1556,13 +1556,13 @@ dropToCurrentFrame(J9StackWalkState * walkState)
 
 
 /* Ensure that this assertion code only appears in the VM DLL */
-#if !defined(J9VM_INTERP_STACKWALK_TRACING)
+//#if !defined(J9VM_INTERP_STACKWALK_TRACING)
 void
 invalidJITReturnAddress(J9StackWalkState *walkState)
 {
 	PORT_ACCESS_FROM_WALKSTATE(walkState);
 	j9tty_printf(PORTLIB, "\n\n*** Invalid JIT return address %p in %p\n\n", walkState->pc, walkState);
-	Assert_VM_unreachable();
+//	Assert_VM_unreachable();
 }
-#endif
+//#endif
 
