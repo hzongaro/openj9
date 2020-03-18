@@ -118,7 +118,7 @@ jitserver:
 # OpenSSL
 #========================================#
 openssl:
-  extra_getsource_options: '--openssl-version=1.1.1d'
+  extra_getsource_options: '--openssl-version=1.1.1e'
   extra_configure_options: '--with-openssl=fetched'
 #========================================#
 # OpenSSL Bundling
@@ -179,8 +179,10 @@ ppc64le_linux_xl:
   extends: ['ppc64le_linux', 'largeheap']
   excluded_tests:
     8:
+      - sanity.openjdk
       - special.system
     11:
+      - sanity.openjdk
       - special.system
 #========================================#
 # Linux PPCLE 64bits Compressed Pointers /w JITSERVER
@@ -215,7 +217,10 @@ s390x_linux:
 s390x_linux_xl:
   extends: ['s390x_linux', 'largeheap']
   excluded_tests:
+    8:
+      - sanity.openjdk
     11:
+      - sanity.openjdk
       - special.system
 #========================================#
 # Linux S390 64bits Compressed Pointers /w JITSERVER
@@ -251,7 +256,10 @@ ppc64_aix:
       14: 'PATH+XLC=/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin CC=xlclang CXX=xlclang++'
       next: 'PATH+XLC=/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin CC=xlclang CXX=xlclang++'
   excluded_tests:
+    8:
+      - sanity.openjdk
     11:
+      - sanity.openjdk
       - special.system
 #========================================#
 # Linux x86 64bits Compressed Pointers
@@ -295,7 +303,10 @@ x86-64_linux_xl:
   extends: ['x86-64_linux', 'largeheap']
   excluded_tests:
     8:
+      - sanity.openjdk
       - special.system
+    11:
+      - sanity.openjdk
 #========================================#
 # Linux Aarch 64bits Compressed Pointers
 #========================================#
@@ -317,7 +328,7 @@ aarch64_linux_xl:
 # Windows x86 64bits Compressed Pointers
 #========================================#
 x86-64_windows:
-  extends: ['cuda', 'openjdk_reference_repo', 'openssl_bundle']
+  extends: ['cuda', 'debuginfo', 'openjdk_reference_repo', 'openssl_bundle']
   boot_jdk:
     8: '/cygdrive/c/openjdk/jdk7'
     11: '/cygdrive/c/openjdk/jdk11'
@@ -339,7 +350,10 @@ x86-64_windows:
   build_env:
     vars: 'PATH+TOOLS=/cygdrive/c/openjdk/LLVM64/bin:/cygdrive/c/openjdk/nasm-2.13.03'
   excluded_tests:
+    8:
+      - sanity.openjdk
     11:
+      - sanity.openjdk
       - special.system
 #========================================#
 # Windows x86 64bits Large Heap
@@ -350,7 +364,7 @@ x86-64_windows_xl:
 # Windows x86 32bits
 #========================================#
 x86-32_windows:
-  extends: ['openjdk_reference_repo', 'openssl_bundle']
+  extends: ['debuginfo', 'openjdk_reference_repo', 'openssl_bundle']
   boot_jdk:
     8: '/cygdrive/c/openjdk/jdk7'
   release:
@@ -366,7 +380,10 @@ x86-32_windows:
       8: 'PATH+TOOLS=/cygdrive/c/openjdk/LLVM32/bin:/cygdrive/c/openjdk/nasm-2.13.03'
   excluded_tests:
     8:
+      - sanity.openjdk
       - special.system
+    11:
+      - sanity.openjdk
 #========================================#
 # OSX x86 64bits Compressed Pointers
 #========================================#
@@ -394,7 +411,10 @@ x86-64_mac:
       all: 'OPENJ9_JAVA_OPTIONS=-Xdump:system+java:events=systhrow,filter=java/lang/ClassCastException,request=exclusive+prepwalk+preempt'
       8: 'MACOSX_DEPLOYMENT_TARGET=10.9.0 SDKPATH=/Users/jenkins/Xcode4/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk'
   excluded_tests:
+    8:
+      - sanity.openjdk
     11:
+      - sanity.openjdk
       - special.system
 #========================================#
 # OSX x86 64bits Large Heap

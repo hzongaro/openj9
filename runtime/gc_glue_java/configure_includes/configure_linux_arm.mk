@@ -35,10 +35,10 @@ ifneq (,$(findstring linux_arm, $(SPEC)))
 		--build=x86_64-pc-linux-gnu \
 		--enable-OMRTHREAD_LIB_UNIX \
 		--enable-OMR_ARCH_ARM \
-		--enable-OMR_GC_FULL_POINTERS \
 		--enable-OMR_ENV_LITTLE_ENDIAN \
 		--enable-OMR_GC_TLH_PREFETCH_FTA \
-		--enable-OMR_PORT_CAN_RESERVE_SPECIFIC_ADDRESS
+		--enable-OMR_PORT_CAN_RESERVE_SPECIFIC_ADDRESS \
+		OMR_GC_POINTER_MODE=full
 endif
 
 ifeq (default,$(origin AS))

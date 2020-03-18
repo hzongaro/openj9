@@ -241,7 +241,7 @@ class ClientSessionData
       TR_OpaqueClassBlock *_parentClass;
       PersistentVector<TR_OpaqueClassBlock *> *_interfaces;
       bool _classHasFinalFields;
-      uintptrj_t _classDepthAndFlags;
+      uintptr_t _classDepthAndFlags;
       bool _classInitialized;
       uint32_t _byteOffsetToLockword;
       TR_OpaqueClassBlock * _leafComponentClass;
@@ -249,9 +249,9 @@ class ClientSessionData
       TR_OpaqueClassBlock * _hostClass;
       TR_OpaqueClassBlock * _componentClass; // caching the componentType of the J9ArrayClass
       TR_OpaqueClassBlock * _arrayClass;
-      uintptrj_t _totalInstanceSize;
+      uintptr_t _totalInstanceSize;
       J9ConstantPool *_constantPool;
-      uintptrj_t _classFlags;
+      uintptr_t _classFlags;
       PersistentUnorderedMap<TR_RemoteROMStringKey, std::string> _remoteROMStringsCache; // cached strings from the client
       PersistentUnorderedMap<int32_t, std::string> _fieldOrStaticNameCache;
       PersistentUnorderedMap<int32_t, TR_OpaqueClassBlock *> _classOfStaticCache;
@@ -294,7 +294,7 @@ class ClientSessionData
    struct VMInfo
       {
       void *_systemClassLoader;
-      uintptrj_t _processID;
+      uintptr_t _processID;
       bool _canMethodEnterEventBeHooked;
       bool _canMethodExitEventBeHooked;
       bool _usesDiscontiguousArraylets;
@@ -322,7 +322,12 @@ class ClientSessionData
       void *_floatInvokeExactThunkHelper;
       void *_doubleInvokeExactThunkHelper;
       size_t _interpreterVTableOffset;
+      J9Method *_jlrMethodInvoke;
       uint32_t _enableGlobalLockReservation;
+#if defined(J9VM_OPT_SIDECAR)
+      TR_OpaqueClassBlock *_srMethodAccessorClass;
+      TR_OpaqueClassBlock *_srConstructorAccessorClass;
+#endif // J9VM_OPT_SIDECAR
       }; // struct VMInfo
 
    TR_PERSISTENT_ALLOC(TR_Memory::ClientSessionData)
