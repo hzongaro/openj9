@@ -4529,7 +4529,7 @@ J9::X86::TreeEvaluator::monitorEnterOrExitForValueTypeClass(
    auto j9classReg = cg->allocateRegister();
    generateLoadJ9Class(node, j9classReg, objectReg, cg);
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
-   auto classFlagsMR = generateX86MemoryReference(j9classReg, (uintptrj_t)(fej9->getOffsetOfClassFlags()), cg);
+   auto classFlagsMR = generateX86MemoryReference(j9classReg, (uintptr_t)(fej9->getOffsetOfClassFlags()), cg);
    static_assert((uint32_t) J9ClassIsValueType < USHRT_MAX);
    //test [j9classReg.classFlags], J9ClassIsValueType
    generateMemImmInstruction(TEST2MemImm2, node, classFlagsMR, J9ClassIsValueType, cg);
