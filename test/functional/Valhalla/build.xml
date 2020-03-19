@@ -76,12 +76,12 @@
 	</target>
 
 	<target name="build" >
-		<if>
+		<!-- if>
 			<equals arg1="${JDK_VERSION}" arg2="Valhalla"/>
-			<then>
+			<then -->
 				<antcall target="clean" inheritall="true" />
-			</then>
-		</if>
+			<!-- /then>
+		</if -->
 	</target>
 
 	<target name="clean" depends="dist" description="clean up" >
