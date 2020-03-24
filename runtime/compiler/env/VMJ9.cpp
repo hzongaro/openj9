@@ -5978,8 +5978,10 @@ TR_J9VMBase::canAllocateInlineClass(TR_OpaqueClassBlock *clazzOffset)
    if (clazz->initializeStatus != 1)
       return false;
 
-   // Can not inline the allocation if the class is an interface, abstract or a value type
-   if (clazz->romClass->modifiers & (J9AccAbstract | J9AccInterface | J9AccValueType))
+   // Can not inline the allocation if the class is an interface, abstract or identityless
+   // (a value type) or if it is a class with identityless fields
+   if ((clazz->romClass->modifiers & (J9AccAbstract | J9AccInterface | J9AccValueType))
+       || (clazz->classFlags & J9ClassContainsUnflattenedFlattenables))
       return false;
    return true;
    }
@@ -6562,7 +6564,7 @@ TR_J9VMBase::isValueTypeClass(TR_OpaqueClassBlock * clazzPointer)
 bool
 TR_J9VMBase::hasUnflattenedFlattenableFields(TR_OpaqueClassBlock * clazzPointer)
    {
-   return (TR::Compiler->cls.romClassOf(clazzPointer)->modifiers & J9ClassContainsUnflattenedFlattenables) ? true : false;
+   return (getClassFlagsValue(clazzPointer) & J9ClassContainsUnflattenedFlattenables) ? true : false;
    }
 
 bool
