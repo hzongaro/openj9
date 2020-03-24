@@ -338,7 +338,9 @@ bool acquireVMaccessIfNeeded(J9VMThread *vmThread, TR_YesNoMaybe isCompThread)
                     heldMonitor, TR_J9VMBase::get(jitConfig, NULL)->getJ9MonitorName((J9ThreadMonitor*)heldMonitor->getVMMonitor()));
 #endif // #if defined(DEBUG) || defined(PROD_WITH_ASSUMES)
 
-            if (TR::Options::getCmdLineOptions()->realTimeGC())
+            TR::Compilation *comp = compInfoPT->getCompilation();
+            if ((comp && comp->getOptions()->realTimeGC()) ||
+                 TR::Options::getCmdLineOptions()->realTimeGC())
                compInfoPT->waitForGCCycleMonitor(false); // used only for real-time
 
             acquireVMAccessNoSuspend(vmThread);   // blocking. Will wait for the entire GC
@@ -356,7 +358,6 @@ bool acquireVMaccessIfNeeded(J9VMThread *vmThread, TR_YesNoMaybe isCompThread)
                //TR::MonitorTable::get()->readReleaseClassUnloadMonitor(0); // Main code should do it.
                // releaseVMAccess(vmThread);
 
-               TR::Compilation *comp = compInfoPT->getCompilation();
                if (comp)
                   {
                   comp->failCompilation<TR::CompilationInterrupted>("Compilation interrupted by GC unloading classes");
@@ -3688,7 +3689,7 @@ TR_J9VMBase::compilationShouldBeInterrupted(TR::Compilation * comp, TR_CallingCo
       {
       releaseVMAccess(vmThread());
 
-      if (!compilingOnApplicationThread && TR::Options::getCmdLineOptions()->realTimeGC())
+      if (!compilingOnApplicationThread && comp->getOptions()->realTimeGC())
          {
          // no compilation on application thread
          TR_ASSERT(_compInfoPT, "Missing compilation info per thread.");
@@ -3704,7 +3705,7 @@ TR_J9VMBase::compilationShouldBeInterrupted(TR::Compilation * comp, TR_CallingCo
    if (!comp->getOption(TR_DisableNoVMAccess))
       {
       bool exitClassUnloadMonitor = persistentMemory(_jitConfig)->getPersistentInfo()->GCwillBlockOnClassUnloadMonitor();
-      if (TR::Options::getCmdLineOptions()->realTimeGC())
+      if (comp->getOptions()->realTimeGC())
          {
 #if defined (J9VM_GC_REALTIME)
          J9JavaVM *vm = _jitConfig->javaVM;
@@ -3729,7 +3730,7 @@ TR_J9VMBase::compilationShouldBeInterrupted(TR::Compilation * comp, TR_CallingCo
 #endif
          //--- GC CAN INTERVENE HERE ---
          TR_ASSERT((vmThread()->publicFlags & J9_PUBLIC_FLAGS_VM_ACCESS) == 0, "comp thread must not have vm access");
-         if (!compilingOnApplicationThread && TR::Options::getCmdLineOptions()->realTimeGC())
+         if (!compilingOnApplicationThread && comp->getOptions()->realTimeGC())
             {
             // no compilation on application thread
             TR_ASSERT(_compInfoPT, "Missing compilation info per thread.");
@@ -4008,7 +4009,7 @@ TR_J9VMBase::getCompiledMethodReceiverKnownObjectIndex(TR::Compilation *comp)
          J9::MethodHandleThunkDetails & thunkDetails = static_cast<J9::MethodHandleThunkDetails &>(details);
          if (thunkDetails.isCustom())
             {
-            return knot->getIndexAt(thunkDetails.getHandleRef());
+            return knot->getOrCreateIndexAt(thunkDetails.getHandleRef());
             }
          }
       }
@@ -4225,7 +4226,7 @@ TR_J9VMBase::initializeLocalObjectFlags(TR::Compilation * comp, TR::Node * alloc
    int32_t initValue = TR::Compiler->cls.romClassOf(ramClass)->instanceShape;
 #endif
 
-   if (!TR::Options::getCmdLineOptions()->realTimeGC())
+   if (!comp->getOptions()->realTimeGC())
       {
       initValue |= vmThread()->allocateThreadLocalHeap.objectFlags;
       }
@@ -9115,9 +9116,6 @@ TR_J9SharedCacheVM::methodTrampolineLookup(TR::Compilation *comp, TR::SymbolRefe
    return 0;
    }
 
-
-extern U_8 *align(U_8 *ptr, U_32 alignment);
-
 // Multiple codeCache support
 TR::CodeCache *
 TR_J9SharedCacheVM::getDesignatedCodeCache(TR::Compilation *comp)
@@ -9131,7 +9129,7 @@ TR_J9SharedCacheVM::getDesignatedCodeCache(TR::Compilation *comp)
    // For AOT we need some alignment
    if (codeCache)
       {
-      codeCache->alignWarmCodeAlloc(_jitConfig->codeCacheAlignment - 1);
+      codeCache->alignWarmCodeAlloc(_jitConfig->codeCacheAlignment);
 
       // For AOT we must install the beginning of the code cache
       comp->setRelocatableMethodCodeStart((uint32_t *)codeCache->getWarmCodeAlloc());

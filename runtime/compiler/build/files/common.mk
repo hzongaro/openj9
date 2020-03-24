@@ -375,7 +375,6 @@ JIT_PRODUCT_SOURCE_FILES+=\
     omr/compiler/env/OMRCompilerEnv.cpp \
     omr/compiler/env/OMRIO.cpp \
     omr/compiler/env/OMRKnownObjectTable.cpp \
-    omr/compiler/runtime/Alignment.cpp \
     omr/compiler/runtime/CodeCacheTypes.cpp \
     omr/compiler/runtime/OMRCodeCache.cpp \
     omr/compiler/runtime/OMRCodeCacheConfig.cpp \
@@ -395,7 +394,8 @@ JIT_PRODUCT_SOURCE_FILES+=\
     compiler/net/ClientStream.cpp \
     compiler/net/CommunicationStream.cpp \
     compiler/net/LoadSSLLibs.cpp \
-    compiler/net/ProtobufTypeConvert.cpp \
+    compiler/net/MessageBuffer.cpp \
+    compiler/net/Message.cpp \
     compiler/net/ServerStream.cpp \
     compiler/runtime/CompileService.cpp \
     compiler/runtime/JITClientSession.cpp \
@@ -409,6 +409,3 @@ include $(JIT_MAKE_DIR)/files/host/$(HOST_ARCH).mk
 include $(JIT_MAKE_DIR)/files/target/$(TARGET_ARCH).mk
 -include $(JIT_MAKE_DIR)/files/host/$(HOST_ARCH)-extra.mk
 -include $(JIT_MAKE_DIR)/files/target/$(TARGET_ARCH)-extra.mk
-ifneq ($(J9VM_OPT_JITSERVER),)
-include $(JIT_MAKE_DIR)/files/net.mk
-endif

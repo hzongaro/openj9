@@ -428,7 +428,7 @@ J9::SymbolReferenceTable::findOrCreateCallSiteTableEntrySymbol(TR::ResolvedMetho
       {
       TR::KnownObjectTable *knot = comp()->getOrCreateKnownObjectTable();
       if (knot)
-         knownObjectIndex = knot->getIndexAt((uintptr_t*)entryLocation);
+         knownObjectIndex = knot->getOrCreateIndexAt((uintptr_t*)entryLocation);
       }
 
    symRef = new (trHeapMemory()) TR::SymbolReference(self(), sym, owningMethodSymbol->getResolvedMethodIndex(), -1,
@@ -1241,7 +1241,7 @@ J9::SymbolReferenceTable::findOrCreateStringSymbol(TR::ResolvedMethodSymbol * ow
          TR::KnownObjectTable *knot = comp()->getOrCreateKnownObjectTable();
          if (knot)
             {
-            knownObjectIndex = knot->getIndexAt((uintptr_t*)stringConst);
+            knownObjectIndex = knot->getOrCreateIndexAt((uintptr_t*)stringConst);
             }
          }
       symRef = findOrCreateCPSymbol(owningMethodSymbol, cpIndex, TR::Address, true, stringConst, knownObjectIndex);
@@ -1664,7 +1664,7 @@ J9::SymbolReferenceTable::findOrCreateStaticSymbol(TR::ResolvedMethodSymbol * ow
 
                if (createKnownObject)
                   {
-                  knownObjectIndex = knot->getIndexAt((uintptr_t*)dataAddress);
+                  knownObjectIndex = knot->getOrCreateIndexAt((uintptr_t*)dataAddress);
                   }
                }
             }
