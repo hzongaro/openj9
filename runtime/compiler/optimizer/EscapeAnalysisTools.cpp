@@ -62,6 +62,11 @@ void TR_EscapeAnalysisTools::insertFakeEscapeForOSR(TR::Block *block, TR::Node *
    int32_t byteCodeIndex = bci.getByteCodeIndex();
    TR_OSRCompilationData *osrCompilationData = _comp->getOSRCompilationData();
 
+if (_comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "In insertFakeEscapeForOSR - block_%d inlinedIndex == %d, byteCodeIndex == %d\n", block->getNumber(), byteCodeIndex);
+}
+
    // Gather all live autos and pending pushes at this point for inlined methods in _loads
    // This ensures objects that EA can stack allocate will be heapified if OSR is induced
    while (inlinedIndex > -1)
@@ -72,6 +77,11 @@ void TR_EscapeAnalysisTools::insertFakeEscapeForOSR(TR::Block *block, TR::Node *
       processAutosAndPendingPushes(rms, methodData, byteCodeIndex);
       byteCodeIndex = _comp->getInlinedCallSite(inlinedIndex)._byteCodeInfo.getByteCodeIndex();
       inlinedIndex = _comp->getInlinedCallSite(inlinedIndex)._byteCodeInfo.getCallerIndex();
+
+if (inlinedIndex > -1 && _comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "  Next inlinedIndex == %d; byteCodeIndex == %d\n", block->getNumber(), byteCodeIndex);
+}
       }
 
    // handle the outter most method
@@ -84,8 +94,20 @@ void TR_EscapeAnalysisTools::insertFakeEscapeForOSR(TR::Block *block, TR::Node *
 
 void TR_EscapeAnalysisTools::processAutosAndPendingPushes(TR::ResolvedMethodSymbol *rms, TR_OSRMethodData *methodData, int32_t byteCodeIndex)
    {
+if (_comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "Checking auto symbol references\n");
+}
    processSymbolReferences(rms->getAutoSymRefs(), methodData->getLiveRangeInfo(byteCodeIndex));
+if (_comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "Checking pending push symbol references\n");
+}
    processSymbolReferences(rms->getPendingPushSymRefs(), methodData->getPendingPushLivenessInfo(byteCodeIndex));
+if (_comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "Finished processing autos and pending pushes\n");
+}
    }
 
 void TR_EscapeAnalysisTools::processSymbolReferences(TR_Array<List<TR::SymbolReference>> *symbolReferences, TR_BitVector *deadSymRefs)
@@ -97,6 +119,10 @@ void TR_EscapeAnalysisTools::processSymbolReferences(TR_Array<List<TR::SymbolRef
       for (TR::SymbolReference* symRef = autosIt.getFirst(); symRef; symRef = autosIt.getNext())
          {
          TR::AutomaticSymbol *p = symRef->getSymbol()->getAutoSymbol();
+if (_comp->trace(OMR::escapeAnalysis))
+{
+traceMsg(_comp, "Checking symbol #%d:  isAuto == %d; isAddress == %d; isDead == %d\n", symRef->getReferenceNumber(), (p != NULL), (p != NULL && (p->getDataType() == TR::Address)), (deadSymRefs != NULL && deadSymRefs->isSet(symRef->getReferenceNumber())));
+}
          if (p && p->getDataType() == TR::Address && (deadSymRefs == NULL || !deadSymRefs->isSet(symRef->getReferenceNumber())))
             {
             _loads->push_back(TR::Node::createWithSymRef(TR::aload, 0, symRef));
