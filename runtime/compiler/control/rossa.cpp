@@ -209,7 +209,7 @@ char *compilationErrorNames[]={
    "compilationSymbolValidationManagerFailure", //50
    "compilationAOTNoSupportForAOTFailure", //51
    "compilationAOTValidateTMFailure", //52
-   "compilationILGenUnresolvedValueTypeFailure", //53
+   "compilationILGenUnsupportedValueTypeOpFailure", //53
 #if defined(J9VM_OPT_JITSERVER)
    "compilationStreamFailure", //54
    "compilationStreamLostMessage", // 55

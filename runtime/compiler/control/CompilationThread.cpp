@@ -11036,9 +11036,9 @@ TR::CompilationInfoPerThreadBase::processException(
       {
       _methodBeingCompiled->_compErrCode = compilationILGenFailure;
       }
-   catch (const TR::UnresolvedValueTypeFailure &e)
+   catch (const TR::UnsupportedValueTypeOperation &e)
       {
-      _methodBeingCompiled->_compErrCode = compilationILGenUnresolvedValueTypeFailure;
+      _methodBeingCompiled->_compErrCode = compilationILGenUnsupportedValueTypeOpFailure;
       }
    /* IL Gen Exceptions End */
 
