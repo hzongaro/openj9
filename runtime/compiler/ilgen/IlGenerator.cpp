@@ -2434,6 +2434,16 @@ bool TR_J9ByteCodeIlGenerator::replaceFieldsAndStatics(TR::TreeTop *tt, TR::Node
    return result;
 }
 
+TR::Block *TR_J9ByteCodeIlGenerator::createBlockAndAddToCFG(TR::Node *node)
+   {
+   TR::Block * newBlock = TR::Block::createEmptyBlock(comp());
+   cfg()->addNode(newBlock);
+   cfg()->findLastTreeTop()->join(newBlock->getEntry());
+   newBlock->getEntry()->getNode()->copyByteCodeInfo(node);
+   newBlock->getExit()->getNode()->copyByteCodeInfo(node);
+   return newBlock;
+   }
+
 /**
  * Expand a checkcast tree for an unresolved class.
  *
@@ -2510,6 +2520,28 @@ void TR_J9ByteCodeIlGenerator::expandUnresolvedClassCheckcast(TR::TreeTop *tree)
    objAnchor->copyByteCodeInfo(checkcastNode);
    tree->insertBefore(TR::TreeTop::create(comp(), objAnchor));
 
+   TR::Block *nullCaseBlock = NULL;
+   TR::Block *nullCaseValueTypeBlock = NULL;
+   TR::SymbolReference *classTemp = NULL;
+   TR::SymbolReference *objTemp = NULL;
+   if (TR::Compiler->om.areValueTypesEnabled())
+      {
+      objTemp = symRefTab()->createTemporary(_methodSymbol, TR::Address);
+      TR::Node *objTempStore = TR::Node::createWithSymRef(checkcastNode, TR::astore, 1, objNode, objTemp);
+      tree->insertBefore(TR::TreeTop::create(comp(), objTempStore));
+
+      TR::Node *resolveCheckNode = genResolveCheck(classNode);
+      resolveCheckNode->copyByteCodeInfo(checkcastNode);
+      tree->insertBefore(TR::TreeTop::create(comp(), resolveCheckNode));
+
+      classTemp = symRefTab()->createTemporary(_methodSymbol, TR::Address);
+      TR::Node *classTempStore = TR::Node::createWithSymRef(checkcastNode, TR::astore, 1, classNode, classTemp);
+      tree->insertBefore(TR::TreeTop::create(comp(), classTempStore));
+
+      nullCaseBlock = createBlockAndAddToCFG(checkcastNode);
+      nullCaseValueTypeBlock = createBlockAndAddToCFG(checkcastNode);
+      }
+
    TR::Block *headBlock = tree->getEnclosingBlock();
    const bool fixupCommoning = true;
    TR::Block *nonNullCaseBlock = headBlock->split(tree, cfg(), fixupCommoning);
@@ -2521,19 +2553,73 @@ void TR_J9ByteCodeIlGenerator::expandUnresolvedClassCheckcast(TR::TreeTop *tree)
    tailBlock->getEntry()->getNode()->copyByteCodeInfo(checkcastNode);
 
    TR::Node *aconstNull = TR::Node::aconst(0);
-   TR::Node *nullTest = TR::Node::createif(TR::ifacmpeq, objNode, aconstNull, tailBlock->getEntry());
+
+   TR::Block *nullCaseBranchDestination = TR::Compiler->om.areValueTypesEnabled() ? nullCaseBlock : tailBlock;
+   TR::Node *nullTest = TR::Node::createif(TR::ifacmpeq, objNode, aconstNull, nullCaseBranchDestination->getEntry());
    aconstNull->copyByteCodeInfo(checkcastNode);
    nullTest->copyByteCodeInfo(checkcastNode);
    headBlock->append(TR::TreeTop::create(comp(), nullTest));
-   cfg()->addEdge(headBlock, tailBlock);
+   if (TR::Compiler->om.areValueTypesEnabled())
+      {
+      cfg()->addEdge(headBlock, nullCaseBlock);
+      cfg()->addEdge(nullCaseBlock, tailBlock);
+      cfg()->addEdge(nullCaseValueTypeBlock, tailBlock);
+      cfg()->addEdge(nullCaseBlock, nullCaseValueTypeBlock);
+      }
+   else
+      cfg()->addEdge(headBlock, tailBlock);
+
+   if (TR::Compiler->om.areValueTypesEnabled())
+      {
+      /*
+       * nullCaseBlock
+       *
+       * ificmpeq tailBlock
+       *    iand
+       *       iloadi j9class.classFlags
+       *          aload classTemp
+       *       iconst J9ClassIsValueType
+       *    iconst0
+       */
+      static_assert((uint32_t) J9ClassIsValueType < USHRT_MAX);
+      TR::Node * classTempLoadNode = TR::Node::createWithSymRef(checkcastNode, TR::aload, 0, classTemp);
+      TR::Node * classFlagsNode = TR::Node::createWithSymRef(checkcastNode, TR::iloadi, 1, classTempLoadNode, symRefTab()->findOrCreateClassFlagsSymbolRef());
+      TR::Node * iandNode = TR::Node::create(checkcastNode, TR::iand, 2, classFlagsNode, TR::Node::create(checkcastNode, TR::iconst, 0, J9ClassIsValueType));
+      TR::Node *iconst0 = TR::Node::iconst(0);
+      iconst0->copyByteCodeInfo(checkcastNode);
+      TR::Node *valueTypeTest = TR::Node::createif(TR::ificmpeq, iandNode, iconst0, tailBlock->getEntry());
+      nullCaseBlock->append(TR::TreeTop::create(comp(), valueTypeTest));
+
+      /*
+       * nullCaseValueTypeBlock
+       * NULLCHK
+       *    passThrough
+       *       aload objTemp
+       * goto tailBlock
+       */
+      TR::Node *nullCHKNode = TR::Node::createWithSymRef(checkcastNode, TR::NULLCHK, 1,
+                                 TR::Node::create(checkcastNode, TR::PassThrough, 1,
+                                    TR::Node::createWithSymRef(checkcastNode, TR::aload, 0, objTemp)),
+                              symRefTab()->findOrCreateNullCheckSymbolRef(_methodSymbol));
+      nullCaseValueTypeBlock->append(TR::TreeTop::create(comp(), nullCHKNode));
+      nullCaseValueTypeBlock->append(TR::TreeTop::create(comp(), TR::Node::create(checkcastNode, TR::Goto, 0, tailBlock->getEntry())));
+      }
 
    TR_ASSERT(checkcastNode->getSecondChild() == classNode, "unresolved class checkcast n%un: split block should not have replaced class child n%un with n%un\n", checkcastNode->getGlobalIndex(), classNode->getGlobalIndex(), checkcastNode->getSecondChild()->getGlobalIndex());
-   TR::Node *resolveCheckNode = genResolveCheck(classNode);
-   resolveCheckNode->copyByteCodeInfo(checkcastNode);
-   nonNullCaseBlock->prepend(TR::TreeTop::create(comp(), resolveCheckNode));
+
+   if (!TR::Compiler->om.areValueTypesEnabled())
+      {
+      TR::Node *resolveCheckNode = genResolveCheck(classNode);
+      resolveCheckNode->copyByteCodeInfo(checkcastNode);
+      nonNullCaseBlock->prepend(TR::TreeTop::create(comp(), resolveCheckNode));
+      }
 
    if (trace)
-      traceMsg(comp(), "\tblock_%d: resolve, checkcast\n\tblock_%d: tail of original block\n", nonNullCaseBlock->getNumber(), tailBlock->getNumber());
+      {
+      traceMsg(comp(), "\tblock_%d: non-null case block with resolve, checkcast\n\tblock_%d: tail of original block\n", nonNullCaseBlock->getNumber(), tailBlock->getNumber());
+      if (nullCaseBlock && nullCaseValueTypeBlock)
+         traceMsg(comp(), "\tblock_%d: null case block with test valuetype class \n\tblock_%d: null case value type class block with nullchk\n", nullCaseBlock->getNumber(), nullCaseValueTypeBlock->getNumber());
+      }
    }
 
 /**

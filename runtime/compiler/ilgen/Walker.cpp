@@ -2282,9 +2282,29 @@ TR_J9ByteCodeIlGenerator::genCheckCast()
       return;
       }
 
-   TR::Node *node = genNodeAndPopChildren(TR::checkcast, 2, symRefTab()->findOrCreateCheckCastSymbolRef(_methodSymbol));
+   TR::Node *classNode = pop();
+   TR::Node *objNode = pop();
+
+   if (TR::Compiler->om.areValueTypesEnabled())
+      {
+      TR::SymbolReference * classSymRef = classNode->getSymbolReference();
+      if (!classSymRef->isUnresolved())
+         {
+         TR::StaticSymbol * sym = classSymRef->getSymbol()->castToStaticSymbol();
+         TR_OpaqueClassBlock * clazz = ( TR_OpaqueClassBlock *) sym->getStaticAddress();
+         if (TR::Compiler->cls.isValueTypeClass(clazz))
+            {
+            TR::Node *nullCHKTreeTopNode = genNullCheck(TR::Node::create(TR::PassThrough, 1, objNode));
+            genTreeTop(nullCHKTreeTopNode);
+            }
+         }
+      }
+
+   TR::Node *node = TR::Node::createWithSymRef(TR::checkcast, 2, symRefTab()->findOrCreateCheckCastSymbolRef(_methodSymbol));
+   node->setAndIncChild(0, objNode);
+   node->setAndIncChild(1, classNode);
    genTreeTop(node);
-   push(node->getFirstChild()); // The object reference
+   push(objNode);
    _methodSymbol->setHasCheckCasts(true);
    }
 
@@ -2302,7 +2322,7 @@ TR_J9ByteCodeIlGenerator::genCheckCast()
 void
 TR_J9ByteCodeIlGenerator::genCheckCast(int32_t cpIndex)
    {
-   loadClassObjectForTypeTest(cpIndex, TR_DisableAOTCheckCastInlining);
+   TR::SymbolReference * classSymRef = loadClassObjectForTypeTest(cpIndex, TR_DisableAOTCheckCastInlining);
    genCheckCast();
    }
 
@@ -5437,7 +5457,7 @@ TR_J9ByteCodeIlGenerator::loadClassObjectForTypeTest(int32_t cpIndex, TR_Compila
    TR::SymbolReference *symRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, cpIndex, classObject);
    TR::Node *node = TR::Node::createWithSymRef(TR::loadaddr, 0, symRef);
    if (symRef->isUnresolved())
-   {
+      {
       // We still need to anchor from the stack *as though* we were emitting
       // the ResolveCHK, since the type test will expand to include one later.
       TR::Node *dummyResolveCheck = genResolveCheck(node);

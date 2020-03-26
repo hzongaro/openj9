@@ -348,6 +348,7 @@ private:
    bool replaceField(TR::Node* node, char* destClass, char* destFieldName, char* destFieldSignature, int ParmIndex);
    bool replaceStatic(TR::Node* node, char* dstClassName, char* staticName, char* type);
 
+   TR::Block *createBlockAndAddToCFG(TR::Node *node);
    uintptr_t walkReferenceChain(TR::Node *node, uintptr_t receiver);
 #if defined(J9VM_OPT_JITSERVER)
    void packReferenceChainOffsets(TR::Node *node, std::vector<uintptr_t>& listOfOffsets);
