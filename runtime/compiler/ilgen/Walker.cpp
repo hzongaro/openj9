@@ -6065,7 +6065,7 @@ TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
                bcIndex,
                comp()->signature()));
          }
-      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for withfieldbytecode instruction");
+      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved class encountered for withfieldbytecode instruction");
       }
 
    bool isStore = false;
@@ -6089,7 +6089,7 @@ TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
                bcIndex,
                comp()->signature()));
          }
-      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved field encountered for withfield bytecode instruction");
+      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved field encountered for withfield bytecode instruction");
       }
 
    TR::Node *newFieldValue = pop();
@@ -6158,7 +6158,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                comp()->signature()));
          }
 
-      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
 
    TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, valueTypeClass);
@@ -6193,7 +6193,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                comp()->signature()));
          }
 
-      comp()->failCompilation<TR::UnresolvedValueTypeFailure>("Unresolved class encountered for defaultvalue bytecode instruction");
+      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved class encountered for defaultvalue bytecode instruction");
       }
    else
       {
