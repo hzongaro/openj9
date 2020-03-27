@@ -1079,7 +1079,7 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
          if (candidate->_kind == TR::New)
             {
             TR_OpaqueClassBlock *clazz = (TR_OpaqueClassBlock *)candidate->_node->getFirstChild()->getSymbol()->getStaticSymbol()->getStaticAddress();
-            if (comp()->fej9()->hasUnflattenedFlattenableFields(clazz))
+            if (TR::Compiler->cls.hasUnflattenedValueTypeField(clazz))
                {
                if (trace())
                   traceMsg(comp(), "   Fail [%p] because candidate has a field that is an unflattened flattenable (value type)\n", candidate->_node);
@@ -1185,9 +1185,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
                }
             else
                {
-               TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
                TR_OpaqueClassBlock *clazz = (TR_OpaqueClassBlock*)classNode->getSymbol()->castToStaticSymbol()->getStaticAddress();
-               if (fej9->isValueTypeClass(clazz))
+               if (TR::Compiler->cls.isValueTypeClass(clazz))
                   {
                   if (trace())
                      traceMsg(comp(), "   Fail [%p] because component type of array is a value type\n", candidate->_node);
