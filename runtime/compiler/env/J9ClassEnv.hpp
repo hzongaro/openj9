@@ -89,6 +89,20 @@ public:
    bool isAbstractClass(TR::Compilation *comp, TR_OpaqueClassBlock *clazzPointer);
    bool isInterfaceClass(TR::Compilation *comp, TR_OpaqueClassBlock *clazzPointer);
    bool isValueTypeClass(TR_OpaqueClassBlock *);
+
+   /**
+    * \brief
+    *    Checks whether the specified class has fields that are value types that have not been expanded
+    *    (flattened) into their own components.
+    *
+    * \param clazz
+    *    The class that is to be checked for unflattened value type fields
+    *
+    * \return
+    *    `true` if the specified class has unexpanded value type fields;
+    *    `false` otherwise
+    */
+   bool hasUnflattenedValueTypeField(TR_OpaqueClassBlock *clazz);
    bool isEnumClass(TR::Compilation *comp, TR_OpaqueClassBlock *clazzPointer, TR_ResolvedMethod *method);
    bool isPrimitiveClass(TR::Compilation *comp, TR_OpaqueClassBlock *clazz);
    bool isAnonymousClass(TR::Compilation *comp, TR_OpaqueClassBlock *clazz);
