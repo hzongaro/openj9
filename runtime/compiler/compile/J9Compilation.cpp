@@ -685,7 +685,7 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
       // Arrays of value type classes must have all their elements initialized with the
       // default value of the component type.  For now, prevent inline allocation of them.
       //
-      if (areValueTypesEnabled && self()->fej9()->isValueTypeClass(reinterpret_cast<TR_OpaqueClassBlock*>(clazz)))
+      if (areValueTypesEnabled && TR::Compiler->cls.isValueTypeClass(reinterpret_cast<TR_OpaqueClassBlock*>(clazz)))
          {
          return -1;
          }
