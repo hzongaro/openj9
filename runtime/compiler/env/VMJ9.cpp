@@ -2470,7 +2470,7 @@ TR_J9VMBase::getClassSignature_DEPRECATED(TR_OpaqueClassBlock * clazz, int32_t &
    for (i = 0; i < numDims; i++)
       sig[i] = '[';
    if (* name != '[')
-      if (isValueTypeClass(myClass))
+      if (TR::Compiler->cls.isValueTypeClass(myClass))
          sig[i++] = 'Q';
       else
          sig[i++] = 'L';
@@ -2501,7 +2501,7 @@ TR_J9VMBase::getClassSignature(TR_OpaqueClassBlock * clazz, TR_Memory * trMemory
    for (i = 0; i < numDims; i++)
       sig[i] = '[';
    if (* name != '[')
-      if (isValueTypeClass(myClass))
+      if (TR::Compiler->cls.isValueTypeClass(myClass))
          sig[i++] = 'Q';
       else
          sig[i++] = 'L';
@@ -6554,18 +6554,6 @@ bool
 TR_J9VMBase::isInterfaceClass(TR_OpaqueClassBlock * clazzPointer)
    {
    return (TR::Compiler->cls.romClassOf(clazzPointer)->modifiers & J9AccInterface) ? true : false;
-   }
-
-bool
-TR_J9VMBase::isValueTypeClass(TR_OpaqueClassBlock * clazzPointer)
-   {
-   return (TR::Compiler->cls.romClassOf(clazzPointer)->modifiers & J9AccValueType) ? true : false;
-   }
-
-bool
-TR_J9VMBase::hasUnflattenedFlattenableFields(TR_OpaqueClassBlock * clazzPointer)
-   {
-   return (getClassFlagsValue(clazzPointer) & J9ClassContainsUnflattenedFlattenables) ? true : false;
    }
 
 bool
