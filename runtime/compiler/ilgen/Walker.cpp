@@ -6095,6 +6095,9 @@ TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
    TR::Node *newFieldValue = pop();
    TR::Node *originalObject = pop();
 
+   TR::Node *passThruNode = TR::Node::create(TR::PassThrough, 1, originalObject);
+   genTreeTop(genNullCheck(passThruNode));
+
    loadClassObject(valueClass);
    const TR::TypeLayout *typeLayout = comp()->typeLayout(valueClass);
    size_t fieldCount = typeLayout->count();
