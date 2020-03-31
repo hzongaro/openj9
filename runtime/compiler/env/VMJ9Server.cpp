@@ -1765,6 +1765,16 @@ TR_J9ServerVM::isStringCompressionEnabledVM()
 J9ROMMethod *
 TR_J9ServerVM::getROMMethodFromRAMMethod(J9Method *ramMethod)
    {
+      {
+      // Check persistent cache first
+      OMR::CriticalSection J9MethodMapMonitor(_compInfoPT->getClientData()->getROMMapMonitor());
+      auto it = _compInfoPT->getClientData()->getJ9MethodMap().find(ramMethod);
+      if (it != _compInfoPT->getClientData()->getJ9MethodMap().end())
+         {
+         return it->second._origROMMethod;
+         }
+      }
+
    JITServer::ServerStream *stream = _compInfoPT->getMethodBeingCompiled()->_stream;
    stream->write(JITServer::MessageType::VM_getROMMethodFromRAMMethod, ramMethod);
    return std::get<0>(stream->read<J9ROMMethod *>());
@@ -1829,6 +1839,55 @@ TR_J9ServerVM::getObjectSizeClass(uintptr_t objectSize)
    return std::get<0>(stream->read<UDATA>());
 #endif
    return 0;
+   }
+
+bool 
+TR_J9ServerVM::noMultipleConcreteClasses(List<TR_PersistentClassInfo>* subClasses)
+   {
+   TR::Compilation *comp = _compInfoPT->getCompilation();
+   int count = 0;
+   TR_ScratchList<TR_PersistentClassInfo> subClassesNotCached(comp->trMemory());
+
+   // Process classes caches at the server first
+   ListIterator<TR_PersistentClassInfo> i(subClasses);
+   for (TR_PersistentClassInfo *ptClassInfo = i.getFirst(); ptClassInfo; ptClassInfo = i.getNext())
+      {
+      TR_OpaqueClassBlock *clazz = ptClassInfo->getClassId();
+      J9Class *j9clazz = TR::Compiler->cls.convertClassOffsetToClassPtr(clazz);
+      auto romClass = JITServerHelpers::getRemoteROMClassIfCached(_compInfoPT->getClientData(), j9clazz);
+      if (romClass == NULL)
+         {
+         subClassesNotCached.add(ptClassInfo);
+         }
+      else
+         {
+         if (!TR::Compiler->cls.isInterfaceClass(comp, clazz) && !TR::Compiler->cls.isAbstractClass(comp, clazz))
+            {
+            count++;
+            }
+         if (count > 1)
+            {
+            return false;
+            }
+         }
+      }
+
+   // Traverse though classes that are not cached on server
+   ListIterator<TR_PersistentClassInfo> j(&subClassesNotCached);
+   for (TR_PersistentClassInfo *ptClassInfo = j.getFirst(); ptClassInfo; ptClassInfo = j.getNext())
+      {
+      TR_OpaqueClassBlock *clazz = ptClassInfo->getClassId();
+      if (!TR::Compiler->cls.isInterfaceClass(comp, clazz) && !TR::Compiler->cls.isAbstractClass(comp, clazz))
+         {
+         count++;
+         }
+      if (count > 1)
+         {
+         return false;
+         }
+      }
+
+   return true;
    }
 
 bool

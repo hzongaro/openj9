@@ -252,6 +252,7 @@ class ClientSessionData
       uintptr_t _totalInstanceSize;
       J9ConstantPool *_constantPool;
       uintptr_t _classFlags;
+      uintptr_t _classChainOffsetOfIdentifyingLoaderForClazz;
       PersistentUnorderedMap<TR_RemoteROMStringKey, std::string> _remoteROMStringsCache; // cached strings from the client
       PersistentUnorderedMap<int32_t, std::string> _fieldOrStaticNameCache;
       PersistentUnorderedMap<int32_t, TR_OpaqueClassBlock *> _classOfStaticCache;
@@ -279,6 +280,7 @@ class ClientSessionData
    struct J9MethodInfo
       {
       J9ROMMethod *_romMethod; // pointer to local/server cache
+      J9ROMMethod *_origROMMethod; // pointer to the client-side method
       // The following is a hashtable that maps a bcIndex to IProfiler data
       // The hashtable is created on demand (NULL means it is missing)
       IPTable_t *_IPData;

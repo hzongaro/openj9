@@ -48,11 +48,24 @@ adoptopenjdk:
 #========================================#
 # Artifactory settings
 #========================================#
-artifactory_server: 'ci-eclipse-openj9'
-artifactory_repo: 'ci-eclipse-openj9'
-artifactory_num_artifacts: 30
-artifactory_days_to_keep_artifacts: 50
-artifactory_manual_cleanup: true
+artifactory:
+  defaultGeo: 'osu'
+  server:
+    osu: 'ci-eclipse-openj9'
+    #unb: 'ci-eclipse-openj9-unb' TEMP DISABLE. See #8817
+  repo: 'ci-eclipse-openj9'
+  numArtifacts:
+    osu: 30
+    unb: 5
+  daysToKeepArtifacts:
+    osu: 50
+    unb: 2
+  manualCleanup:
+    osu: true
+    unb: true
+  vpn:
+    osu: false
+    unb: true
 #========================================#
 # Miscellaneous settings
 #========================================#
@@ -147,6 +160,12 @@ cuda:
 cuda_version:
   extends: ['cuda']
   extra_configure_options: '--with-cuda=/usr/local/cuda-9.0'
+#========================================#
+# Valhalla
+#========================================#
+valhalla:
+  extra_configure_options: '--enable-inline-types'
+  test_build_list: 'functional/Valhalla,functional/cmdline_options_tester,functional/cmdLineTests/valuetypeddrtests'
 #========================================#
 # Linux PPCLE 64bits Compressed Pointers
 #========================================#
@@ -308,6 +327,11 @@ x86-64_linux_xl:
       - special.system
     11:
       - sanity.openjdk
+#========================================#
+# Linux x86 64bits Compressed Pointers / Valhalla
+#========================================#
+x86-64_linux_valhalla:
+  extends: ['x86-64_linux', 'valhalla']
 #========================================#
 # Linux Aarch 64bits Compressed Pointers
 #========================================#

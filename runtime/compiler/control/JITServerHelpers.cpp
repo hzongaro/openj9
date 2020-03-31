@@ -126,7 +126,7 @@ JITServerHelpers::printJITServerMsgStats(J9JITConfig *jitConfig)
    for (int i = 0; i < JITServer::MessageType_ARRAYSIZE; ++i)
       {
       if (JITServerHelpers::serverMsgTypeCount[i] > 0)
-         j9tty_printf(PORTLIB, "#%04d %7u\n", i, JITServerHelpers::serverMsgTypeCount[i]);
+         j9tty_printf(PORTLIB, "#%04d %7u %s\n", i, JITServerHelpers::serverMsgTypeCount[i], JITServer::messageNames[i]);
       }
    }
 
@@ -215,14 +215,17 @@ JITServerHelpers::cacheRemoteROMClass(ClientSessionData *clientSessionData, J9Cl
    classInfoStruct._remoteRomClass = std::get<17>(classInfo);
    classInfoStruct._constantPool = (J9ConstantPool *)std::get<18>(classInfo);
    classInfoStruct._classFlags = std::get<19>(classInfo);
+   classInfoStruct._classChainOffsetOfIdentifyingLoaderForClazz = std::get<20>(classInfo);
    clientSessionData->getROMClassMap().insert({ clazz, classInfoStruct});
+
+   auto &origROMMethods = std::get<21>(classInfo);
 
    uint32_t numMethods = romClass->romMethodCount;
    J9ROMMethod *romMethod = J9ROMCLASS_ROMMETHODS(romClass);
    for (uint32_t i = 0; i < numMethods; i++)
       {
       clientSessionData->getJ9MethodMap().insert({&methods[i],
-            {romMethod, NULL, static_cast<bool>(methodTracingInfo[i]), (TR_OpaqueClassBlock *)clazz, false}});
+            {romMethod, origROMMethods[i], NULL, static_cast<bool>(methodTracingInfo[i]), (TR_OpaqueClassBlock *)clazz, false}});
       romMethod = nextROMMethod(romMethod);
       }
    }
@@ -250,11 +253,17 @@ JITServerHelpers::packRemoteROMClassInfo(J9Class *clazz, J9VMThread *vmThread, T
    TR_OpaqueClassBlock *parentClass = fe->getSuperClass((TR_OpaqueClassBlock *) clazz);
 
    uint32_t numMethods = clazz->romClass->romMethodCount;
+
    std::vector<uint8_t> methodTracingInfo;
    methodTracingInfo.reserve(numMethods);
+
+   std::vector<J9ROMMethod *> origROMMethods;
+   origROMMethods.reserve(numMethods);
    for(uint32_t i = 0; i < numMethods; ++i)
       {
       methodTracingInfo.push_back(static_cast<uint8_t>(fe->isMethodTracingEnabled((TR_OpaqueMethodBlock *) &methodsOfClass[i])));
+      // record client-side pointers to ROM methods
+      origROMMethods.push_back(fe->getROMMethodFromRAMMethod(&methodsOfClass[i]));
       }
 
    bool classHasFinalFields = fe->hasFinalFieldsInClass((TR_OpaqueClassBlock *)clazz);
@@ -269,8 +278,14 @@ JITServerHelpers::packRemoteROMClassInfo(J9Class *clazz, J9VMThread *vmThread, T
    uintptr_t totalInstanceSize = clazz->totalInstanceSize;
    uintptr_t cp = fe->getConstantPoolFromClass((TR_OpaqueClassBlock *)clazz);
    uintptr_t classFlags = fe->getClassFlagsValue((TR_OpaqueClassBlock *)clazz);
+   uintptr_t classChainOffsetOfIdentifyingLoaderForClazz = fe->sharedCache() ? 
+      fe->sharedCache()->getClassChainOffsetOfIdentifyingLoaderForClazzInSharedCacheNoFail((TR_OpaqueClassBlock *)clazz) : 0;
 
-   return std::make_tuple(packROMClass(clazz->romClass, trMemory), methodsOfClass, baseClass, numDims, parentClass, TR::Compiler->cls.getITable((TR_OpaqueClassBlock *) clazz), methodTracingInfo, classHasFinalFields, classDepthAndFlags, classInitialized, byteOffsetToLockword, leafComponentClass, classLoader, hostClass, componentClass, arrayClass, totalInstanceSize, clazz->romClass, cp, classFlags);
+   return std::make_tuple(packROMClass(clazz->romClass, trMemory), methodsOfClass, baseClass, numDims, parentClass,
+                          TR::Compiler->cls.getITable((TR_OpaqueClassBlock *) clazz), methodTracingInfo,
+                          classHasFinalFields, classDepthAndFlags, classInitialized, byteOffsetToLockword,
+                          leafComponentClass, classLoader, hostClass, componentClass, arrayClass, totalInstanceSize,
+                          clazz->romClass, cp, classFlags, classChainOffsetOfIdentifyingLoaderForClazz, origROMMethods);
    }
 
 J9ROMClass *
@@ -470,6 +485,11 @@ JITServerHelpers::getROMClassData(const ClientSessionData::ClassInfo &classInfo,
       case CLASSINFO_CONSTANT_POOL :
          {
          *(J9ConstantPool **)data = classInfo._constantPool;
+         }
+         break;
+      case CLASSINFO_CLASS_CHAIN_OFFSET:
+         {
+         *(uintptr_t *)data = classInfo._classChainOffsetOfIdentifyingLoaderForClazz;
          }
          break;
       default :

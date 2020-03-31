@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2020 IBM Corp. and others
+ * Copyright (c) 2020, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,32 +19,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package org.openj9.test.varhandle;
 
-/**
- * @file
- * @ingroup GC_CheckElement
- */
-
-#if !defined(CHECKELEMENT_HPP_)
-#define CHECKELEMENT_HPP_
-
-#include "j9.h"
-#include "j9cfg.h"
-
-struct GC_CheckElement {
-	enum Type {
-		type_none = 0,
-		type_object,
-		type_class
-	} type;
-	union {
-		J9Object *object;
-		J9Class *clazz;
-	} u;
-
-	GC_CheckElement() :
-		type(type_none)
-		{}
-};
-
-#endif /* CHECKELEMENT_HPP_ */
+public class StaticHelperChild extends StaticHelper {
+	/* StaticHelperChild is used to test if StaticFieldVarHandle functions
+	 * properly while accessing the static fields of StaticHelper (parent
+	 * class) via StaticHelperChild (child class).
+	 */
+}
