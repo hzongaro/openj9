@@ -76,7 +76,7 @@ typedef enum {
    compilationSymbolValidationManagerFailure       = 50,
    compilationAOTNoSupportForAOTFailure            = 51,
    compilationAOTValidateTMFailure                 = 52,
-   compilationILGenUnsupportedValueTypeOpFailure   = 53,
+   compilationILGenUnsupportedValueTypeOperationFailure = 53,
 #if defined(J9VM_OPT_JITSERVER)
    compilationFirstJITServerFailure,
    compilationStreamFailure                        = compilationFirstJITServerFailure,
@@ -84,7 +84,7 @@ typedef enum {
    compilationStreamMessageTypeMismatch            = compilationFirstJITServerFailure+2,
    compilationStreamVersionIncompatible            = compilationFirstJITServerFailure+3,
    compilationStreamInterrupted                    = compilationFirstJITServerFailure+4,
-#endif /* defined(JITSERVER_SUPPORT) */
+#endif /* defined(J9VM_OPT_JITSERVER) */
    /* please insert new codes before compilationMaxError which is used in jar2jxe to test the error codes range */
    /* If new codes are added then add the corresponding names in compilationErrorNames table in rossa.cpp */
    compilationMaxError /* must be the last one */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2019 IBM Corp. and others
+ * Copyright (c) 2008, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -203,6 +203,11 @@ jitParseSignature (const J9UTF8 *signature, U_8 *paramBuffer, UDATA *paramElemen
 		} else {
 			switch (*sigChar) {
 			case 'Q':
+<<<<<<< HEAD
+=======
+                                /* VALHALLA_TODO:  Need to return a J9_NATIVE_TYPE_VALUE for 'Q' in future */
+                                /* FALLTHROUGH */
+>>>>>>> master
 			case 'L': next = J9_NATIVE_TYPE_OBJECT; break;
 			case '[': 
 				next = J9_NATIVE_TYPE_OBJECT; 

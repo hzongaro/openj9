@@ -11038,7 +11038,11 @@ TR::CompilationInfoPerThreadBase::processException(
       }
    catch (const TR::UnsupportedValueTypeOperation &e)
       {
+<<<<<<< HEAD
       _methodBeingCompiled->_compErrCode = compilationILGenUnsupportedValueTypeOpFailure;
+=======
+      _methodBeingCompiled->_compErrCode = compilationILGenUnsupportedValueTypeOperationFailure;
+>>>>>>> master
       }
    /* IL Gen Exceptions End */
 
@@ -11510,12 +11514,6 @@ TR_HWProfiler *
 TR::CompilationInfo::getHWProfiler() const
    {
    return ((TR_JitPrivateConfig*)_jitConfig->privateConfig)->hwProfiler;
-   }
-
-TR_LMGuardedStorage *
-TR::CompilationInfo::getLMGuardedStorage() const
-   {
-   return ((TR_JitPrivateConfig*)_jitConfig->privateConfig)->lmGuardedStorage;
    }
 
 TR_JProfilerThread *

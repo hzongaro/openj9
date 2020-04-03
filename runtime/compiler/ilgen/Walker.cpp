@@ -547,6 +547,7 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
             break;
 
          case J9BCdefaultvalue:
+<<<<<<< HEAD
 #if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
             {
 #if 0  // Need a way to test at run-time whether value types are supported
@@ -559,6 +560,20 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
                }
             }
 #endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
+=======
+            {
+            if (TR::Compiler->om.areValueTypesEnabled())
+               {
+               genDefaultValue(next2Bytes());
+               _bcIndex += 3;
+               }
+            else
+               {
+               fej9()->unsupportedByteCode(comp(), opcode);
+               }
+            break;
+            }
+>>>>>>> master
          case J9BCwithfield:
 #if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
             {
@@ -6061,6 +6076,7 @@ TR_J9ByteCodeIlGenerator::genNew(TR::ILOpCodes opCode)
    }
 
 void
+<<<<<<< HEAD
 TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
    {
    const int32_t bcIndex = currentByteCodeIndex();
@@ -6151,6 +6167,8 @@ TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
    }
 
 void
+=======
+>>>>>>> master
 TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
    {
    TR_OpaqueClassBlock *valueTypeClass = method()->getClassFromConstantPool(comp(), cpIndex);
@@ -6160,6 +6178,11 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
 void
 TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
    {
+<<<<<<< HEAD
+=======
+   // valueTypeClass will be NULL if it is unresolved.  Abort the compilation and
+   // track the failure with a static debug counter
+>>>>>>> master
    if (valueTypeClass == NULL)
       {
       const int32_t bcIndex = currentByteCodeIndex();
@@ -6197,6 +6220,11 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
 
    if (valueClassSymRef->isUnresolved())
       {
+<<<<<<< HEAD
+=======
+      // IL generation for defaultvalue is currently only able to handle value type classes that have been resolved.
+      // If the class is still unresolved, abort the compilation and track the failure with a static debug counter.
+>>>>>>> master
       const int32_t bcIndex = currentByteCodeIndex();
       if (isOutermostMethod())
          {
@@ -6232,6 +6260,26 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
             traceMsg(comp(), "Handling defaultvalue for valueClass %s\n - field[%d] name %s type %d offset %d\n", comp()->getDebug()->getName(valueClassSymRef), idx, entry._fieldname, entry._datatype.getDataType(), entry._offset);
             }
 
+<<<<<<< HEAD
+=======
+         // Supply default value that is appropriate for the type of the corresponding field
+         // All these are gathered up as operands of a newvalue instruction.
+         //
+         // For example, if a value type class "Val" has fields of type int, long, double, LIdent;
+         // and Qval2;, where value type class "Val2" has a field of type boolean, the following
+         // IL will be generated:
+         //
+         //     newvalue jitNewValue   // Default value of type Val
+         //        loadaddr  Val
+         //        iconst 0     // int default value
+         //        lconst 0     // long default value
+         //        dconst 0.0   // double default value
+         //        aconst 0     // default value (null reference) for class Ident
+         //        newvalue jitNewValue    // Default value of type Val2
+         //           loadaddr  Val2
+         //           iconst 0  // boolean default value
+         //
+>>>>>>> master
          switch (entry._datatype.getDataType())
             {
             case TR::Int8:
@@ -6260,9 +6308,20 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                {
                const char *fieldSignature = entry._typeSignature;
 
+<<<<<<< HEAD
                if (fieldSignature[0] == 'Q')
                   {
                   TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature), comp()->getCurrentMethod());
+=======
+               // If the field's signature begins with a Q, it is a value type and should be initialized with a default value
+               // for that value type.  That's handled with a recursive call to genDefaultValue.
+               // If the signature does not begin with a Q, the field is an identity type whose default value is a Java null
+               /// reference.
+               if (fieldSignature[0] == 'Q')
+                  {
+                  TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature),
+                                                                                  comp()->getCurrentMethod());
+>>>>>>> master
                   genDefaultValue(fieldClass);
                   }
                else if (comp()->target().is64Bit())

@@ -85,7 +85,7 @@ CURRENT_RELEASES = ['8', '11', '14', 'next']
 
 SPECS = ['ppc64_aix'      : CURRENT_RELEASES,
          'ppc64le_linux'  : CURRENT_RELEASES,
-         'ppc64le_linux_cm' : ['8', '11'],
+         'ppc64le_linux_cm' : ['8', '11', 'next'],
          'ppc64le_linux_jit' : ['8', '11'],
          'ppc64le_linux_xl' : CURRENT_RELEASES,
          's390x_linux'    : CURRENT_RELEASES,
@@ -94,7 +94,7 @@ SPECS = ['ppc64_aix'      : CURRENT_RELEASES,
          's390x_zos'      : ['11'],
          'x86-64_linux_xl': CURRENT_RELEASES,
          'x86-64_linux'   : CURRENT_RELEASES,
-         'x86-64_linux_cm': ['8', '11'],
+         'x86-64_linux_cm': ['8', '11', 'next'],
          'x86-64_linux_jit' : ['8', '11'],
          'x86-64_linux_valhalla'   : ['next'],
          'x86-64_mac_xl'  : CURRENT_RELEASES,
@@ -536,6 +536,7 @@ def get_summary_table(identifier) {
                     pipelineLink = buildFile.get_build_embedded_status_link(build)
                     downstreamBuilds.putAll(buildFile.get_downstream_builds(build, pipelineName, downstreamJobNames.values()))
                     pipelineDuration = build.getDurationString()
+                    pipelineDuration = pipelineDuration.replaceAll(" and counting", "+")
 
                     if (build.getResult()) {
                         // pipeline finished, cache its status
@@ -544,7 +545,7 @@ def get_summary_table(identifier) {
                 }
             }
 
-            innerTable += "<tr><td>&nbsp;</td><td style=\"text-align: right;\">${pipelineLink}</td><td style=\"text-align: right;\">${pipelineDuration}</td></tr>"
+            innerTable += "<tr><td>&nbsp;</td><td style=\"text-align: right;\">${pipelineLink}</td><td style=\"text-align: right; white-space: nowrap;\">${pipelineDuration}</td></tr>"
 
             // add pipeline's downstream builds
             downstreamJobNames.each { label, jobName ->
@@ -556,6 +557,7 @@ def get_summary_table(identifier) {
                 if (downstreamBuild) {
                     link = buildFile.get_build_embedded_status_link(downstreamBuild)
                     duration = downstreamBuild.getDurationString()
+                    duration = duration.replaceAll(" and counting", "+")
                 }
 
                 if (showLabel) {
@@ -563,7 +565,7 @@ def get_summary_table(identifier) {
                     aLabel = label
                 }
 
-                innerTable += "<tr style=\"vertical-align: bottom;\"><td>${aLabel}</td><td style=\"text-align: right\">${link}</td><td style=\"text-align: right\">${duration}</td></tr>"
+                innerTable += "<tr style=\"vertical-align: bottom;\"><td>${aLabel}</td><td style=\"text-align: right\">${link}</td><td style=\"text-align: right; white-space: nowrap;\">${duration}</td></tr>"
             }
 
             innerTable += "</tbody></table>"

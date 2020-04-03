@@ -1948,7 +1948,7 @@ mustReportEnterStepOrBreakpoint(J9JavaVM * vm);
 * @param object
 * @return IDATA
 */
-IDATA
+UDATA
 objectMonitorEnter(J9VMThread* vmStruct, j9object_t object);
 
 
@@ -3953,7 +3953,9 @@ J9ROMMethod *
 * @brief Finds the rom class given a PC.  Also returns the classloader it belongs to.
 * @param vmThread
 * @param methodPC
-* @param resultClassLoader
+* @param resultClassLoader  This is the classLoader that owns the memory segment that the ROMClass was found in.
+*	For classes from the SharedClasses cache, this will always be the vm->systemClassLoader regardless of which
+*	J9ClassLoader actually loaded the class.
 * @return IDATA
 *
 * Returns the rom class, or NULL on failure.  resultClassLoader is filled in if non-null with the classloader associated.
