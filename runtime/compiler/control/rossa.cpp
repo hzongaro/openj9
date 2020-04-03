@@ -215,7 +215,6 @@ char *compilationErrorNames[]={
    "compilationStreamVersionIncompatible", // 57
    "compilationStreamInterrupted", // 58
 #endif /* defined(J9VM_OPT_JITSERVER) */
->>>>>>> master
    "compilationMaxError"
 };
 

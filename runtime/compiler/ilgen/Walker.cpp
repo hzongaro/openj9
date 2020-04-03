@@ -547,20 +547,6 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
             break;
 
          case J9BCdefaultvalue:
-<<<<<<< HEAD
-#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
-            {
-#if 0  // Need a way to test at run-time whether value types are supported
-            if (cg()->supportsValueTypes())
-#endif
-               {
-               genDefaultValue(next2Bytes());
-               _bcIndex += 3;
-               break;
-               }
-            }
-#endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
-=======
             {
             if (TR::Compiler->om.areValueTypesEnabled())
                {
@@ -573,7 +559,6 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
                }
             break;
             }
->>>>>>> master
          case J9BCwithfield:
 #if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
             {
@@ -6076,99 +6061,6 @@ TR_J9ByteCodeIlGenerator::genNew(TR::ILOpCodes opCode)
    }
 
 void
-<<<<<<< HEAD
-TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
-   {
-   const int32_t bcIndex = currentByteCodeIndex();
-   int32_t classCpIndex = method()->classCPIndexOfFieldOrStatic(fieldCpIndex);
-   TR_OpaqueClassBlock *valueClass = method()->getClassFromConstantPool(comp(), classCpIndex, true);
-   if (!valueClass)
-      {
-      if (isOutermostMethod())
-         {
-         TR::DebugCounter::incStaticDebugCounter(comp(),
-            TR::DebugCounter::debugCounterName(comp(),
-                  "ilgen.abort/unresolved/withfield/class/(%s)/bc=%d",
-                  comp()->signature(),
-                  bcIndex));
-         }
-      else
-         {
-         TR::DebugCounter::incStaticDebugCounter(comp(),
-            TR::DebugCounter::debugCounterName(comp(),
-               "ilgen.abort/unresolved/withfield/class/(%s)/bc=%d/root=(%s)",
-               _method->signature(comp()->trMemory()),
-               bcIndex,
-               comp()->signature()));
-         }
-      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved class encountered for withfieldbytecode instruction");
-      }
-
-   bool isStore = false;
-   TR::SymbolReference * symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, fieldCpIndex, isStore);
-   if (symRef->isUnresolved())
-      {
-      if (isOutermostMethod())
-         {
-         TR::DebugCounter::incStaticDebugCounter(comp(),
-            TR::DebugCounter::debugCounterName(comp(),
-                  "ilgen.abort/unresolved/withfield/field/(%s)/bc=%d",
-                  comp()->signature(),
-                  bcIndex));
-         }
-      else
-         {
-         TR::DebugCounter::incStaticDebugCounter(comp(),
-            TR::DebugCounter::debugCounterName(comp(),
-               "ilgen.abort/unresolved/withfield/field/(%s)/bc=%d/root=(%s)",
-               _method->signature(comp()->trMemory()),
-               bcIndex,
-               comp()->signature()));
-         }
-      comp()->failCompilation<TR::UnsupportedValueTypeOperation>("Unresolved field encountered for withfield bytecode instruction");
-      }
-
-   TR::Node *newFieldValue = pop();
-   TR::Node *originalObject = pop();
-
-   TR::Node *passThruNode = TR::Node::create(TR::PassThrough, 1, originalObject);
-   genTreeTop(genNullCheck(passThruNode));
-
-   loadClassObject(valueClass);
-   const TR::TypeLayout *typeLayout = comp()->typeLayout(valueClass);
-   size_t fieldCount = typeLayout->count();
-
-   for (size_t idx = 0; idx < fieldCount; idx++)
-      {
-      const TR::TypeLayoutEntry &fieldEntry = typeLayout->entry(idx);
-      if (fieldEntry._offset == symRef->getOffset())
-         push(newFieldValue);
-      else
-         {
-         auto* fieldSymRef = comp()->getSymRefTab()->findOrFabricateShadowSymbol(valueClass,
-                                                                     fieldEntry._datatype,
-                                                                     fieldEntry._offset,
-                                                                     fieldEntry._isVolatile,
-                                                                     fieldEntry._isPrivate,
-                                                                     fieldEntry._isFinal,
-                                                                     fieldEntry._fieldname,
-                                                                     fieldEntry._typeSignature
-                                                                     );
-         push(originalObject);
-         loadInstance(fieldSymRef);
-         }
-      }
-
-   TR::Node *newValueNode = genNodeAndPopChildren(TR::newvalue, fieldCount+1, symRefTab()->findOrCreateNewValueSymbolRef(_methodSymbol));
-   newValueNode->setIdentityless(true);
-   genTreeTop(newValueNode);
-   push(newValueNode);
-   genFlush(0);
-   }
-
-void
-=======
->>>>>>> master
 TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
    {
    TR_OpaqueClassBlock *valueTypeClass = method()->getClassFromConstantPool(comp(), cpIndex);
@@ -6178,11 +6070,8 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
 void
 TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
    {
-<<<<<<< HEAD
-=======
    // valueTypeClass will be NULL if it is unresolved.  Abort the compilation and
    // track the failure with a static debug counter
->>>>>>> master
    if (valueTypeClass == NULL)
       {
       const int32_t bcIndex = currentByteCodeIndex();
@@ -6220,11 +6109,8 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
 
    if (valueClassSymRef->isUnresolved())
       {
-<<<<<<< HEAD
-=======
       // IL generation for defaultvalue is currently only able to handle value type classes that have been resolved.
       // If the class is still unresolved, abort the compilation and track the failure with a static debug counter.
->>>>>>> master
       const int32_t bcIndex = currentByteCodeIndex();
       if (isOutermostMethod())
          {
@@ -6259,9 +6145,6 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
             {
             traceMsg(comp(), "Handling defaultvalue for valueClass %s\n - field[%d] name %s type %d offset %d\n", comp()->getDebug()->getName(valueClassSymRef), idx, entry._fieldname, entry._datatype.getDataType(), entry._offset);
             }
-
-<<<<<<< HEAD
-=======
          // Supply default value that is appropriate for the type of the corresponding field
          // All these are gathered up as operands of a newvalue instruction.
          //
@@ -6279,7 +6162,6 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
          //           loadaddr  Val2
          //           iconst 0  // boolean default value
          //
->>>>>>> master
          switch (entry._datatype.getDataType())
             {
             case TR::Int8:
@@ -6308,11 +6190,6 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                {
                const char *fieldSignature = entry._typeSignature;
 
-<<<<<<< HEAD
-               if (fieldSignature[0] == 'Q')
-                  {
-                  TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature), comp()->getCurrentMethod());
-=======
                // If the field's signature begins with a Q, it is a value type and should be initialized with a default value
                // for that value type.  That's handled with a recursive call to genDefaultValue.
                // If the signature does not begin with a Q, the field is an identity type whose default value is a Java null
@@ -6321,7 +6198,6 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                   {
                   TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature),
                                                                                   comp()->getCurrentMethod());
->>>>>>> master
                   genDefaultValue(fieldClass);
                   }
                else if (comp()->target().is64Bit())
