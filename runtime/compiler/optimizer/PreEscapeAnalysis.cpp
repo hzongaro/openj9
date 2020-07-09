@@ -33,6 +33,7 @@
 
 int32_t TR_PreEscapeAnalysis::perform()
    {
+static char *disableOSREAEscapeHelper = feGetEnv("TR_disableOSREAEscapeHelper");
    if (!optimizer()->isEnabled(OMR::escapeAnalysis))
       {
       if (comp()->trace(OMR::escapeAnalysis))
@@ -42,7 +43,7 @@ int32_t TR_PreEscapeAnalysis::perform()
       return 0;
       }
 
-   if (comp()->getOSRMode() != TR::voluntaryOSR || comp()->getOption(TR_DisableOSRLiveRangeAnalysis))
+   if (comp()->getOSRMode() != TR::voluntaryOSR || comp()->getOption(TR_DisableOSRLiveRangeAnalysis) || disableOSREAEscapeHelper)
       {
       if (comp()->trace(OMR::escapeAnalysis))
          {
