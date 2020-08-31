@@ -230,7 +230,7 @@ private:
    void         genMonitorExit(bool);
    TR_OpaqueClassBlock *loadValueClass(int32_t classCpIndex);
    void         genDefaultValue(uint16_t classCpIndex);
-   void         genDefaultValue(TR_OpaqueClassBlock *valueTypeClass);
+   void         genDefaultValue(TR::SymbolReference *valueClassSymRef);
    void         genWithField(uint16_t fieldCpIndex);
    void         genFlush(int32_t nargs);
    void         genFullFence(TR::Node *node);

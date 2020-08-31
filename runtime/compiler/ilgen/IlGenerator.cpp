@@ -630,6 +630,47 @@ TR_J9ByteCodeIlGenerator::genILFromByteCodes()
             }
          }
 
+      if (opcode.getOpCodeValue() == TR::treetop
+          && currNode->getFirstChild()->getOpCodeValue() == TR::newvalue
+          && currNode->getFirstChild()->getFirstChild()->getOpCodeValue() == TR::loadaddr
+          && currNode->getFirstChild()->getFirstChild()->getSymbolReference()->isUnresolved())
+         {
+TR_OSRMethodData *osrMethodData = comp()->getOSRCompilationData()->findOrCreateOSRMethodData(currNode->getByteCodeInfo().getCallerIndex(), _methodSymbol);
+TR::Block *catchBlock = osrMethodData->findOrCreateOSRCatchBlock(currNode);
+TR::Block *currBlock = currTree->getEnclosingBlock();
+if (!currBlock->hasExceptionSuccessor(catchBlock))
+{
+cfg()->addEdge(TR::CFGEdge::createExceptionEdge(currBlock, catchBlock, comp()->trMemory()));
+}
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "Preparing to generate induceOSR for newvalue n%dn\n", currNode->getGlobalIndex());
+}
+         TR::Node *branchNode = TR::Node::create(currNode, TR::Goto, 0);
+         TR::TreeTop *branchTT = TR::TreeTop::create(comp(), branchNode);
+         TR::TreeTop *prevTT = currTree->getPrevTreeTop();
+         TR::TreeTop *lastTT = NULL;
+
+// Clean up trees following the point at which the induceOSR will be inserted
+//
+TR::TreeTop *cleanupTT = currTree;
+while (cleanupTT)
+{
+TR::Node *cleanupNode = cleanupTT->getNode();
+if (((cleanupNode->getOpCodeValue() == TR::athrow)
+     && cleanupNode->throwInsertedByOSR())
+    || (cleanupNode->getOpCodeValue() == TR::BBEnd))
+   break;
+TR::TreeTop *nextTT = cleanupTT->getNextTreeTop();
+prevTT->join(nextTT);
+cleanupNode->recursivelyDecReferenceCount();
+cleanupTT = nextTT;
+}
+         _methodSymbol->induceOSRAfterAndRecompile(prevTT, currNode->getByteCodeInfo(), branchTT, false, 0, &lastTT);
+         currTree = branchTT;
+         continue;
+         }
+
       if (needMonitor && primitive)
          {
          if ((currNode->getOpCode().isStore() &&
@@ -3117,7 +3158,6 @@ void TR_J9ByteCodeIlGenerator::expandInvokeHandleGeneric(TR::TreeTop *tree)
    TR::Node * callNode = tree->getNode()->getChild(0);
    TR::Node * receiverHandle = callNode->getArgument(0);
    callNode->getByteCodeInfo().setDoNotProfile(true);
-
    TR::Node* callSiteMethodType = loadCallSiteMethodType(callNode);
    if (callSiteMethodType->getSymbolReference()->isUnresolved())
       {

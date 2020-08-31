@@ -1156,6 +1156,7 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
    if (comp()->getOption(TR_TraceOSR))
       traceMsg(comp(), "skip saving PPS for exceptionOnlyPoints %d node n%dn\n", isExceptionOnlyPoint, n->getGlobalIndex());
 
+
    // It is not necessary to save the stack under OSR if the bytecode index or caller has been marked as cannotAttemptOSR
    bool cannotAttemptOSR = comp()->getOption(TR_EnableOSR) && !comp()->isPeekingMethod() &&
       (_methodSymbol->cannotAttemptOSRAt(n->getByteCodeInfo(), NULL, comp()) || _cannotAttemptOSR);
@@ -1181,26 +1182,37 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
       static int32_t osrIndirectCallBCThresh = (OSRIndirectCallBCThreshold = feGetEnv("TR_OSRIndirectCallBCThreshold")) ? atoi(OSRIndirectCallBCThreshold) : 0;
 
       bool OSRTooExpensive = false;
-      if ((n->getNumChildren() > 0) && !comp()->getOption(TR_EnableOSROnGuardFailure) && comp()->getHCRMode() != TR::osr &&
+bool c1 = false;
+bool c2 = false;
+bool c3 = false;
+bool c4 = false;
+bool c5 = false;
+bool c6 = false;
+      if ((c1=(n->getNumChildren() > 0))
+          && (c2=!comp()->getOption(TR_EnableOSROnGuardFailure))
+          && (c3=(comp()->getHCRMode() != TR::osr))
+          &&
 
-          (((comp()->getNumLoopNestingLevels() == 0) &&
+          ((c4=((comp()->getNumLoopNestingLevels() == 0) &&
             ((((int32_t) _stack->size()) > osrPPSThreshOutsideLoops) || true ||
-             ((((int32_t) _stack->size() + (int32_t) comp()->getNumLivePendingPushSlots())) > osrTotalPPSThreshOutsideLoops))) ||
+             ((((int32_t) _stack->size() + (int32_t) comp()->getNumLivePendingPushSlots())) > osrTotalPPSThreshOutsideLoops)))) ||
 
-           ((comp()->getNumLoopNestingLevels() >= osrLoopNestingThresh) &&
+           (c5=((comp()->getNumLoopNestingLevels() >= osrLoopNestingThresh) &&
             ((((int32_t) _stack->size()) > osrPPSThresh) ||
-             ((((int32_t) _stack->size() + (int32_t) comp()->getNumLivePendingPushSlots())) > osrTotalPPSThresh))) ||
+             ((((int32_t) _stack->size() + (int32_t) comp()->getNumLivePendingPushSlots())) > osrTotalPPSThresh)))) ||
 
-           (n->getFirstChild()->getOpCode().isCallIndirect() &&
+           (c6=(n->getFirstChild()->getOpCode().isCallIndirect() &&
             (n->getFirstChild()->getSymbolReference()->isUnresolved() || true || // turned OSR off for indirect calls for 727 due to failed guards being seen
              n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->virtualMethodIsOverridden() ||
              comp()->getPersistentInfo()->isClassLoadingPhase() ||
              (comp()->getOption(TR_EnableHCR) &&
               (!n->getFirstChild()->getSecondChild()->getOpCode().isLoadVarDirect() || !n->getFirstChild()->getSecondChild()->getSymbol()->isParm())) ||
-             (n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->maxBytecodeIndex() > osrIndirectCallBCThresh)))
+             (n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->maxBytecodeIndex() > osrIndirectCallBCThresh))))
            ))
         {
         OSRTooExpensive = true;
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "OSRTooExpensive == %d && %d && %d && (%d || %d || %d)\n", c1,c2,c3,c4,c5,c6);
         if (n->getFirstChild()->getOpCode().isCall() && !comp()->getOption(TR_FullSpeedDebug) && comp()->getOption(TR_EnableOSR))
            {
            if (comp()->getOption(TR_TraceOSR))
@@ -1209,12 +1221,34 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
            }
         }
 
+// bool isUnsupportedJITValueTypeOperationCall = (n->getOpCodeValue() == TR::treetop) && n->getFirstChild()->getOpCode().isCall() && n->getFirstChild()->isUnsupportedJITOperationCall();
+// if (comp()->getOption(TR_TraceILGen))
+// traceMsg(comp(), "isUnsupportedJITValueTypeOperationCall == %d\n", isUnsupportedJITValueTypeOperationCall);
+
+bool isUnresolvedValueTypeOperation = (n->getOpCodeValue() == TR::newvalue) && n->getFirstChild()->getOpCode().isLoadAddr() && n->getFirstChild()->getSymbolReference()->isUnresolved();
+
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "isUnresolvedValueTypeOperation == %d\n", isUnresolvedValueTypeOperation);
+
+
       if ((comp()->getOption(TR_MimicInterpreterFrameShape) ||
             comp()->getOption(TR_FullSpeedDebug) ||
             comp()->getHCRMode() == TR::osr ||
             ((n->getNumChildren() > 0) && n->getFirstChild()->getOpCode().isCall() && !OSRTooExpensive && comp()->getOption(TR_EnableOSR)))
             && !comp()->isPeekingMethod())
          {
+
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "  Inside if\n");
+
+if (!comp()->supportsInduceOSR() || (comp()->getOSRMode() != TR::voluntaryOSR) || !comp()->allowRecompilation())
+   {
+   if (isUnsupportedJITValueTypeOperationCall)
+      {
+      abortForUnresolvedValueTypeOp("newvalue","class");
+      }
+   }
+
          if (comp()->isOSRTransitionTarget(TR::postExecutionOSR))
             {
             // When transitioning to a call bytecode, the VM requires that its
@@ -1247,6 +1281,12 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
                   traceMsg(comp(), "Skipping OSR stack state for repeated call n%dn in treetop n%dn\n", n->getFirstChild()->getGlobalIndex(), n->getGlobalIndex());
                   }
 
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "  creatingTreeTop\n");
+}
+TR::SymbolReference *induceOSRSymRef = symRefTab()->findOrCreateInduceOSRSymbolRef(TR_induceOSRAtCurrentPC);
+n->getFirstChild()->setSymbolReference(induceOSRSymRef);
                return _block->append(TR::TreeTop::create(comp(), n));
                }
             else
@@ -1270,6 +1310,20 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
             //
             saveStack(-1);
             stashPendingPushLivenessForOSR();
+            }
+
+         if (isUnresolvedValueTypeOperation)
+            {
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "  Do something with isUnsupportedJITValueTypeOperationCall\n");
+
+            }
+         }
+      else
+         {
+         if (isUnresolvedValueTypeOperation)
+            {
+            abortForUnresolvedValueTypeOp("newvalue","class");
             }
          }
       }
@@ -1620,6 +1674,8 @@ TR_J9ByteCodeIlGenerator::isAtBBStart(int32_t bcIndex)
 void
 TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
    {
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "  In stashArgumentsForOSR - _couldOSRAtNextBC == %d\n", _couldOSRAtNextBC);
    if (!_couldOSRAtNextBC &&
        !isAtBBStart(_bcIndex)) // _couldOSRAtNextBC doesn't work if the curent bc is at bbstart,
                                // conversatively assume OSR transition can happen at bbstart
@@ -1631,6 +1687,9 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
        || _cannotAttemptOSR
        || !comp()->isOSRTransitionTarget(TR::postExecutionOSR))
       return;
+
+if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "  Stashing");
 
    // Determine the symref to extract the number of arguments required by this bytecode
    TR::SymbolReference *symRef;
@@ -2715,6 +2774,10 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
       TR::Node::createWithSymRef(TR::icall, 2, 2, lhs, rhs, comparisonNonHelper);
 
    substitutabilityTest->getByteCodeInfo().setDoNotProfile(true);
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "TR_J9ByteCodeIlGenerator::genIfAcmpEqNe - Called setDoNotProfile(true) for bytecode index == %d\n", substitutabilityTest->getByteCodeInfo().getByteCodeIndex());
+}
    genTreeTop(substitutabilityTest);
 
    push(substitutabilityTest);
@@ -4583,6 +4646,13 @@ break
       osrInductionOffset = comp()->getOSRInductionOffset(callNode);
       }
 
+#if 0
+   if (callNode->isUnsupportedJITOperationCall() && !needOSRBookkeeping)
+      {
+      abortForUnresolvedValueTypeOp("Dunno", "Dunno");
+      }
+#endif
+
    TR::Node * resultNode = 0;
 
    TR::ResolvedMethodSymbol * resolvedMethodSymbol = symbol->getResolvedMethodSymbol();
@@ -6209,39 +6279,36 @@ TR_J9ByteCodeIlGenerator::genWithField(uint16_t fieldCpIndex)
 void
 TR_J9ByteCodeIlGenerator::genDefaultValue(uint16_t cpIndex)
    {
-   TR_OpaqueClassBlock *valueTypeClass = method()->getClassFromConstantPool(comp(), cpIndex);
-   genDefaultValue(valueTypeClass);
+   bool aotOK = !comp()->compileRelocatableCode();
+   void *classObject = method()->getClassFromConstantPool(comp(), cpIndex, aotOK);
+   TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, cpIndex, classObject);
+   genDefaultValue(valueClassSymRef);
    }
 
 void
-TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
+TR_J9ByteCodeIlGenerator::genDefaultValue(TR::SymbolReference *valueClassSymRef)
    {
-   // valueTypeClass will be NULL if it is unresolved.  Abort the compilation and
-   // track the failure with a static debug counter
-   if (valueTypeClass == NULL)
-      {
-      abortForUnresolvedValueTypeOp("defaultvalue", "class");
-      }
-
-   TR::SymbolReference *valueClassSymRef = symRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, valueTypeClass);
+   TR::Node *newValueNode = NULL;
 
    if (comp()->getOption(TR_TraceILGen))
       {
       traceMsg(comp(), "Handling defaultvalue for valueClass %s\n", comp()->getDebug()->getName(valueClassSymRef));
       }
 
-   loadSymbol(TR::loadaddr, valueClassSymRef);
-
-   TR::Node *newValueNode = NULL;
+   TR::Node *classAddr = loadSymbol(TR::loadaddr, valueClassSymRef);
 
    if (valueClassSymRef->isUnresolved())
       {
       // IL generation for defaultvalue is currently only able to handle value type classes that have been resolved.
       // If the class is still unresolved, abort the compilation and track the failure with a static debug counter.
-      abortForUnresolvedValueTypeOp("defaultvalue", "class");
+      // abortForUnresolvedValueTypeOp("defaultvalue", "class");
+      TR::Node *unsupportedNode = TR::Node::createUnsupportedJITOperationCall(1);
+      unsupportedNode->setAndIncChild(0, pop());
+      push(unsupportedNode);
       }
    else
       {
+      TR_OpaqueClassBlock *valueTypeClass = (TR_OpaqueClassBlock *) valueClassSymRef->getSymbol()->getStaticSymbol()->getStaticAddress();
       const TR::TypeLayout *typeLayout = comp()->typeLayout(valueTypeClass);
       size_t fieldCount = typeLayout->count();
 
@@ -6307,7 +6374,7 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
                   {
                   TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature),
                                                                                   comp()->getCurrentMethod());
-                  genDefaultValue(fieldClass);
+                  genDefaultValue(comp()->getSymRefTab()->findOrCreateClassSymbol(_methodSymbol, 0, fieldClass));
                   }
                else if (comp()->target().is64Bit())
                   {
@@ -6328,10 +6395,10 @@ TR_J9ByteCodeIlGenerator::genDefaultValue(TR_OpaqueClassBlock *valueTypeClass)
 
          newValueNode = genNodeAndPopChildren(TR::newvalue, fieldCount+1, symRefTab()->findOrCreateNewValueSymbolRef(_methodSymbol));
          newValueNode->setIdentityless(true);
-      }
 
-   genTreeTop(newValueNode);
-   push(newValueNode);
+         genTreeTop(newValueNode);
+         push(newValueNode);
+      }
    genFlush(0);
    }
 
