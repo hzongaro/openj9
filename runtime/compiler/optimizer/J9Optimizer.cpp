@@ -78,6 +78,7 @@
 #include "optimizer/UnsafeFastPath.hpp"
 #include "optimizer/VarHandleTransformer.hpp"
 #include "optimizer/StaticFinalFieldFolding.hpp"
+#include "optimizer/HandleRecompilationOps.hpp"
 
 
 static const OptimizationStrategy J9EarlyGlobalOpts[] =
@@ -817,6 +818,8 @@ J9::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *method
       new (comp->allocator()) TR::OptimizationManager(self(), TR_JProfilingValue::create, OMR::jProfilingValue);
    _opts[OMR::staticFinalFieldFolding] =
          new (comp->allocator()) TR::OptimizationManager(self(), TR_StaticFinalFieldFolding::create, OMR::staticFinalFieldFolding);
+   _opts[OMR::handleRecompilationOps] =
+      new (comp->allocator()) TR::OptimizationManager(self(), TR_HandleRecompilationOps::create, OMR::handleRecompilationOps);
    // NOTE: Please add new J9 optimizations here!
 
    // initialize additional J9 optimization groups
