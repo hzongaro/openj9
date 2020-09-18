@@ -167,7 +167,7 @@ private:
    void         loadFlattenableInstanceWithHelper(int32_t cpIndex);
    void         loadStatic(int32_t);
    void         loadAuto(TR::DataType type, int32_t slot, bool isAdjunct = false);
-   TR::Node     *loadSymbol(TR::ILOpCodes, TR::SymbolReference *);
+   TR::Node     *loadSymbol(TR::ILOpCodes, TR::SymbolReference *, bool requestRecompileOnUnresolved = false);
    void         loadConstant(TR::ILOpCodes, int32_t);
    void         loadConstant(TR::ILOpCodes, int64_t);
    void         loadConstant(TR::ILOpCodes, float);
@@ -211,7 +211,7 @@ private:
    void         genIRem();
    void         genLRem();
    TR::Node *    genNullCheck(TR::Node *);
-   TR::Node *    genResolveCheck(TR::Node *);
+   TR::Node *    genResolveCheck(TR::Node *, bool requestRecompile = false);
    TR::Node *    genResolveAndNullCheck(TR::Node *);
    void         genInc();
    void         genIncLong();
