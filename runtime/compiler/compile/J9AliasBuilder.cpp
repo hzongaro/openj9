@@ -295,7 +295,8 @@ J9::AliasBuilder::createAliasInfo()
 
    static TR::SymbolReferenceTable::CommonNonhelperSymbol nonhelpersThatMayThrow[] =
       {
-      TR::SymbolReferenceTable::resolveCheckSymbol
+      TR::SymbolReferenceTable::resolveCheckSymbol,
+      TR::SymbolReferenceTable::resolveCheckRequestRecompileSymbol
       };
 
    for (i = 0; i < (sizeof(nonhelpersThatMayThrow) / 4); ++i)
