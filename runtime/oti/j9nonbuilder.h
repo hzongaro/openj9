@@ -3662,7 +3662,6 @@ typedef struct J9Class {
 #if defined(J9VM_GC_LEAF_BITS)
 	UDATA* instanceLeafDescription;
 #endif /* defined(J9VM_GC_LEAF_BITS) */
-	UDATA instanceHotFieldDescription;
 	UDATA selfReferencingField1;
 	UDATA selfReferencingField2;
 	struct J9Method* initializerCache;
@@ -3762,7 +3761,6 @@ typedef struct J9ArrayClass {
 #if defined(J9VM_GC_LEAF_BITS)
 	UDATA* instanceLeafDescription;
 #endif /* defined(J9VM_GC_LEAF_BITS) */
-	UDATA instanceHotFieldDescription;
 	UDATA selfReferencingField1;
 	UDATA selfReferencingField2;
 	struct J9Method* initializerCache;
