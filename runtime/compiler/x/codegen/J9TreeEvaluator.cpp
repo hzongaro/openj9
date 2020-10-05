@@ -1231,11 +1231,17 @@ TR::Register *J9::X86::TreeEvaluator::newEvaluator(TR::Node *node, TR::CodeGener
    TR::Compilation *comp = cg->comp();
    TR::Register *targetRegister=NULL;
 
+static char *disableValueTypesNEW = feGetEnv("TR_DisableValueTypesNEW");
+static TR::SimpleRegex * regex = disableValueTypesNEW ? TR::SimpleRegex::create(disableValueTypesNEW) : NULL;
+
+
    // If the helper symbol set on the node is TR_newValue, we are (expecting to be)
    // dealing with a value type. Since we do not fully support value types yet, always
    // call the JIT helper to do the allocation.
    //
-   if (TR::Compiler->om.areValueTypesEnabled() && node->getSymbolReference() == comp->getSymRefTab()->findOrCreateNewValueSymbolRef(comp->getMethodSymbol()))
+   if (TR::Compiler->om.areValueTypesEnabled()
+       && !(regex && TR::SimpleRegex::match(regex, comp->signature()))
+       && node->getSymbolReference() == comp->getSymRefTab()->findOrCreateNewValueSymbolRef(comp->getMethodSymbol()))
       {
       TR_OpaqueClassBlock *classInfo;
       bool spillFPRegs = comp->canAllocateInlineOnStack(node, classInfo) <= 0;
@@ -4531,11 +4537,14 @@ J9::X86::TreeEvaluator::VMmonentEvaluator(
 
    static const char *doCmpFirst = feGetEnv("TR_AddCMPBeforeCMPXCHG");
 
+static char *disableValueTypesMon = feGetEnv("TR_DisableValueTypesMon");
+static TR::SimpleRegex * regex = disableValueTypesMon ? TR::SimpleRegex::create(disableValueTypesMon) : NULL;
+
    int lwOffset = fej9->getByteOffsetToLockword((TR_OpaqueClassBlock *) cg->getMonClass(node));
    if (comp->getOption(TR_MimicInterpreterFrameShape) ||
        (comp->getOption(TR_FullSpeedDebug) && node->isSyncMethodMonitor()) ||
        noInline ||
-       TR::Compiler->om.areValueTypesEnabled() && cg->isMonitorValueType(node) == TR_yes ||
+       TR::Compiler->om.areValueTypesEnabled() && !(regex && TR::SimpleRegex::match(regex, comp->signature())) && cg->isMonitorValueType(node) == TR_yes ||
        comp->getOption(TR_DisableInlineMonEnt) ||
        (firstMonEnt && (*firstMonEnt-'0') > monEntCount++))
       {
@@ -4600,7 +4609,7 @@ J9::X86::TreeEvaluator::VMmonentEvaluator(
    TR::SymbolReference *originalNodeSymRef = NULL;
 
    TR::Node *helperCallNode = node;
-   if (TR::Compiler->om.areValueTypesEnabled())
+   if (TR::Compiler->om.areValueTypesEnabled() && !(regex && TR::SimpleRegex::match(regex, comp->signature())))
       TR::TreeEvaluator::generateCheckForValueTypeMonitorEnterOrExit(node, snippetLabel, cg);
    if (comp->getOption(TR_ReservingLocks))
       {
@@ -5154,9 +5163,12 @@ TR::Register
    bool gen64BitInstr = cg->comp()->target().is64Bit() && !fej9->generateCompressedLockWord();
    int lwOffset = fej9->getByteOffsetToLockword((TR_OpaqueClassBlock *) cg->getMonClass(node));
 
+static char *disableValueTypesMon = feGetEnv("TR_DisableValueTypesMon");
+static TR::SimpleRegex * regex = disableValueTypesMon ? TR::SimpleRegex::create(disableValueTypesMon) : NULL;
+
    if ((comp->getOption(TR_MimicInterpreterFrameShape) /*&& !comp->getOption(TR_EnableLiveMonitorMetadata)*/) ||
        noInline ||
-       TR::Compiler->om.areValueTypesEnabled() && cg->isMonitorValueType(node) == TR_yes ||
+       TR::Compiler->om.areValueTypesEnabled() && !(regex && TR::SimpleRegex::match(regex, comp->signature())) && cg->isMonitorValueType(node) == TR_yes ||
        comp->getOption(TR_DisableInlineMonExit) ||
        (firstMonExit && (*firstMonExit-'0') > monExitCount++))
       {
@@ -5206,7 +5218,7 @@ TR::Register
    TR::LabelSymbol *fallThru   = generateLabelSymbol(cg);
    // Create the monitor exit snippet
    TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg);
-   if (TR::Compiler->om.areValueTypesEnabled())
+   if (TR::Compiler->om.areValueTypesEnabled() && !(regex && TR::SimpleRegex::match(regex, comp->signature())))
        TR::TreeEvaluator::generateCheckForValueTypeMonitorEnterOrExit(node, snippetLabel, cg);
 #if !defined(J9VM_OPT_REAL_TIME_LOCKING_SUPPORT)
    // Now that the object reference has been generated, see if this is the end

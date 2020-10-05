@@ -36,6 +36,7 @@
 #include "ilgen/IlGeneratorMethodDetails_inlines.hpp"
 #include "infra/Cfg.hpp"
 #include "infra/Checklist.hpp"
+#include "infra/SimpleRegex.hpp"
 #include "env/VMJ9.h"
 #include "ilgen/J9ByteCodeIlGenerator.hpp"
 #include "optimizer/BoolArrayStoreTransformer.hpp"
@@ -562,11 +563,16 @@ TR_J9ByteCodeIlGenerator::genILFromByteCodes()
             bstoreiUnknownArrayTypeNodes.insert(currNode);
          }
 
+static char *disableValueTypesCHECKCAST = feGetEnv("TR_DisableValueTypesCHECKCAST");
+static TR::SimpleRegex * regex = disableValueTypesCHECKCAST ? TR::SimpleRegex::create(disableValueTypesCHECKCAST) : NULL;
+
+
       if (currNode->getOpCodeValue() == TR::checkcast
           && currNode->getSecondChild()->getOpCodeValue() == TR::loadaddr
           && currNode->getSecondChild()->getSymbolReference()->isUnresolved()
           && // check whether the checkcast class is valuetype. Expansion is only needed for checkcast to reference type.
             (!TR::Compiler->om.areValueTypesEnabled()
+            || (regex && TR::SimpleRegex::match(regex, comp()->signature()))
             || !TR::Compiler->cls.isClassRefValueType(comp(), method()->classOfMethod(), currNode->getSecondChild()->getSymbolReference()->getCPIndex())))
           {
           unresolvedCheckcastTopsNeedingNullGuard.add(currTree);

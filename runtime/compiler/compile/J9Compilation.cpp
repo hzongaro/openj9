@@ -47,6 +47,7 @@
 #include "il/Node_inlines.hpp"
 #include "ilgen/IlGenRequest.hpp"
 #include "infra/List.hpp"
+#include "infra/SimpleRegex.hpp"
 #include "optimizer/OptimizationManager.hpp"
 #include "optimizer/Optimizer.hpp"
 #include "optimizer/TransformUtil.hpp"
@@ -668,13 +669,16 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
    else if (node->getOpCodeValue() == TR::anewarray)
       {
       classRef      = node->getSecondChild();
+static char *disableValueTypesANEWARRAYHandling = feGetEnv("TR_DisableValueTypesANEWARRAYHandling");
+static TR::SimpleRegex * regex = disableValueTypesANEWARRAYHandling ? TR::SimpleRegex::create(disableValueTypesANEWARRAYHandling) : NULL;
 
       // In the case of dynamic array allocation, return 0 indicating variable dynamic array allocation,
       // unless value types are enabled, in which case return -1 to prevent inline allocation
       if (classRef->getOpCodeValue() != TR::loadaddr)
          {
          classInfo = NULL;
-         if (areValueTypesEnabled)
+
+         if (areValueTypesEnabled && !(regex && TR::SimpleRegex::match(regex, self()->signature())))
             {
             if (self()->getOption(TR_TraceCG))
                {
@@ -701,7 +705,7 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
       // Arrays of value type classes must have all their elements initialized with the
       // default value of the component type.  For now, prevent inline allocation of them.
       //
-      if (areValueTypesEnabled && TR::Compiler->cls.isValueTypeClass(reinterpret_cast<TR_OpaqueClassBlock*>(clazz)))
+      if (areValueTypesEnabled && !(regex && TR::SimpleRegex::match(regex, self()->signature())) && TR::Compiler->cls.isValueTypeClass(reinterpret_cast<TR_OpaqueClassBlock*>(clazz)))
          {
          return -1;
          }
