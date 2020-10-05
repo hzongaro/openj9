@@ -56,6 +56,7 @@
 #include "infra/BitVector.hpp"
 #include "infra/ILWalk.hpp"
 #include "infra/List.hpp"
+#include "infra/SimpleRegex.hpp"
 #include "optimizer/Structure.hpp"
 #include "optimizer/TransformUtil.hpp"
 #include "ras/Delimiter.hpp"
@@ -338,6 +339,13 @@ void
 J9::CodeGenerator::lowerNonhelperCallIfNeeded(TR::Node *node, TR::TreeTop *tt)
    {
    TR::Compilation* comp = self()->comp();
+
+static char *disableValueTypesACMP = feGetEnv("TR_DisableValueTypesACMP");
+static TR::SimpleRegex * regex = disableValueTypesACMP ? TR::SimpleRegex::create(disableValueTypesACMP) : NULL;
+
+if (regex && TR::SimpleRegex::match(regex, self()->comp()->signature())) {
+  return;
+}
 
    if (TR::Compiler->om.areValueTypesEnabled() &&
        comp->getSymRefTab()->isNonHelper(
@@ -1556,6 +1564,13 @@ J9::CodeGenerator::lowerTreeIfNeeded(
 void
 J9::CodeGenerator::lowerArrayStoreCHK(TR::Node *node, TR::TreeTop *tt)
    {
+static char *disableValueTypesArrayStore = feGetEnv("TR_DisableValueTypesArrayStore");
+static TR::SimpleRegex * regex = disableValueTypesArrayStore ? TR::SimpleRegex::create(disableValueTypesArrayStore) : NULL;
+
+if (regex && TR::SimpleRegex::match(regex, self()->comp()->signature())) {
+  return;
+}
+
    // Pattern match the ArrayStoreCHK operands to get the source of the assignment
    // (sourceChild) and the array to which an element will have a value assigned (destChild)
    TR::Node *firstChild = node->getFirstChild();

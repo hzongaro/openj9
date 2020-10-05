@@ -48,6 +48,7 @@
 #include "ilgen/J9ByteCode.hpp"
 #include "ilgen/J9ByteCodeIlGenerator.hpp"
 #include "infra/Bit.hpp"               //for trailingZeroes
+#include "infra/SimpleRegex.hpp"
 #include "env/JSR292Methods.h"
 
 #if defined(J9VM_OPT_JITSERVER)
@@ -2376,7 +2377,10 @@ TR_J9ByteCodeIlGenerator::genCheckCast()
 void
 TR_J9ByteCodeIlGenerator::genCheckCast(int32_t cpIndex)
    {
-   if (TR::Compiler->om.areValueTypesEnabled() && TR::Compiler->cls.isClassRefValueType(comp(), method()->classOfMethod(), cpIndex))
+static char *disableValueTypesCHECKCAST = feGetEnv("TR_DisableValueTypesCHECKCAST");
+static TR::SimpleRegex * regex = disableValueTypesCHECKCAST ? TR::SimpleRegex::create(disableValueTypesCHECKCAST) : NULL;
+
+   if (TR::Compiler->om.areValueTypesEnabled() && !(regex && TR::SimpleRegex::match(regex, comp()->signature())) && TR::Compiler->cls.isClassRefValueType(comp(), method()->classOfMethod(), cpIndex))
       {
       TR::Node * objNode = _stack->top();
 
@@ -2698,7 +2702,10 @@ TR_J9ByteCodeIlGenerator::genIfTwoOperand(TR::ILOpCodes nodeop)
 int32_t
 TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled())
+static char *disableValueTypesACMP = feGetEnv("TR_DisableValueTypesACMP");
+static TR::SimpleRegex * regex = disableValueTypesACMP ? TR::SimpleRegex::create(disableValueTypesACMP) : NULL;
+
+   if (!TR::Compiler->om.areValueTypesEnabled() || (regex && TR::SimpleRegex::match(regex, comp()->signature())))
       return genIfTwoOperand(ifacmpOp);
 
    int32_t branchBC = _bcIndex + next2BytesSigned();
