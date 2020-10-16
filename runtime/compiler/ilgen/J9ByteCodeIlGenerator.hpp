@@ -132,11 +132,13 @@ private:
 
    bool         runMacro(TR::SymbolReference *);
    bool         runFEMacro(TR::SymbolReference *);
+
    TR::Node *    genInvoke(TR::SymbolReference *, TR::Node *indirectCallFirstChild, TR::Node *invokedynamicReceiver = NULL);
 
    TR::Node *    genInvokeDirect(TR::SymbolReference *symRef){ return genInvoke(symRef, NULL); }
    TR::Node *    genInvokeWithVFTChild(TR::SymbolReference *);
    TR::Node *    getReceiverFor(TR::SymbolReference *);
+   void          prepareUnresolvedValueTypeOSRPoint();
    void          stashArgumentsForOSR(TR_J9ByteCode byteCode);
    /** \brief
     *    Tell if the current bytecode is at start of a basic block
@@ -163,12 +165,12 @@ private:
    // GenLoadStore
    //
    void         loadInstance(int32_t);
-   void         loadInstance(TR::SymbolReference *);
+   void         loadInstance(TR::SymbolReference *, bool needRecompileOnUnresolved = false);
    void         loadFlattenableInstance(int32_t);
    void         loadFlattenableInstanceWithHelper(int32_t cpIndex);
    void         loadStatic(int32_t);
    void         loadAuto(TR::DataType type, int32_t slot, bool isAdjunct = false);
-   TR::Node     *loadSymbol(TR::ILOpCodes, TR::SymbolReference *, bool requestRecompileOnUnresolved = false);
+   TR::Node     *loadSymbol(TR::ILOpCodes, TR::SymbolReference *, bool needRecompileOnUnresolved = false);
    void         loadConstant(TR::ILOpCodes, int32_t);
    void         loadConstant(TR::ILOpCodes, int64_t);
    void         loadConstant(TR::ILOpCodes, float);
@@ -199,7 +201,7 @@ private:
 
    // GenMisc
    //
-   TR::TreeTop * genTreeTop(TR::Node *);
+   TR::TreeTop * genTreeTop(TR::Node *, bool needRecompileOnUnresolved = false);
 
    TR::Node    * loadConstantValueIfPossible(TR::Node *, uintptr_t, TR::DataType type = TR::Int32, bool isArrayLength = true);
 
