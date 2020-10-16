@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include "env/FrontEnd.hpp"
+#include "env/j9method.h"
 #include "il/Block.hpp"
 #include "il/Node.hpp"
 #include "il/Node_inlines.hpp"
@@ -107,13 +108,91 @@ TR_HandleRecompilationOps::perform()
    return 0;
    }
 
+bool
+TR_HandleRecompilationOps::resolveCHKGuardsValueTypeOperation(TR::TreeTop *currTree, TR::Node *node)
+   {
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "Looking at ResolveCHK node n%dn [%p]\n", node->getGlobalIndex(), node);
+}
+   TR::Node *resolveChild = node->getFirstChild();
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "   child node n%dn [%p]\n", resolveChild->getGlobalIndex(), resolveChild);
+}
+
+   if (resolveChild->getOpCodeValue() == TR::loadaddr)
+      {
+      TR::SymbolReference *loadAddrSymRef = resolveChild->getSymbolReference();
+
+      if (loadAddrSymRef->isUnresolved())
+         {
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "   addrSymRef isUnresolved\n");
+}
+         for (TR::TreeTop *nextTree = currTree->getNextTreeTop();
+              nextTree != NULL && nextTree->getNode()->getOpCodeValue() != TR::BBEnd;
+              nextTree = nextTree->getNextTreeTop())
+            {
+            TR::Node *nextNode = nextTree->getNode();
+            if (nextNode->getOpCode().isTreeTop() && nextNode->getNumChildren() > 0)
+               {
+               nextNode = nextNode->getFirstChild();
+               }
+
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "   Walking through nodes - n%dn [%p]\n", nextNode->getGlobalIndex(), nextNode);
+}
+
+            if (nextNode->getOpCodeValue() == TR::newvalue)
+               {
+               TR::Node *classAddr = nextNode->getFirstChild();
+
+               if (classAddr == resolveChild
+                   || (classAddr->getOpCodeValue() == TR::loadaddr
+                       && classAddr->getSymbolReference() == loadAddrSymRef))
+               {
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "   Found newvalue referencing load address\n");
+}
+               return true;
+               }
+               }
+            }
+if (comp()->getOption(TR_TraceILGen))
+{
+traceMsg(comp(), "   Didn't find relevant use of load address\n");
+}
+         }
+      }
+   else if (resolveChild->getOpCode().isLoadVarOrStore() && resolveChild->getOpCode().isIndirect())
+      {
+      TR::SymbolReference *symRef = resolveChild->getSymbolReference();
+
+      if (symRef->getCPIndex() != -1 && static_cast<TR_ResolvedJ9Method*>(_methodSymbol->getResolvedMethod())->isFieldQType(symRef->getCPIndex()))
+         {
+         return true;
+         }
+      }
+
+   return false;
+   }
+
 void
 TR_HandleRecompilationOps::visitNode(TR::TreeTop *currTree, TR::Node *node)
    {
+static char *dontUseResolveCHKRequestRecompileSymbol = feGetEnv("TR_DontUseResolveCHKRequestRecompileSymbol");
+
    TR::ILOpCode opcode = node->getOpCode();
 
    if (opcode.isResolveCheck()
-       && node->getSymbolReference() == getSymRefTab()->findOrCreateResolveCheckRequestRecompileSymbolRef(_methodSymbol))
+       && ((!dontUseResolveCHKRequestRecompileSymbol
+            && node->getSymbolReference() == getSymRefTab()->findOrCreateResolveCheckRequestRecompileSymbolRef(_methodSymbol))
+           || (dontUseResolveCHKRequestRecompileSymbol
+               && resolveCHKGuardsValueTypeOperation(currTree, node) )))
       {
       if (_enableTransform
           && performTransformation(comp(), "%sInserting induceOSR call after ResolveCHK node n%dn [%p]\n", optDetailString(), node->getGlobalIndex(), node))
@@ -157,7 +236,7 @@ TR_HandleRecompilationOps::visitNode(TR::TreeTop *currTree, TR::Node *node)
 
          TR_ASSERT_FATAL(_methodSymbol->induceOSRAfterAndRecompile(currTree, node->getByteCodeInfo(), branchTT, false, 0, &lastTT), "Unable to generate induce OSR");
          node->setSymbolReference(getSymRefTab()->findOrCreateResolveCheckSymbolRef(_methodSymbol));
-      }
+         }
       else
          {
 if (comp()->getOption(TR_TraceILGen))

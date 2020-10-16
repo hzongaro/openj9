@@ -42,6 +42,7 @@ class TR_HandleRecompilationOps : public TR::Optimization
       _methodSymbol = comp()->getOwningMethodSymbol(comp()->getCurrentMethod());
       }
 
+   bool resolveCHKGuardsValueTypeOperation(TR::TreeTop *currTree, TR::Node *node);
    void visitNode(TR::TreeTop *currTree, TR::Node *node);
 
    public:
