@@ -24,6 +24,9 @@
 #define HANDLERECOMPILATINOOPS_INCL
 
 #include <stdint.h>
+#include "infra/Cfg.hpp"
+#include "infra/CfgEdge.hpp"
+#include "infra/CfgNode.hpp"
 #include "optimizer/Optimization.hpp"
 #include "optimizer/OptimizationManager.hpp"
 
@@ -32,11 +35,15 @@ class TR_HandleRecompilationOps : public TR::Optimization
    private:
 
    TR::ResolvedMethodSymbol *_methodSymbol;
+   bool _enableTransform;
 
    TR_HandleRecompilationOps(TR::OptimizationManager *manager) : TR::Optimization(manager)
       {
       _methodSymbol = comp()->getOwningMethodSymbol(comp()->getCurrentMethod());
       }
+
+   bool resolveCHKGuardsValueTypeOperation(TR::TreeTop *currTree, TR::Node *node);
+   void visitNode(TR::TreeTop *currTree, TR::Node *node);
 
    public:
 
