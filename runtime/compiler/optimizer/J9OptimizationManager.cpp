@@ -118,6 +118,9 @@ J9::OptimizationManager::OptimizationManager(TR::Optimizer *o, OptimizationFacto
       case OMR::jProfilingRecompLoopTest:
          _flags.set(requiresStructure);
          break;
+      case OMR::handleRecompilationOps:
+         _flags.set(doesNotRequireAliasSets | supportsIlGenOptLevel);
+         break;
       default:
          // do nothing
          break;
