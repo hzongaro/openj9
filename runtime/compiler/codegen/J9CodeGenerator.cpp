@@ -180,7 +180,7 @@ static TR::Node *lowerCASValues(
  * @details
  *
  * This transformation adds checks for the cases where the acmp can be performed
- * without calling the VM helper. The trasformed Trees represen the following operation:
+ * without calling the VM helper. The transformed Trees represent the following operation:
  *
  * 1. If the address of lhs and rhs are the same, produce an eq (true) result
  *    and skip the call (note the two objects must be the same regardless of
@@ -224,7 +224,7 @@ static TR::Node *lowerCASValues(
  *        |
  *        v
  *  +-----------------+
- *  |BBStart
+ *  |BBStart          |
  *  |ificmpeq --> ... |
  *  |  iRegLoad x     |
  *  |  iconst 0       |
@@ -262,6 +262,13 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
    TR::Block* targetBlock = prevBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
    TR::Block* callBlock = prevBlock->split(tt, cfg);
    callBlock->setIsExtensionOfPreviousBlock(true);
+
+   if (prevBlock->getLiveLocals())
+      {
+      targetBlock->setLiveLocals(new (self()->trHeapMemory()) TR_BitVector(*prevBlock->getLiveLocals()));
+      callBlock->setLiveLocals(new (self()->trHeapMemory()) TR_BitVector(*prevBlock->getLiveLocals()));
+      }
+
    if (trace)
       traceMsg(comp, "Isolated call node n%dn in block_%d\n", node->getGlobalIndex(), callBlock->getNumber());
 
@@ -1672,6 +1679,12 @@ J9::CodeGenerator::lowerArrayStoreCHK(TR::Node *node, TR::TreeTop *tt)
       TR::Block *nullCheckBlock = prevBlock->split(nullCheckTT, cfg);
 
       nullCheckBlock->setIsExtensionOfPreviousBlock(true);
+
+      if (prevBlock->getLiveLocals())
+         {
+         arrayStoreCheckBlock->setLiveLocals(new (self()->trHeapMemory()) TR_BitVector(*prevBlock->getLiveLocals()));
+         nullCheckBlock->setLiveLocals(new (self()->trHeapMemory()) TR_BitVector(*prevBlock->getLiveLocals()));
+         }
 
       cfg->addEdge(prevBlock, arrayStoreCheckBlock);
       }
