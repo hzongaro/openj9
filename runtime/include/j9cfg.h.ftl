@@ -60,7 +60,7 @@ extern "C" {
 </#if>
 </#list>
 
-#if JAVA_SPEC_VERSION >= 11
+#if JAVA_SPEC_VERSION >= 8
 #define J9VM_OPT_VALHALLA_NESTMATES
 #define J9VM_OPT_VALHALLA_VALUE_TYPES
 #endif
