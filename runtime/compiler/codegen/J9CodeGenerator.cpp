@@ -251,6 +251,48 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
    // next treetop and then at the current one
    TR::Block* prevBlock = tt->getEnclosingBlock();
    TR::Block* targetBlock = prevBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
+
+   // Move call tree to end of block, along with any stores of the result of the call, if they're
+   // not already at the end.  The call has to be split into its own block, but splitPostGRA above
+   // might have left register stores and stores into temporaries that must stay with the previous block
+   TR::TreeTop* prevBlockExit = prevBlock->getExit();
+   TR::TreeTop* afterTT = tt->getNextTreeTop();
+
+   if (afterTT != prevBlockExit)
+      {
+      if (trace)
+         {
+         traceMsg(comp, "Moving treetop containing node n%dn [%p] associated with acmp helper call to end of prevBlock in preparation of final block split\n", tt->getNode()->getGlobalIndex(), tt->getNode());
+         }
+
+      // Remove TreeTop for call node
+      tt->unlink(false);
+      TR::TreeTop* callTreesTail = tt;
+
+      while (afterTT != prevBlockExit)
+         {
+         TR::TreeTop* nextTT = afterTT->getNextTreeTop();
+         TR::ILOpCodes op = afterTT->getNode()->getOpCodeValue();
+
+         if ((op == TR::iRegStore || op == TR::istore) && afterTT->getNode()->getFirstChild() == node)
+            {
+            if (trace)
+               {
+               traceMsg(comp, "Moving treetop containing node n%dn [%p] associated with acmp helper call to end of prevBlock in preparation of final block split\n", afterTT->getNode()->getGlobalIndex(), afterTT->getNode());
+               }
+
+            afterTT->unlink(false);
+            callTreesTail->join(afterTT);
+            callTreesTail = afterTT;
+            }
+
+         afterTT = nextTT;
+         }
+
+      prevBlockExit->getPrevTreeTop()->join(tt);
+      callTreesTail->join(prevBlockExit);
+      }
+
    TR::Block* callBlock = prevBlock->split(tt, cfg);
    callBlock->setIsExtensionOfPreviousBlock(true);
    if (trace)
@@ -285,13 +327,18 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
 
    // instert acmpeq for fastpath, taking care to set the proper register dependencies
    auto* ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, anchoredCallArg1TT->getNode()->getFirstChild(), anchoredCallArg2TT->getNode()->getFirstChild(), targetBlock->getEntry());
-   if (anchoredNode->getOpCodeValue() == TR::iRegLoad)
+   if (anchoredNode->getOpCodeValue() == TR::iRegLoad || callBlock->getExit()->getNode()->getNumChildren() > 0)
       {
-      auto* depNode = TR::Node::create(TR::PassThrough, 1, storeNode->getChild(0));
-      depNode->setGlobalRegisterNumber(storeNode->getGlobalRegisterNumber());
-
       TR::Node* glRegDeps = TR::Node::create(TR::GlRegDeps);
-      glRegDeps->addChildren(&depNode, 1);
+      TR::Node* depNode = NULL;
+
+      if (anchoredNode->getOpCodeValue() == TR::iRegLoad)
+         {
+         depNode = TR::Node::create(TR::PassThrough, 1, storeNode->getChild(0));
+         depNode->setGlobalRegisterNumber(storeNode->getGlobalRegisterNumber());
+         glRegDeps->addChildren(&depNode, 1);
+         }
+
       ifacmpeqNode->addChildren(&glRegDeps, 1);
 
       if (callBlock->getExit()->getNode()->getNumChildren() > 0)
@@ -300,7 +347,7 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
          for (int i = 0; i < expectedDeps->getNumChildren(); ++i)
             {
             TR::Node* temp = expectedDeps->getChild(i);
-            if (temp->getGlobalRegisterNumber() == depNode->getGlobalRegisterNumber())
+            if (depNode && temp->getGlobalRegisterNumber() == depNode->getGlobalRegisterNumber())
                continue;
             else if (temp->getOpCodeValue() == TR::PassThrough)
                {
