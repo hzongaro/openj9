@@ -201,6 +201,8 @@ static TR::Node *lowerCASValues(
  *  |ifacmpeq  -->---------*---------+
  *  |  aload lhs           |         |
  *  |  aload rhs           |         |
+ *  |  GlRegDeps (copied from below) |
+ *  |    PassThrough ...   |         |
  *  |BBEnd                 |         |
  *  +----------------------+         |
  *  |BBStart (extension)   |         |
@@ -209,6 +211,8 @@ static TR::Node *lowerCASValues(
  *  |    aload lhs         |         |
  *  |    aload rhs         |         |
  *  |BBEnd                 |         |
+ *  |  GlRegDeps (from splitPostGRA) |
+ *  |    PassThrough ...   |         |
  *  +----------------------+         |
  *        |                          |
  *        +--------------------------+
@@ -252,45 +256,51 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
    TR::Block* prevBlock = tt->getEnclosingBlock();
    TR::Block* targetBlock = prevBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
 
-   // Move call tree to end of block, along with any stores of the result of the call, if they're
-   // not already at the end.  The call has to be split into its own block, but splitPostGRA above
-   // might have left register stores and stores into temporaries that must stay with the previous block
+   // As the block is split after the helper call node, it is possible that as part of un-commoning
+   // code to store nodes into registers or temp-slots is appended to the original block by the call
+   // to splitPostGRA above.  Move the acmp helper call treetop to the end of prevBlock, along with
+   // any stores resulting from un-commoning of the nodes in the helper call tree so that it can be
+   // split into its own call block.
    TR::TreeTop* prevBlockExit = prevBlock->getExit();
-   TR::TreeTop* afterTT = tt->getNextTreeTop();
+   TR::TreeTop* iterTT = tt->getNextTreeTop();
 
-   if (afterTT != prevBlockExit)
+   if (iterTT != prevBlockExit)
       {
       if (trace)
          {
-         traceMsg(comp, "Moving treetop containing node n%dn [%p] associated with acmp helper call to end of prevBlock in preparation of final block split\n", tt->getNode()->getGlobalIndex(), tt->getNode());
+         traceMsg(comp, "Moving treetop containing node n%dn [%p] for acmp helper call to end of prevBlock in preparation of final block split\n", tt->getNode()->getGlobalIndex(), tt->getNode());
          }
 
-      // Remove TreeTop for call node
+      // Remove TreeTop for call node, and gather it and the treetops for stores that
+      // resulted from un-commoning in a TreeTop chain from tt to lastTTForCallBlock
       tt->unlink(false);
-      TR::TreeTop* callTreesTail = tt;
+      TR::TreeTop* lastTTForCallBlock = tt;
 
-      while (afterTT != prevBlockExit)
+      while (iterTT != prevBlockExit)
          {
-         TR::TreeTop* nextTT = afterTT->getNextTreeTop();
-         TR::ILOpCodes op = afterTT->getNode()->getOpCodeValue();
+         TR::TreeTop* nextTT = iterTT->getNextTreeTop();
+         TR::ILOpCodes op = iterTT->getNode()->getOpCodeValue();
 
-         if ((op == TR::iRegStore || op == TR::istore) && afterTT->getNode()->getFirstChild() == node)
+         if ((op == TR::iRegStore || op == TR::istore) && iterTT->getNode()->getFirstChild() == node)
             {
             if (trace)
                {
-               traceMsg(comp, "Moving treetop containing node n%dn [%p] associated with acmp helper call to end of prevBlock in preparation of final block split\n", afterTT->getNode()->getGlobalIndex(), afterTT->getNode());
+               traceMsg(comp, "Moving treetop containing node n%dn [%p] for store of acmp helper result to end of prevBlock in preparation of final block split\n", iterTT->getNode()->getGlobalIndex(), iterTT->getNode());
                }
 
-            afterTT->unlink(false);
-            callTreesTail->join(afterTT);
-            callTreesTail = afterTT;
+            // Remove store node from prevBlock temporarily
+            iterTT->unlink(false);
+            lastTTForCallBlock->join(iterTT);
+            lastTTForCallBlock = iterTT;
             }
 
-         afterTT = nextTT;
+         iterTT = nextTT;
          }
 
+      // Move the treetops that were gathered for the call and any stores of the
+      // result to the end of the block in preparation for the split of the call block
       prevBlockExit->getPrevTreeTop()->join(tt);
-      callTreesTail->join(prevBlockExit);
+      lastTTForCallBlock->join(prevBlockExit);
       }
 
    TR::Block* callBlock = prevBlock->split(tt, cfg);
@@ -325,9 +335,12 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
       TR_ASSERT_FATAL(false, "Anchord call has been turned into unexpected opcode %s\n", anchoredNode->getOpCode().getName());
    prevBlock->append(TR::TreeTop::create(comp, storeNode));
 
-   // instert acmpeq for fastpath, taking care to set the proper register dependencies
+   // insert acmpeq for fastpath, taking care to set the proper register dependencies
+   // Any register dependencies added by splitPostGRA will now be on the BBExit for
+   // the call block.  As the ifacmpeq branching around the call block will reach the same
+   // target block, copy any GlRegDeps from the end of the call block to the ifacmpeq
    auto* ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, anchoredCallArg1TT->getNode()->getFirstChild(), anchoredCallArg2TT->getNode()->getFirstChild(), targetBlock->getEntry());
-   if (anchoredNode->getOpCodeValue() == TR::iRegLoad || callBlock->getExit()->getNode()->getNumChildren() > 0)
+   if (callBlock->getExit()->getNode()->getNumChildren() > 0)
       {
       TR::Node* glRegDeps = TR::Node::create(TR::GlRegDeps);
       TR::Node* depNode = NULL;
@@ -341,27 +354,25 @@ J9::CodeGenerator::fastpathAcmpHelper(TR::Node *node, TR::TreeTop *tt, const boo
 
       ifacmpeqNode->addChildren(&glRegDeps, 1);
 
-      if (callBlock->getExit()->getNode()->getNumChildren() > 0)
+      TR::Node* expectedDeps = callBlock->getExit()->getNode()->getFirstChild();
+      for (int i = 0; i < expectedDeps->getNumChildren(); ++i)
          {
-         TR::Node* expectedDeps = callBlock->getExit()->getNode()->getFirstChild();
-         for (int i = 0; i < expectedDeps->getNumChildren(); ++i)
+         TR::Node* temp = expectedDeps->getChild(i);
+         if (depNode && temp->getGlobalRegisterNumber() == depNode->getGlobalRegisterNumber())
+            continue;
+         else if (temp->getOpCodeValue() == TR::PassThrough)
             {
-            TR::Node* temp = expectedDeps->getChild(i);
-            if (depNode && temp->getGlobalRegisterNumber() == depNode->getGlobalRegisterNumber())
-               continue;
-            else if (temp->getOpCodeValue() == TR::PassThrough)
-               {
-               // PassThrough nodes cannot be commoned because doing so does not
-               // actually anchor the child, causing it's lifetime to not be extended
-               TR::Node* original = temp;
-               temp = TR::Node::create(original, TR::PassThrough, 1, original->getFirstChild());
-               temp->setLowGlobalRegisterNumber(original->getLowGlobalRegisterNumber());
-               temp->setHighGlobalRegisterNumber(original->getHighGlobalRegisterNumber());
-               }
-            glRegDeps->addChildren(&temp, 1);
+            // PassThrough nodes cannot be commoned because doing so does not
+            // actually anchor the child, causing it's lifetime to not be extended
+            TR::Node* original = temp;
+            temp = TR::Node::create(original, TR::PassThrough, 1, original->getFirstChild());
+            temp->setLowGlobalRegisterNumber(original->getLowGlobalRegisterNumber());
+            temp->setHighGlobalRegisterNumber(original->getHighGlobalRegisterNumber());
             }
+         glRegDeps->addChildren(&temp, 1);
          }
       }
+
    prevBlock->append(TR::TreeTop::create(comp, ifacmpeqNode));
    }
 
