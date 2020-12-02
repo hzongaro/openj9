@@ -54,9 +54,9 @@ typedef enum {
 	RUN_METHOD_INTERPRETED,
 	RUN_JNI_NATIVE,
 	RUN_METHOD_COMPILED,
-#if JAVA_SPEC_VERSION >= 16
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 	THROW_VALUE_TYPE_ILLEGAL_MONITOR_STATE,
-#endif /* JAVA_SPEC_VERSION >= 16 */
+#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 	/* All values after this line are for the debug interpreter only - add general values above this line */
 	GOTO_EXECUTE_BREAKPOINTED_BYTECODE,
 	HANDLE_POP_FRAMES,
