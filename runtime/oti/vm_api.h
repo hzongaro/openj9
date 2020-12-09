@@ -1487,15 +1487,6 @@ printBytecodePairs(J9JavaVM *vm);
 BOOLEAN
 areValueTypesEnabled(J9JavaVM *vm);
 
-
-/**
- * @brief Queries if -XX:ValueBasedClassCheck=exception or -XX:ValueBasedClassCheck=exception are found in the CML
- * @param[in] vm pointer to the J9JavaVM
- * @return FALSE if neither of -XX:ValueBasedClassCheck=exception/-XX:ValueBasedClassCheck=exception are found in the CML.
- * 			Otherwise, return TRUE.
- */
-BOOLEAN areValueBasedMonitorChecksEnabled(J9JavaVM *vm);
-
 /**
 * @brief
 * @param vmThread

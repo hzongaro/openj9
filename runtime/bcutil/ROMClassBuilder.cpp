@@ -1079,7 +1079,7 @@ ROMClassBuilder::finishPrepareAndLaydown(
  *
  *                                  + UNUSED
  *                                 + UNUSED
- *                                + J9AccClassIsValueBased
+ *                                + UNUSED
  *                              + J9AccClassHiddenOptionNestmate
  *
  *                             + J9AccClassHiddenOptionStrong
@@ -1160,10 +1160,6 @@ ROMClassBuilder::computeExtraModifiers(ClassFileOracle *classFileOracle, ROMClas
 
 	if ( classFileOracle->isClassUnmodifiable() ) {
 		modifiers |= J9AccClassIsUnmodifiable;
-	}
-	
-	if (classFileOracle->isValueBased()) {
-		modifiers |= J9AccClassIsValueBased;
 	}
 
 	U_32 classNameindex = classFileOracle->getClassNameIndex();

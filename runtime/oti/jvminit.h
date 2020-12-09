@@ -391,9 +391,6 @@ enum INIT_STAGE {
 #define VMOPT_XXDISABLEVALHALLA "-XX:-EnableValhalla"
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 
-#define VMOPT_XXVALUEBASEDCLASSCHECKEXCEPTION "-XX:ValueBasedClassCheck=exception"
-#define VMOPT_XXVALUEBASEDCLASSCHECKWARN "-XX:ValueBasedClassCheck=warn"
-
 #define VMOPT_XX_NOSUBALLOC32BITMEM "-XXnosuballoc32bitmem"
 
 #define VMOPT_XUSE_CEEHDLR "-XCEEHDLR"
