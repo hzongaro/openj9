@@ -77,6 +77,7 @@
 #include "optimizer/JProfilingRecompLoopTest.hpp"
 #include "runtime/J9Profiler.hpp"
 #include "optimizer/UnsafeFastPath.hpp"
+#include "optimizer/ValueTypeOpLowering.hpp"
 #include "optimizer/VarHandleTransformer.hpp"
 #include "optimizer/StaticFinalFieldFolding.hpp"
 #include "optimizer/HandleRecompilationOps.hpp"
@@ -236,6 +237,7 @@ static const OptimizationStrategy noOptStrategyOpts[] =
    { OMR::trivialDeadTreeRemoval,  OMR::IfEnabled },
    { OMR::treeSimplification                      },
    { OMR::recompilationModifier,   OMR::IfEnabled },
+   { OMR::valueTypeOpLowering,    OMR::MustBeDone },
    { OMR::globalLiveVariablesForGC, OMR::IfAggressiveLiveness },
    { OMR::endOpts                                 }
    };
@@ -283,6 +285,7 @@ static const OptimizationStrategy coldStrategyOpts[] =
    { OMR::trivialDeadTreeRemoval,                                               },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup, OMR::IfAOTAndEnabled            },
    { OMR::jProfilingValue,                           OMR::MustBeDone                 },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::globalLiveVariablesForGC,                  OMR::IfAggressiveLiveness  },
    { OMR::profilingGroup,                            OMR::IfProfiling                },
    { OMR::regDepCopyRemoval                                                     },
@@ -367,6 +370,7 @@ static const OptimizationStrategy warmStrategyOpts[] =
    { OMR::jProfilingRecompLoopTest,                  OMR::IfLoops                    },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup, OMR::IfEnabled                  },
    { OMR::jProfilingValue,                           OMR::MustBeDone                 },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::globalDeadStoreGroup,                                                 },
    { OMR::rematerialization                                                     },
    { OMR::compactNullChecks,                         OMR::IfEnabled                  }, // cleanup at the end
@@ -403,6 +407,7 @@ static const OptimizationStrategy reducedWarmStrategyOpts[] =
    { OMR::deadTreesElimination,                      OMR::IfEnabled                  }, // cleanup at the end
    { OMR::jProfilingRecompLoopTest,                  OMR::IfLoops                    },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup, OMR::IfEnabled                  },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::jProfilingValue,                           OMR::MustBeDone                 },
    { OMR::hotFieldMarking                                                       },
    { OMR::endOpts                                                               }
@@ -467,6 +472,7 @@ const OptimizationStrategy hotStrategyOpts[] =
    { OMR::jProfilingRecompLoopTest,              OMR::IfLoops                  },
    { OMR::tacticalGlobalRegisterAllocatorGroup,  OMR::IfEnabled                },
    { OMR::jProfilingValue,                           OMR::MustBeDone           },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone           },
    { OMR::globalDeadStoreElimination,            OMR::IfMoreThanOneBlock       }, // global dead store removal
    { OMR::deadTreesElimination                                            }, // cleanup after dead store removal
    { OMR::compactNullChecks                                               }, // cleanup at the end
@@ -549,6 +555,7 @@ const OptimizationStrategy scorchingStrategyOpts[] =
    { OMR::checkcastAndProfiledGuardCoalescer      },
    { OMR::tacticalGlobalRegisterAllocatorGroup,  OMR::IfEnabled   },
    { OMR::jProfilingValue,                           OMR::MustBeDone                 },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::globalDeadStoreElimination,            OMR::IfMoreThanOneBlock }, // global dead store removal
    { OMR::deadTreesElimination                               }, // cleanup after dead store removal
    { OMR::compactNullChecks                                  }, // cleanup at the end
@@ -616,6 +623,7 @@ static const OptimizationStrategy AOTStrategyOpts[] =
    { OMR::signExtendLoadsGroup,                  OMR::IfEnabled }, // last opt before GRA
    { OMR::arraysetStoreElimination                                              },
    { OMR::tacticalGlobalRegisterAllocatorGroup,  OMR::IfEnabled },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::globalCopyPropagation,                 OMR::IfMoreThanOneBlock}, // global copy propagation
    { OMR::globalDeadStoreElimination,            OMR::IfMoreThanOneBlock}, // global dead store removal
    { OMR::deadTreesElimination                             }, // cleanup after dead store removal
@@ -717,6 +725,7 @@ static const OptimizationStrategy cheapWarmStrategyOpts[] =
    { OMR::jProfilingRecompLoopTest,                  OMR::IfLoops                    },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup, OMR::IfEnabled                  },
    { OMR::jProfilingValue,                           OMR::MustBeDone                 },
+   { OMR::valueTypeOpLowering,                       OMR::MustBeDone            },
    { OMR::globalDeadStoreGroup,                                                 },
    { OMR::compactNullChecks,                         OMR::IfEnabled                  }, // cleanup at the end
    { OMR::deadTreesElimination,                      OMR::IfEnabled                  }, // remove dead anchors created by check/store removal
@@ -797,6 +806,8 @@ J9::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *method
       new (comp->allocator()) TR::OptimizationManager(self(), TR_StringPeepholes::create, OMR::stringPeepholes);
    _opts[OMR::switchAnalyzer] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR::SwitchAnalyzer::create, OMR::switchAnalyzer);
+   _opts[OMR::valueTypeOpLowering] =
+      new (comp->allocator()) TR::OptimizationManager(self(), TR::ValueTypeOpLowering::create, OMR::varHandleTransformer);
    _opts[OMR::varHandleTransformer] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_VarHandleTransformer::create, OMR::varHandleTransformer);
    _opts[OMR::unsafeFastPath] =

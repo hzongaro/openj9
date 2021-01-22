@@ -389,19 +389,19 @@ J9::CodeGenerator::lowerNonhelperCallIfNeeded(TR::Node *node, TR::TreeTop *tt)
    {
    TR::Compilation* comp = self()->comp();
 
-   if (TR::Compiler->om.areValueTypesEnabled() &&
-       comp->getSymRefTab()->isNonHelper(
-       node->getSymbolReference(),
-       TR::SymbolReferenceTable::objectEqualityComparisonSymbol))
-      {
-      // turn the non-helper call into a VM helper call
-      node->setSymbolReference(comp->getSymRefTab()->findOrCreateAcmpHelperSymbolRef());
-      static const bool disableAcmpFastPath =  NULL != feGetEnv("TR_DisableAcmpFastpath");
-      if (!disableAcmpFastPath)
-         {
-         self()->fastpathAcmpHelper(node, tt, comp->getOption(TR_TraceCG));
-         }
-      }
+   // if (TR::Compiler->om.areValueTypesEnabled() &&
+   //     comp->getSymRefTab()->isNonHelper(
+   //     node->getSymbolReference(),
+   //     TR::SymbolReferenceTable::objectEqualityComparisonSymbol))
+   //    {
+   //    // turn the non-helper call into a VM helper call
+   //    node->setSymbolReference(comp->getSymRefTab()->findOrCreateAcmpHelperSymbolRef());
+   //    static const bool disableAcmpFastPath =  NULL != feGetEnv("TR_DisableAcmpFastpath");
+   //    if (!disableAcmpFastPath)
+   //       {
+   //       self()->fastpathAcmpHelper(node, tt, comp->getOption(TR_TraceCG));
+   //       }
+   //    }
    }
 
 
@@ -932,10 +932,10 @@ J9::CodeGenerator::lowerTreesPreChildrenVisit(TR::Node *parent, TR::TreeTop *tre
 
    // J9
    //
-   if (parent->getOpCodeValue() == TR::ArrayStoreCHK && TR::Compiler->om.areValueTypesEnabled())
-      {
-      self()->lowerArrayStoreCHK(parent, treeTop);
-      }
+   // if (parent->getOpCodeValue() == TR::ArrayStoreCHK && TR::Compiler->om.areValueTypesEnabled())
+   //    {
+   //    self()->lowerArrayStoreCHK(parent, treeTop);
+   //    }
 
    // J9
    //

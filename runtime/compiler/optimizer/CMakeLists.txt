@@ -68,10 +68,11 @@ j9jit_files(
 	optimizer/SignExtendLoads.cpp
 	optimizer/SPMDParallelizer.cpp
 	optimizer/SPMDPreCheck.cpp
-        optimizer/StaticFinalFieldFolding.cpp
-        optimizer/StringBuilderTransformer.cpp
+	optimizer/StaticFinalFieldFolding.cpp
+	optimizer/StringBuilderTransformer.cpp
 	optimizer/StringPeepholes.cpp
 	optimizer/UnsafeFastPath.cpp
+	optimizer/ValueTypeOpLowering.cpp
 	optimizer/VarHandleTransformer.cpp
 	optimizer/VPBCDConstraint.cpp
 )
