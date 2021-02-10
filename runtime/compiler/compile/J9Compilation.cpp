@@ -642,7 +642,12 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
 
    bool generateArraylets = self()->generateArraylets();
 
-   const bool areValueTypesEnabled = TR::Compiler->om.areValueTypesEnabled();
+   static char * disableCanAllocateInline = feGetEnv("TR_DisableValueTypesCanAllocateInline");
+   static char * enableCanAllocateInline = feGetEnv("TR_EnableValueTypesCanAllocateInline");
+   static TR::SimpleRegex * disableRegex = disableCanAllocateInline ? TR::SimpleRegex::create(disableCanAllocateInline) : NULL;
+   static TR::SimpleRegex * enableRegex = enableCanAllocateInline ? TR::SimpleRegex::create(enableCanAllocateInline) : NULL;
+
+   const bool areValueTypesEnabled = TR::Compiler->om.areValueTypesEnabled() ? self()->continueProcessValueTypes(disableRegex, enableRegex) : false;
 
    if (node->getOpCodeValue() == TR::New)
       {
@@ -1562,3 +1567,26 @@ J9::Compilation::incompleteOptimizerSupportForReadWriteBarriers()
    return self()->getOption(TR_EnableFieldWatch);
    }
 
+bool
+J9::Compilation::continueProcessValueTypes(TR::SimpleRegex *disableRegex, TR::SimpleRegex *enableRegex)
+   {
+   if (disableRegex)
+      {
+      if (TR::SimpleRegex::match(disableRegex, self()->signature()))
+         {
+         return false;
+         }
+      else
+         return true;
+      }
+
+   if (enableRegex)
+      {
+      if (TR::SimpleRegex::match(enableRegex, self()->signature()))
+         return true;
+      else
+         return false;
+      }
+
+   return true;
+   }

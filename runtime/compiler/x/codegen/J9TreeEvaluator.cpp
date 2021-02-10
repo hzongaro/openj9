@@ -1165,7 +1165,13 @@ TR::Register *J9::X86::TreeEvaluator::newEvaluator(TR::Node *node, TR::CodeGener
    // dealing with a value type. Since we do not fully support value types yet, always
    // call the JIT helper to do the allocation.
    //
-   if (TR::Compiler->om.areValueTypesEnabled() && node->getSymbolReference() == comp->getSymRefTab()->findOrCreateNewValueSymbolRef(comp->getMethodSymbol()))
+   static char *disableNEW = feGetEnv("TR_DisableValueTypesNEW");
+   static char *enableNEW = feGetEnv("TR_EnableValueTypesNEW");
+   static TR::SimpleRegex * disableRegex = disableNEW ? TR::SimpleRegex::create(disableNEW) : NULL;
+   static TR::SimpleRegex * enableRegex = enableNEW ? TR::SimpleRegex::create(enableNEW) : NULL;
+   if (TR::Compiler->om.areValueTypesEnabled() &&
+       comp->continueProcessValueTypes(disableRegex, enableRegex) &&
+       node->getSymbolReference() == comp->getSymRefTab()->findOrCreateNewValueSymbolRef(comp->getMethodSymbol()))
       {
       TR_OpaqueClassBlock *classInfo;
       bool spillFPRegs = comp->canAllocateInlineOnStack(node, classInfo) <= 0;

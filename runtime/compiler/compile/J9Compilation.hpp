@@ -38,6 +38,7 @@ namespace J9 { typedef J9::Compilation CompilationConnector; }
 #include "control/Options.hpp"
 #include "control/Options_inlines.hpp"
 #include "infra/Statistics.hpp"
+#include "infra/SimpleRegex.hpp"
 #include "env/CompilerEnv.hpp"
 #include "env/OMRMemory.hpp"
 #include "compile/AOTClassInfo.hpp"
@@ -373,6 +374,8 @@ class OMR_EXTENSIBLE Compilation : public OMR::CompilationConnector
       _tracingBufferFreeSpace = _tracingBufferSize;
       }
    int32_t getTracingBufferFreeSpace() { return _tracingBufferFreeSpace; }
+
+   bool continueProcessValueTypes(TR::SimpleRegex *disableRegex, TR::SimpleRegex *enableRegex);
 
 private:
    enum CachedClassPointerId

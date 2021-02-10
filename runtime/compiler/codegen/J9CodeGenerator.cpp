@@ -5423,6 +5423,14 @@ J9::CodeGenerator::isMonitorValueBasedOrValueType(TR::Node* monNode)
    {
    if (TR::Compiler->om.areValueTypesEnabled() || TR::Compiler->om.areValueBasedMonitorChecksEnabled())
       {
+      static char *disableMon = feGetEnv("TR_DisableValueTypesMon");
+      static char *enableMon = feGetEnv("TR_EnableValueTypesMon");
+      static TR::SimpleRegex * disableRegex = disableMon ? TR::SimpleRegex::create(disableMon) : NULL;
+      static TR::SimpleRegex * enableRegex = enableMon ? TR::SimpleRegex::create(enableMon) : NULL;
+
+      if (!self()->comp()->continueProcessValueTypes(disableRegex, enableRegex))
+         return TR_no;
+
       TR_OpaqueClassBlock *clazz = self()->getMonClass(monNode);
 
       if (!clazz)

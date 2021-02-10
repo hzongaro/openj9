@@ -562,11 +562,16 @@ TR_J9ByteCodeIlGenerator::genILFromByteCodes()
             bstoreiUnknownArrayTypeNodes.insert(currNode);
          }
 
+      static char *disableTypesCHECKCAST = feGetEnv("TR_DisableValueTypesCHECKCAST");
+      static char *enableTypesCHECKCAST = feGetEnv("TR_EnableValueTypesCHECKCAST");
+      static TR::SimpleRegex * disableRegex = disableTypesCHECKCAST ? TR::SimpleRegex::create(disableTypesCHECKCAST) : NULL;
+      static TR::SimpleRegex * enableRegex = enableTypesCHECKCAST ? TR::SimpleRegex::create(enableTypesCHECKCAST) : NULL;
       if (currNode->getOpCodeValue() == TR::checkcast
           && currNode->getSecondChild()->getOpCodeValue() == TR::loadaddr
           && currNode->getSecondChild()->getSymbolReference()->isUnresolved()
           && // check whether the checkcast class is valuetype. Expansion is only needed for checkcast to reference type.
             (!TR::Compiler->om.areValueTypesEnabled()
+            || !comp()->continueProcessValueTypes(disableRegex, enableRegex)
             || !TR::Compiler->cls.isClassRefValueType(comp(), method()->classOfMethod(), currNode->getSecondChild()->getSymbolReference()->getCPIndex())))
           {
           unresolvedCheckcastTopsNeedingNullGuard.add(currTree);
