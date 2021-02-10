@@ -137,6 +137,7 @@ static const OptimizationStrategy fsdStrategyOptsForMethodsWithSlotSharing[] =
    { OMR::localCSE                                      },
    { OMR::treeSimplification                            },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup     },         // added for fsd gra
+   { OMR::valueTypeOpLowering,    OMR::MustBeDone },
    { OMR::globalLiveVariablesForGC                      },
    { OMR::regDepCopyRemoval                             },
    { OMR::endOpts },
@@ -209,6 +210,7 @@ static const OptimizationStrategy fsdStrategyOptsForMethodsWithoutSlotSharing[] 
    { OMR::trivialDeadTreeRemoval,      OMR::IfEnabled }, // final cleanup before opcode expansion
    { OMR::globalDeadStoreElimination,            },
    { OMR::cheapTacticalGlobalRegisterAllocatorGroup, },
+   { OMR::valueTypeOpLowering,    OMR::MustBeDone },
    { OMR::globalDeadStoreGroup,                  },
    { OMR::rematerialization,                     },
    { OMR::compactNullChecks,                     }, // cleanup at the end
