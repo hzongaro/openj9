@@ -289,6 +289,7 @@ TR::SymbolReference *
 J9::SymbolReferenceTable::findOrCreateLoadFlattenableArrayElementSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol)
    {
    return findOrCreateRuntimeHelper(TR_ldFlattenableArrayElement, true, true, true);
+//   return findOrCreateRuntimeHelper(TR_ldFlattenableArrayElement, false, false, true);
    }
 
 

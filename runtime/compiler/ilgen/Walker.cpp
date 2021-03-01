@@ -6199,7 +6199,9 @@ TR_J9ByteCodeIlGenerator::loadFromCallSiteTable(int32_t callSiteIndex)
 void
 TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes nodeop, bool checks)
    {
-   if (TR::Compiler->om.areValueTypesEnabled() && dataType == TR::Address)
+   static char *doit1 = feGetEnv("TR_disableLoadFlattenableArrayElement");
+
+   if (!doit1 && TR::Compiler->om.areValueTypesEnabled() && dataType == TR::Address)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
@@ -6209,6 +6211,23 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
          nullchk = genNullCheck(nullchk);
          genTreeTop(nullchk);
          }
+
+//////
+      static char *doit2 = feGetEnv("TR_inlineLoadFlattenableArrayElement");
+      if (doit2)
+         {
+         int32_t width = TR::Symbol::convertTypeToSize(dataType);
+         if (comp()->useCompressedPointers() && dataType == TR::Address)
+            {
+            width = TR::Compiler->om.sizeofReferenceField();
+            }
+
+         push(arrayBaseAddress);
+         genArrayBoundsCheck(elementIndex, width);
+         pop(); // discard index
+         }
+//////
+
       auto* helperSymRef = comp()->getSymRefTab()->findOrCreateLoadFlattenableArrayElementSymbolRef();
       auto* helperCallNode = TR::Node::createWithSymRef(TR::acall, 2, 2, elementIndex, arrayBaseAddress, helperSymRef);
       push(helperCallNode);

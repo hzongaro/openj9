@@ -33,6 +33,7 @@
 #include "thrtypes.h"
 #include "codegen/AheadOfTimeCompile.hpp"
 #include "codegen/CodeGenerator.hpp"
+#include "codegen/ConstantDataSnippet.hpp"
 #include "codegen/Instruction.hpp"
 #include "codegen/Machine.hpp"
 #include "codegen/Linkage.hpp"
@@ -9117,6 +9118,64 @@ TR::Register *intOrLongClobberEvaluate(
       }
    }
 
+
+static TR::Register *inlineLoadFlattenableArrayElement(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   TR::Node *indexNode = node->getFirstChild();
+   TR::Node *arrayObjectNode = node->getSecondChild();
+
+   TR::Register *arrayObjectReg = cg->evaluate(arrayObjectNode);
+   TR::Register *indexReg = cg->evaluate(indexNode);
+
+//   generateInstruction(BADIA32Op, node, cg);
+//
+//
+   static char *doSkipAllChecks = feGetEnv("TR_skipAllChecksLoadFlattenableArrayElement");
+   static char *doSimulateObjectHeaderCheck = feGetEnv("TR_simulateObjectHeaderCheckLoadFlattenableArrayElement");
+
+   if (!doSkipAllChecks)
+      {
+      if (doSimulateObjectHeaderCheck)
+         {
+         TR::MemoryReference *arrayClassMR = generateX86MemoryReference(arrayObjectReg, TR::Compiler->om.offsetOfObjectVftField(), cg);
+         generateMemImmInstruction(TEST4MemImm4, node, arrayClassMR, 1, cg);
+         }
+      else
+         {
+         TR::Register *classReg = cg->allocateRegister();
+         TR::MemoryReference *arrayClassMR = generateX86MemoryReference(arrayObjectReg, TR::Compiler->om.offsetOfObjectVftField(), cg);
+         generateRegMemInstruction(L4RegMem, node, classReg, arrayClassMR, cg); // class pointer is 32 bits
+         TR::TreeEvaluator::generateVFTMaskInstruction(node, classReg, cg);
+
+         TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
+         TR::MemoryReference *classFlagsMR = generateX86MemoryReference(classReg, (uintptr_t)(fej9->getOffsetOfClassFlags()), cg);
+         generateMemImmInstruction(TEST4MemImm4, node, classFlagsMR, (J9ClassIsFlattened | J9ClassIsValueType), cg);
+         cg->stopUsingRegister(classReg);
+         }
+
+      TR::X86ConstantDataSnippet *cds = cg->findOrCreate2ByteConstant(node, 0xcccc); // 0xcc == int3
+      generateLabelInstruction(JNE4, node, cds->getSnippetLabel(), cg); // breakpoint
+      }
+
+   TR::Register *valueReg = cg->allocateCollectedReferenceRegister();
+
+   TR::MemoryReference *arrayElementMR = generateX86MemoryReference(
+		   arrayObjectReg, 
+		   indexReg, 
+		   TR::MemoryReference::convertMultiplierToStride(TR::Compiler->om.sizeofReferenceField()),
+		   TR::Compiler->om.contiguousArrayHeaderSizeInBytes(),
+		   cg);
+
+   generateRegMemInstruction(cg->comp()->useCompressedPointers() ? L4RegMem : L8RegMem, node, valueReg, arrayElementMR, cg);
+
+   node->setRegister(valueReg);
+   cg->decReferenceCount(indexNode);
+   cg->decReferenceCount(arrayObjectNode);
+
+   return valueReg;
+   }
+
+
 /**
  * \brief
  *   Generate inlined instructions equivalent to com/ibm/jit/JITHelpers.intrinsicIndexOfLatin1 or com/ibm/jit/JITHelpers.intrinsicIndexOfUTF16
@@ -11375,6 +11434,15 @@ J9::X86::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *c
          {
          case TR_checkAssignable:
             return TR::TreeEvaluator::checkcastinstanceofEvaluator(node, cg);
+
+         case TR_ldFlattenableArrayElement:
+//	    printf("XXX Recognized TR_ldFlattenableArrayElement\n");
+	    static char *doit = feGetEnv("TR_inlineLoadFlattenableArrayElement");
+	    if (doit)
+               {
+               return inlineLoadFlattenableArrayElement(node, cg);
+	       }
+
          default:
             break;
          }
