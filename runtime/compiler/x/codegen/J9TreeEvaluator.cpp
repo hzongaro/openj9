@@ -2483,6 +2483,8 @@ TR::Register *J9::X86::TreeEvaluator::ArrayStoreCHKEvaluator(TR::Node *node, TR:
    TR::Node *firstChild = node->getFirstChild();
    TR::Node *sourceChild = firstChild->getSecondChild();
 
+TR_ASSERT_FATAL(firstChild->getOpCodeValue() == TR::awrtbari, "Found a case where child of ArrayStoreCHK is not awrtbari");
+
    static bool isRealTimeGC = comp->getOptions()->realTimeGC();
    auto gcMode = TR::Compiler->om.writeBarrierType();
 
