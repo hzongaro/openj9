@@ -6205,7 +6205,7 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
    {
    bool genSpineChecks = comp()->requiresSpineChecks();
 
-   if (TR::Compiler->om.areValueTypesEnabled() && dataType == TR::Address)
+   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
@@ -7680,7 +7680,7 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
 
    handlePendingPushSaveSideEffects(value);
 
-   if (TR::Compiler->om.areValueTypesEnabled() && dataType == TR::Address)
+   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
