@@ -205,9 +205,11 @@ J9::ValuePropagation::transformCallToNodeDelayedTransformations(TR::TreeTop *cal
    {
    TR::Node * callNode = callTree->getNode()->getFirstChild();
    TR::Method * calledMethod = callNode->getSymbol()->castToMethodSymbol()->getMethod();
-   const char *signature = calledMethod->signature(comp()->trMemory(), stackAlloc);
+   const char *signature = calledMethod ? calledMethod->signature(comp()->trMemory(), stackAlloc) : NULL;
    if (trace())
-          traceMsg(comp(), "The call to %s on node %p will be folded in delayed transformations\n", signature, callNode, result);
+      {
+      traceMsg(comp(), "The call to %s on node %p will be folded in delayed transformations\n", signature ? signature : comp()->getDebug()->getName(callNode->getSymbol()), callNode, result);
+      }
    _callsToBeFoldedToNode.add(new (trStackMemory()) TreeNodeResultPair(callTree, result, requiresGuard));
    }
 /**
@@ -581,7 +583,7 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    if (clazz == comp->getObjectClassPointer())
       return type->isFixedClass() ? TR_no : TR_maybe;
 
-   if (TR::Compiler->cls.isInterfaceClass(comp, clazz))
+   if (!TR::Compiler->cls.isConcreteClass(comp, clazz))
       return TR_maybe;
 
    // No AOT validation is necessary here, since whether a class is a value
@@ -594,14 +596,22 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
 void
 J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
    {
-   const bool isIsObjectEqualityCompare =
+   const bool isObjectEqualityCompare =
       comp()->getSymRefTab()->isNonHelper(
          node->getSymbolReference(),
          TR::SymbolReferenceTable::objectEqualityComparisonSymbol);
 
-   if (isIsObjectEqualityCompare)
+   if (isObjectEqualityCompare)
       {
-      addGlobalConstraint(node, TR::VPIntRange::create(this, 0, 1));
+      // Only constrain the call in the last run of vp to avoid handling the candidate twice if the call is inside a loop
+      if (lastTimeThrough())
+         {
+         addGlobalConstraint(node, TR::VPIntRange::create(this, 0, 1));
+         }
+      else
+         {
+         return;
+         }
 
       bool lhsGlobal, rhsGlobal;
       TR::Node *lhsNode = node->getChild(0);
