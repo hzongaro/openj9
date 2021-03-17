@@ -6213,6 +6213,20 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
          nullchk = genNullCheck(nullchk);
          genTreeTop(nullchk);
          }
+
+      static char *disableInlineBndChk = feGetEnv("TR_disableVPLoadFlattenableArrayElement");
+
+      if (disableInlineBndChk == NULL)
+         {
+         // Use an artificial width of zero.  If array elements might be flattened, we do not
+         // know the actual element width at this stage.
+         const int32_t width = 0;
+
+         push(arrayBaseAddress);
+         genArrayBoundsCheck(elementIndex, width);
+         pop(); // discard index
+         }
+
       auto* helperSymRef = comp()->getSymRefTab()->findOrCreateLoadFlattenableArrayElementSymbolRef();
       auto* helperCallNode = TR::Node::createWithSymRef(TR::acall, 2, 2, elementIndex, arrayBaseAddress, helperSymRef);
 
@@ -7681,6 +7695,20 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
          nullchk = genNullCheck(nullchk);
          genTreeTop(nullchk);
          }
+
+      static char *disableInlineBndChk = feGetEnv("TR_disableVPStoreFlattenableArrayElement");
+
+      if (disableInlineBndChk == NULL)
+         {
+         // Use an artificial width of zero.  If array elements might be flattened, we do not
+         // know the actual element width at this stage.
+         const int32_t width = 0;
+
+         push(arrayBaseAddress);
+         genArrayBoundsCheck(elementIndex, width);
+         pop(); // discard index
+         }
+
       auto* helperSymRef = comp()->getSymRefTab()->findOrCreateStoreFlattenableArrayElementSymbolRef();
       TR::TreeTop *storeHelperCallTT = genTreeTop(TR::Node::createWithSymRef(TR::acall, 3, 3, value, elementIndex, arrayBaseAddress, helperSymRef));
 
