@@ -6203,6 +6203,8 @@ TR_J9ByteCodeIlGenerator::loadFromCallSiteTable(int32_t callSiteIndex)
 void
 TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes nodeop, bool checks)
    {
+   bool genSpineChecks = comp()->requiresSpineChecks();
+
    if (TR::Compiler->om.areValueTypesEnabled() && dataType == TR::Address)
       {
       TR::Node* elementIndex = pop();
@@ -6216,7 +6218,7 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
 
       static char *disableInlineBndChk = feGetEnv("TR_disableVPLoadFlattenableArrayElement");
 
-      if (disableInlineBndChk == NULL)
+      if (disableInlineBndChk == NULL && !genSpineChecks)
          {
          // Use an artificial width of zero.  If array elements might be flattened, we do not
          // know the actual element width at this stage.
@@ -6239,8 +6241,6 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
       push(helperCallNode);
       return;
       }
-
-   bool genSpineChecks = comp()->requiresSpineChecks();
 
    _suppressSpineChecks = false;
 
@@ -7681,6 +7681,8 @@ TR_J9ByteCodeIlGenerator::storeAuto(TR::DataType type, int32_t slot, bool isAdju
 void
 TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes nodeop, bool checks)
    {
+   bool genSpineChecks = comp()->requiresSpineChecks();
+
    TR::Node * value = pop();
 
    handlePendingPushSaveSideEffects(value);
@@ -7698,7 +7700,7 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
 
       static char *disableInlineBndChk = feGetEnv("TR_disableVPStoreFlattenableArrayElement");
 
-      if (disableInlineBndChk == NULL)
+      if (disableInlineBndChk == NULL && !genSpineChecks)
          {
          // Use an artificial width of zero.  If array elements might be flattened, we do not
          // know the actual element width at this stage.
@@ -7718,8 +7720,6 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
 
       return;
       }
-
-   bool genSpineChecks = comp()->requiresSpineChecks();
 
    _suppressSpineChecks = false;
 
