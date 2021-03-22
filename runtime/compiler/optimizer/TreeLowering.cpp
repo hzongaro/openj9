@@ -352,6 +352,10 @@ TR::TreeLowering::fastpathAcmpHelper(TR::Node * const node, TR::TreeTop * const 
    tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
 
+static char *disableNewACMPFastPaths = feGetEnv("TR_disableVT_ACMP_NewFastPaths");
+
+if (!disableNewACMPFastPaths)
+{
    // duplicate the store node and put 0 (false), because if the lhs is null
    // the comparison must return false
    storeNode = storeNode->duplicateTree(true);
@@ -423,6 +427,7 @@ TR::TreeLowering::fastpathAcmpHelper(TR::Node * const node, TR::TreeTop * const 
       }
    tt->insertBefore(TR::TreeTop::create(comp, checkRhsIsVT));
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
+}
    }
 
 /**
