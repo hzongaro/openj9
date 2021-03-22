@@ -110,7 +110,7 @@ void
 TR::TreeLowering::lowerValueTypeOperations(TR::Node* node, TR::TreeTop* tt)
    {
    TR::SymbolReferenceTable * symRefTab = comp()->getSymRefTab();
-   static char *enableInliningCheckAastore = feGetEnv("TR_EnableInliningCheckAastore");
+   static char *disableInliningCheckAastore = feGetEnv("TR_DisableVT_AASTORE_Inlining");
 
    if (node->getOpCode().isCall())
       {
@@ -126,22 +126,22 @@ TR::TreeLowering::lowerValueTypeOperations(TR::Node* node, TR::TreeTop* tt)
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_ldFlattenableArrayElement)
          {
-         static char *enableInliningCheckAaload = feGetEnv("TR_EnableInliningCheckAaload");
+         static char *disableInliningCheckAaload = feGetEnv("TR_DisableVT_AALOAD_Inlining");
 
-         if (enableInliningCheckAaload)
+         if (!disableInliningCheckAaload)
             {
             lowerLoadArrayElement(node, tt);
             }
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_strFlattenableArrayElement)
          {
-         if (enableInliningCheckAastore)
+         if (!disableInliningCheckAastore)
             {
             lowerStoreArrayElement(node, tt);
             }
          }
       }
-   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && !enableInliningCheckAastore)
+   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && disableInliningCheckAastore)
       {
       lowerArrayStoreCHK(node, tt);
       }
