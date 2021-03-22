@@ -254,10 +254,12 @@ BuildResult
 ROMClassBuilder::injectInterfaces(ClassFileOracle *classFileOracle)
 {
 	U_32 numOfInterfaces = 0;
+#if JAVA_SPEC_VERSION >= 11
 	if (classFileOracle->needsIdentityInterface()) {
 		J9_DECLARE_CONSTANT_UTF8(identityInterface, IDENTITY_OBJECT_NAME);
 		_interfaceInjectionInfo.interfaces[numOfInterfaces++] = (J9UTF8 *) &identityInterface;
 	}
+#endif
 	_interfaceInjectionInfo.numOfInterfaces = numOfInterfaces;
 	return OK;
 }
