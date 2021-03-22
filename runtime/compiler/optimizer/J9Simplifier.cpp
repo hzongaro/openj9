@@ -277,6 +277,7 @@ J9::Simplifier::foldAbs(TR::Node *node)
 TR::Node *
 J9::Simplifier::simplifyiCallMethods(TR::Node * node, TR::Block * block)
    {
+   static char *disableVTACMPTransform = feGetEnv("TR_disableVT_ACMP_Simplifier");
    if (isRecognizedAbsMethod(node))
       {
       node = foldAbs(node);
@@ -308,7 +309,7 @@ J9::Simplifier::simplifyiCallMethods(TR::Node * node, TR::Block * block)
          foldDoubleConstant(node, 10000.0, (TR::Simplifier *) this);
          }
       }
-   else if (isObjectEqualityComparison(node))
+   else if (!disableVTACMPTransform && isObjectEqualityComparison(node))
       {
       TR::Node *lhs = node->getChild(0);
       const bool lhsNull =
