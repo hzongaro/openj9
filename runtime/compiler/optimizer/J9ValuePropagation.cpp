@@ -597,12 +597,14 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
 void
 J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
    {
+   static char *disableEqualityCompareTransform = feGetEnv("TR_disableVT_ACMP_VP");
+
    const bool isObjectEqualityCompare =
       comp()->getSymRefTab()->isNonHelper(
          node->getSymbolReference(),
          TR::SymbolReferenceTable::objectEqualityComparisonSymbol);
 
-   if (isObjectEqualityCompare)
+   if (isObjectEqualityCompare && !disableEqualityCompareTransform)
       {
       // Only constrain the call in the last run of vp to avoid handling the candidate twice if the call is inside a loop
       if (lastTimeThrough())
@@ -649,6 +651,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       return;
       }
 
+   static char *disableElementLoadTransform = feGetEnv("TR_disableVT_AALOAD_VP");
+   static char *disableElementStoreTransform = feGetEnv("TR_disableVT_AASTORE_VP");
+
    const bool isLoadFlattenableArrayElement =
                  node->getSymbolReference()
                  == comp()->getSymRefTab()->findOrCreateLoadFlattenableArrayElementSymbolRef();
@@ -657,12 +662,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                  node->getSymbolReference()
                  == comp()->getSymRefTab()->findOrCreateStoreFlattenableArrayElementSymbolRef();
 
-   static char *disableVPLoadFlattenableArrayElement = feGetEnv("TR_disableVPLoadFlattenableArrayElement");
-   static char *disableVPStoreFlattenableArrayElement = feGetEnv("TR_disableVPStoreFlattenableArrayElement");
-
    if (!comp()->requiresSpineChecks()
-       && (!disableVPLoadFlattenableArrayElement && isLoadFlattenableArrayElement
-           || !disableVPStoreFlattenableArrayElement && isStoreFlattenableArrayElement))
+       && (!disableElementLoadTransform && isLoadFlattenableArrayElement
+           || !disableElementStoreTransform && isStoreFlattenableArrayElement))
       {
       // Only constrain the call in the last run of vp to avoid handling the candidate twice if the call is inside a loop
       if (!lastTimeThrough())
