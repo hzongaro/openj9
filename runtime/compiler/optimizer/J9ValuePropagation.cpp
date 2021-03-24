@@ -647,6 +647,30 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                   node->getGlobalIndex());
             }
          }
+      else
+         {
+         const char *reason = "unknown";
+
+         if (lhs == NULL || rhs == NULL)
+            {
+            reason = "no-constraint";
+            }
+         else if (isLhsValue != TR_no)
+            {
+            reason = (isLhsValue == TR_maybe) ? "lhs-may-be-vt" : "lhs-is-vt";
+            }
+         else if (isRhsValue != TR_no)
+            {
+            reason = (isRhsValue == TR_maybe) ? "rhs-may-be-vt" : "rhs-is-vt";
+            }
+
+         const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/acmp/(%s)/%s/block_%d/%s",
+                                                        comp()->signature(),
+                                                        comp()->getHotnessName(comp()->getMethodHotness()),
+                                                        _curTree->getEnclosingBlock()->getNumber(),
+                                                        reason);
+         TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
+         }
 
       return;
       }
@@ -679,8 +703,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::Node *indexNode = node->getChild(elementIndexOpIndex);
       TR::Node *arrayRefNode = node->getChild(arrayRefOpIndex);
       TR::VPConstraint *arrayConstraint = getConstraint(arrayRefNode, arrayRefGlobal);
+      TR_YesNoMaybe isCompTypeVT = isArrayCompTypeValueType(arrayConstraint);
 
-      if (arrayConstraint != NULL && isArrayCompTypeValueType(arrayConstraint) == TR_no)
+      if (arrayConstraint != NULL && isCompTypeVT == TR_no)
          {
          flags8_t flagsForTransform = (isLoadFlattenableArrayElement ? ValueTypesHelperCallTransform::IsArrayLoad
                                                                      : (ValueTypesHelperCallTransform::IsArrayStore
@@ -689,6 +714,32 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 
          _valueTypesHelperCallsToBeFolded.add(
                new (trStackMemory()) ValueTypesHelperCallTransform(_curTree, node, flagsForTransform));
+         }
+      else
+         {
+         const char *operationName = isLoadFlattenableArrayElement ? "aaload" : "aastore";
+
+         const char *reason = "unknown";
+
+         if (arrayConstraint == NULL)
+            {
+            reason = "no-array-constraint";
+            }
+         else if (isCompTypeVT == TR_yes)
+            {
+            reason = "comp-type-is-vt";
+            }
+         else if (isCompTypeVT == TR_yes)
+            {
+            reason = "comp-type-may-be-vt";
+            }
+
+         const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/%s/(%s)/%s/block_%d/%s",
+                                                        operationName, comp()->signature(),
+                                                        comp()->getHotnessName(comp()->getMethodHotness()),
+                                                        _curTree->getEnclosingBlock()->getNumber(),
+                                                        reason);
+         TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
          }
 
       return;
