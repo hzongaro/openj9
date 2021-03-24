@@ -729,7 +729,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             {
             reason = "comp-type-is-vt";
             }
-         else if (isCompTypeVT == TR_yes)
+         else if (isCompTypeVT == TR_maybe)
             {
             reason = "comp-type-may-be-vt";
             }
