@@ -585,7 +585,20 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
       return type->isFixedClass() ? TR_no : TR_maybe;
 
    if (!TR::Compiler->cls.isConcreteClass(comp, clazz))
-      return TR_maybe;
+      {
+      TR_OpaqueClassBlock *identityInterface = comp->fe()->getClassFromSignature("java/lang/IdentityObject", 24,
+                                                                                   comp->getCurrentMethod());
+
+      if (identityInterface != NULL && comp->fe()->isInstanceOf(clazz, identityInterface, true, true) == TR_yes)
+         {
+         return TR_no;
+         }
+      else
+         {
+         return TR_maybe;
+         }
+      }
+
 
    // No AOT validation is necessary here, since whether a class is a value
    // type is determined by its ROM class.
