@@ -49,10 +49,7 @@ TR::TreeLowering::perform()
       TR::Node* node = nodeIter.currentNode();
       TR::TreeTop* tt = nodeIter.currentTree();
 
-      if (TR::Compiler->om.areValueTypesEnabled())
-         {
-         lowerValueTypeOperations(nodeIter, node, tt);
-         }
+      lowerValueTypeOperations(nodeIter, node, tt);
       }
 
    return 0;
@@ -137,7 +134,7 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
                                                             comp()->signature(), node->getByteCodeIndex());
             TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
 
-            lowerLoadArrayElement(node, tt);
+            lowerLoadArrayElement(nodeIter, node, tt);
             }
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_strFlattenableArrayElement)
@@ -148,7 +145,7 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
                                                             comp()->signature(), node->getByteCodeIndex());
             TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
 
-            lowerStoreArrayElement(node, tt);
+            lowerStoreArrayElement(nodeIter, node, tt);
             }
          }
       }
@@ -734,117 +731,120 @@ TR::TreeLowering::lowerArrayStoreCHK(TR::Node *node, TR::TreeTop *tt)
    }
 
 /*
-+-----------------------------------------+       +--------------------------------------------+
-|treetop                                  |       | BBStart                                    |
-|   acall  jitLoadFlattenableArrayElement |       | treetop                                    |
-|      ==>iRegLoad                        |       |    ==>iRegLoad                             |
-|      ==>aRegLoad                        | ----> | treetop                                    |
-|ResolveAndNULLCHK                        |       |    ==>aRegLoad                             |
-|   iloadi  Point2D.x                     |       | aRegStore edi                              |
-|      ==>acall                           |       |    aconst NULL                             |
-|...                                      |       | ificmpeq -->-------------------------------+---+
-+-----------------------------------------+       |    iand                                    |   |
-                                                  |       iloadi  <isClassFlags>               |   |
-                                                  |       ...                                  |   |
-                                                  |       iconst 1024                          |   |
-                                                  |    iconst 0                                |   |
-                                                  |    GlRegDeps ()                            |   |
-                                                  |       PassThrough rdi                      |   |
-                                                  |          ==>aconst NULL                    |   |
-                                                  |       ==>aRegLoad                          |   |
-                                                  |       ==>iRegLoad                          |   |
-                                                  | BBEnd                                      |   |
-                                                  +--------------------------------------------+   |
-                                                  +--------------------------------------------+   |
-                                                  | BBStart                                    |   |
-                                                  | treetop                                    |   |
-                                                  |    acall  jitLoadFlattenableArrayElement   |   |
-                                                  |       ==>iRegLoad                          |   |
-                                                  |       ==>aRegLoad                          |   |
-                                                  | aRegStore edi                              |   |
-                                                  |    ==>acall                                |   |
-                                                  | goto -->-----------------------------------+---+---+
-                                                  |    GlRegDeps ()                            |   |   |
-                                                  |       ==>aRegLoad                          |   |   |
-                                                  |       ==>iRegLoad                          |   |   |
-                                                  |       PassThrough rdi                      |   |   |
-                                                  |          ==>acall                          |   |   |
-                                                  | BBEnd                                      |   |   |
-                                                  |    GlRegDeps ()                            |   |   |
-                                                  |       ==>aRegLoad                          |   |   |
-                                                  |       ==>iRegLoad                          |   |   |
-                                                  |       PassThrough rdi                      |   |   |
-                                                  |          ==>acall                          |   |   |
-                                                  +----------+---------------------------------+   |   |
-                                                             |                                     |   |
-                                                             +-------------------------------------+   |
-                                                             |                                         |
-                                                  +----------v---------------------------------+       |
-                                                  | BBStart                                    |       |
-                                                  |    GlRegDeps ()                            |       |
-                                                  |       PassThrough rdi                      |       |
-                                                  |          ==>aconst NULL                    |       |
-                                                  |    ==>aRegLoad                             |       |
-                                                  |    ==>iRegLoad                             |       |
-                                                  | NULLCHK on n191n                           |       |
-                                                  |    PassThrough                             |       |
-                                                  |       ==>aRegLoad                          |       |
-                                                  | BNDCHK                                     |       |
-                                                  |    arraylength                             |       |
-                                                  |       ==>aRegLoad                          |       |
-                                                  |    ==>iRegLoad                             |       |
-                                                  | compressedRefs                             |       |
-                                                  |    aloadi                                  |       |
-                                                  |      aladd                                 |       |
-                                                  |        ...                                 |       |
-                                                  |    lconst 0                                |       |
-                                                  | aRegStore edi                              |       |
-                                                  |     ==>aloadi                              |       |
-                                                  | BBEnd                                      |       |
-                                                  |     GlRegDeps ()                           |       |
-                                                  |        PassThrough rdi                     |       |
-                                                  |           ==>aloadi                        |       |
-                                                  |        ==>aRegLoad                         |       |
-                                                  |        ==>iRegLoad                         |       |
-                                                  +----------+---------------------------------+       |
-                                                             |                                         |
-                                                             +-----------------------------------------+
-                                                             |
-                                                             |
-                                                  +----------v---------------------------------+
-                                                  | BBStart                                    |
-                                                  |    GlRegDeps ()                            |
-                                                  |       aRegLoad r9d                         |
-                                                  |       iRegLoad ebx                         |
-                                                  |       aRegLoad edi                         |
-                                                  | treetop                                    |
-                                                  |    ==>aRegLoad                             |
-                                                  | ResolveAndNULLCHK                          |
-                                                  |    iloadi  Point2D.x                       |
-                                                  |       ==>aRegLoad                          |
-                                                  | ...                                        |
-                                                  +--------------------------------------------+
+ +----------------------------------------+
+ |treetop                                 |
+ |  acall  jitLoadFlattenableArrayElement |
+ |     ==>iRegLoad                        |
+ |     ==>aRegLoad                        |
+ |ttAfterHelperCall                       |
+ +----------------------------------------+
+              |           |
+              v           v
 
+ +------------------------------------------+
+ |BBStart                                   |
+ |  treetop                                 |
+ |     ==>iRegLoad                          |
+ |  treetop                                 |
+ |     ==>aRegLoad                          |
+ |  aRegStore edi                           |
+ |     aconst NULL                          |
+ |  ificmpne -------------------------------+-----------+
+ |     iand                                 |           |
+ |        iloadi  <isClassFlags>            |           |
+ |        ...                               |           |
+ |        iconst 1024                       |           |
+ |     iconst 0                             |           |
+ |     GlRegDeps ()                         |           |
+ |        PassThrough rdi                   |           |
+ |           ==>aconst NULL                 |           |
+ |        ==>aRegLoad                       |           |
+ |        ==>iRegLoad                       |           |
+ |BBEnd                                     |           |
+ +------------------------------------------+           |
+ +------------------------------------------+           |
+ |BBStart (extension of previous block)     |           |
+ |NULLCHK on n191n                          |           |
+ |   PassThrough                            |           |
+ |      ==>aRegLoad                         |           |
+ |BNDCHK                                    |           |
+ |   arraylength                            |           |
+ |      ==>aRegLoad                         |           |
+ |   ==>iRegLoad                            |           |
+ |compressedRefs                            |           |
+ |   aloadi                                 |           |
+ |      aladd                               |           |
+ |        ...                               |           |
+ |   lconst 0                               |           |
+ |aRegStore edi                             |           |
+ |   ==>aloadi                              |           |
+ |BBEnd                                     |           |
+ |   GlRegDeps ()                           |           |
+ |      PassThrough rdi                     |           |
+ |         ==>aloadi                        |           |
+ |      ==>aRegLoad                         |           |
+ |      ==>iRegLoad                         |           |
+ +---------------------|--------------------+           |
+                       |                                |
+                       +----------------------------+   |
+                       |                            |   |
+ +---------------------v--------------------+       |   |
+ |BBStart                                   |       |   |
+ |   GlRegDeps ()                           |       |   |
+ |      aRegLoad r9d                        |       |   |
+ |      iRegLoad ebx                        |       |   |
+ |      aRegLoad edi                        |       |   |
+ |treetop                                   |       |   |
+ |   ==>aRegLoad                            |       |   |
+ |ttAfterHelperCall                         |       |   |
+ +------------------------------------------+       |   |
+                                                    |   |
+                       +----------------------------|---+
+                       |                            |
+                       |                            |
+ +---------------------v---------------------+      |
+ | BBStart                                   |      |
+ |    GlRegDeps ()                           |      |
+ |       PassThrough rdi                     |      |
+ |          ==>aconst NULL                   |      |
+ |       aRegLoad edi                        |      |
+ |       iRegLoad ebx                        |      |
+ | treetop                                   |      |
+ |    acall  jitLoadFlattenableArrayElement  |      |
+ |       ==>iRegLoad                         |      |
+ |       ==>aRegLoad                         |      |
+ | aRegStore edi                             |      |
+ |     ==>acall                              |      |
+ | goto  ----------------->------------------+------+
+ |    GlRegDeps ()                           |
+ |       ==>aRegLoad                         |
+ |       ==>iRegLoad                         |
+ |       PassThrough rdi                     |
+ |          ==>acall                         |
+ | BBEnd                                     |
+ +-------------------------------------------+
  */
 void
 TR::TreeLowering::printTT(char *str, TR::TreeTop *tt)
    {
-   if (trace())
+   if (trace() && tt)
       {
       TR::TreeTop *prevTT = tt->getPrevTreeTop();
       TR::TreeTop *nextTT = tt->getNextTreeTop();
       TR::Node *ttFirstChild = tt->getNode()->getFirstChild();
-      TR::Node *prevTTFirstChild = prevTT->getNode()->getFirstChild();
-      TR::Node *nextTTFirstChild = nextTT->getNode()->getFirstChild();
+      TR::Node *prevTTFirstChild = prevTT ? prevTT->getNode()->getFirstChild() : NULL;
+      TR::Node *nextTTFirstChild = nextTT ? nextTT->getNode()->getFirstChild() : NULL;
 
       traceMsg(comp(), "   %s n%dn %s (n%dn %s), PrevTreeTop n%dn %s (n%dn %s), NextTreeTop n%dn %s (n%dn %s)\n", str,
          tt->getNode()->getGlobalIndex(), tt->getNode()->getOpCode().getName(),
          ttFirstChild ? ttFirstChild->getGlobalIndex() : -1,
          ttFirstChild ? ttFirstChild->getOpCode().getName() : "",
-         prevTT->getNode()->getGlobalIndex(), prevTT->getNode()->getOpCode().getName(),
+         prevTT ? prevTT->getNode()->getGlobalIndex() : -1,
+         prevTT ? prevTT->getNode()->getOpCode().getName() : "",
          prevTTFirstChild ? prevTTFirstChild->getGlobalIndex() : -1,
          prevTTFirstChild ? prevTTFirstChild->getOpCode().getName() : "",
-         nextTT->getNode()->getGlobalIndex(), nextTT->getNode()->getOpCode().getName(),
+         nextTT ? nextTT->getNode()->getGlobalIndex() : -1,
+         nextTT ? nextTT->getNode()->getOpCode().getName() : "",
          nextTTFirstChild ? nextTTFirstChild->getGlobalIndex() : -1,
          nextTTFirstChild ? nextTTFirstChild->getOpCode().getName() : "");
       }
@@ -871,7 +871,7 @@ TR::TreeLowering::printBlock(char *str, TR::Block *block)
    }
 
 void
-TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
+TR::TreeLowering::lowerLoadArrayElement(TR::PreorderNodeIterator& nodeIter, TR::Node *node, TR::TreeTop *tt)
    {
    TR::Compilation *comp = self()->comp();
    TR::Block *originalBlock = tt->getEnclosingBlock();
@@ -888,11 +888,10 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
 
 
    ///////////////////////////////////////
-   // 1. Anchor the call node after the helper call split point
-   // to ensure the returned value goes into either a temp or a global register
+   // X. Anchor helper call node after the helper call
+   //    Anchor elementIndex and arrayBaseAddress before the helper call
    TR::TreeTop *anchoredCallTT = TR::TreeTop::create(comp, tt, TR::Node::create(TR::treetop, 1, node));
 
-   // Anchor elementIndex and arrayBaseAddress
    TR::TreeTop *anchoredElementIndexTT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, elementIndexNode));
    TR::TreeTop *anchoredArrayBaseAddressTT = TR::TreeTop::create(comp, anchoredElementIndexTT, TR::Node::create(TR::treetop, 1, arrayBaseAddressNode));
 
@@ -900,11 +899,9 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
    printTT("anchoredElementIndexTT", anchoredElementIndexTT);
    printTT("anchoredArrayBaseAddressTT", anchoredArrayBaseAddressTT);
 
-   printBlock("before inserting elementLoadTT originalBlock", originalBlock);
-
 
    ///////////////////////////////////////
-   // 2. Create the new regular array element load node and insert it before anchoredCallTT
+   // X. Create array element load node and insert it before the helper call
    TR::Node *anchoredArrayBaseAddressNode = anchoredArrayBaseAddressTT->getNode()->getFirstChild();
    TR::Node *anchoredElementIndexNode = anchoredElementIndexTT->getNode()->getFirstChild();
 
@@ -916,9 +913,134 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
    if (trace())
       traceMsg(comp, "Created elementLoadNode n%dn\n", elementLoadNode->getGlobalIndex());
 
-   anchoredCallTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(TR::PassThrough, 1, anchoredArrayBaseAddressNode), comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
+   TR::TreeTop *elementLoadTT = NULL;
+   if (comp->useCompressedPointers())
+      elementLoadTT = tt->insertBefore(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementLoadNode)));
+   else
+      elementLoadTT = tt->insertBefore(TR::TreeTop::create(comp, TR::Node::create(node, TR::treetop, 1, elementLoadNode)));
 
-   printBlock("after inserting NULLCHK originalBlock", originalBlock);
+   printBlock("after inserting array element load: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. (1) Split after the helper call
+   TR::Block *blockAfterHelperCall = originalBlock->splitPostGRA(anchoredCallTT, cfg, true, NULL);
+
+   if (trace())
+      traceMsg(comp, "Isolated the anchored call node n%dn in block_%d\n", anchoredCallTT->getNode()->getGlobalIndex(), blockAfterHelperCall->getNumber());
+
+   printBlock("after split at anchored call: blockAfterHelperCall", blockAfterHelperCall);
+   printBlock("after split at anchored call: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. Create a store node that will be used to save the return value
+   // of the helper call or the regular array load. It uses the same register
+   // as the anchored node.
+   TR::Node *anchoredNode = anchoredCallTT->getNode()->getFirstChild();
+   TR::Node *storeNode = TR::TreeLowering::createStoreNodeForAnchoredNode(anchoredNode, TR::Node::aconst(0), "aconst(0)");
+
+   elementLoadTT->insertBefore(TR::TreeTop::create(comp, storeNode));
+
+   printBlock("Insert storeNode(aconst(0)) before elementLoadTT: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. GlRegDeps for the originalBlock BBExit is what's required for the arrayElementLoadBlock.
+   // It might get changed after the split at the helper call. It should be saved.
+   TR::Node *origRegDeps = originalBlock->getExit()->getNode()->getFirstChild();
+   TR::Node *duplicateGlRegDeps = NULL;
+
+   if (origRegDeps)
+      {
+      duplicateGlRegDeps = TR::Node::create(origRegDeps, TR::GlRegDeps);
+
+      for (int32_t i=0; i < origRegDeps->getNumChildren(); ++i)
+         {
+         TR::Node * regDep = origRegDeps->getChild(i);
+
+         // If the anchoredNode is saved to a register, there is a PassThrough for the return value from
+         // the helper call. It should not be copied here because the helper call will get moved up to
+         // GlRegDeps due to split uncommoning.
+         if (storeNode->getOpCodeValue() == TR::aRegStore &&
+             regDep->getOpCodeValue() == TR::PassThrough &&
+             regDep->getGlobalRegisterNumber() == storeNode->getGlobalRegisterNumber())
+            {
+            if (trace())
+             traceMsg(comp,"duplicateGlRegDeps skip n%dn [%d] %s %s storeNode (%s)\n",
+                     regDep->getGlobalIndex(), i, regDep->getOpCode().getName(),
+                     comp->getDebug()->getGlobalRegisterName(regDep->getGlobalRegisterNumber()),
+                     comp->getDebug()->getGlobalRegisterName(storeNode->getGlobalRegisterNumber()));
+            continue;
+            }
+         else
+            {
+            if (trace())
+             traceMsg(comp,"duplicateGlRegDeps add n%dn [%d] %s %s\n",
+                     regDep->getGlobalIndex(), i, regDep->getOpCode().getName(), comp->getDebug()->getGlobalRegisterName(regDep->getGlobalRegisterNumber()));
+            }
+
+         if (regDep->getOpCodeValue() == TR::PassThrough)
+            {
+            TR::Node *orig = regDep;
+            regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
+            regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
+            regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
+            }
+
+         duplicateGlRegDeps->addChildren(&regDep, 1);
+         }
+      }
+
+
+   ///////////////////////////////////////
+   // X. Move helper call and the regStore of the call to the end of the block before the split
+   moveTTAndStoreNodeToEnd(originalBlock->getExit(), tt, node);
+
+   printBlock("after moving tt: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. (2) Split at the helper call
+   TR::Block *helperCallBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
+
+   if (trace())
+      traceMsg(comp, "Isolated helper call node n%dn and the anchored call node n%dn in block_%d\n",
+            node->getGlobalIndex(), anchoredCallTT->getNode()->getGlobalIndex(), helperCallBlock->getNumber());
+
+   printBlock("after split at helper call: helperCallBlock", helperCallBlock);
+   printBlock("after split at helper call: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. Move array element load to the end of the originalBlock before split
+   moveTTAndStoreNodeToEnd(originalBlock->getExit(), elementLoadTT, elementLoadNode);
+
+   printBlock("after moving elementLoadTT: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. Store the return value from the array element load
+   TR::Node *storeArrayElementNode = TR::TreeLowering::createStoreNodeForAnchoredNode(anchoredNode, elementLoadNode, "array element load");
+
+   elementLoadTT->insertAfter(TR::TreeTop::create(comp, storeArrayElementNode));
+
+
+   ///////////////////////////////////////
+   // X. (3) Split at the array element load node
+   TR::Block *arrayElementLoadBlock = originalBlock->split(elementLoadTT, cfg);
+
+   arrayElementLoadBlock->setIsExtensionOfPreviousBlock(true);
+
+   if (trace())
+      traceMsg(comp, "Isolated array element load node n%dn in block_%d\n", elementLoadNode->getGlobalIndex(), arrayElementLoadBlock->getNumber());
+
+   printBlock("after split array element load node: arrayElementLoadBlock", arrayElementLoadBlock);
+   printBlock("after split array element load node: originalBlock", originalBlock);
+
+   elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(TR::PassThrough, 1, anchoredArrayBaseAddressNode), comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
+
+   printBlock("after inserting NULLCHK: arrayElementLoadBlock", arrayElementLoadBlock);
 
    int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
    if (comp->useCompressedPointers())
@@ -926,110 +1048,13 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
 
    TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
    arraylengthNode->setArrayStride(dataWidth);
-   anchoredCallTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+   elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
 
-   printBlock("after inserting BNDCHK originalBlock", originalBlock);
-
-   if (comp->useCompressedPointers())
-      anchoredCallTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementLoadNode)));
-   else
-      anchoredCallTT->insertBefore(TR::TreeTop::create(comp, TR::Node::create(node, TR::treetop, 1, elementLoadNode)));
-
-   printBlock("after inserting array element load originalBlock", originalBlock);
+   printBlock("after inserting BNDCHK: arrayElementLoadBlock", arrayElementLoadBlock);
 
 
    ///////////////////////////////////////
-   // 3. Split the block after the helper call
-   printTT("splitPostGRA at tt->getNextTreeTop()", tt->getNextTreeTop());
-
-   TR::Block *blockAfterHelperCall = originalBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
-
-   if (trace())
-      traceMsg(comp, "Isolated regular array element load node n%dn and the anchored call node n%dn in block_%d\n",
-            elementLoadNode->getGlobalIndex(), anchoredCallTT->getNode()->getGlobalIndex(), blockAfterHelperCall->getNumber());
-
-   printBlock("after splitting the original block originalBlock", originalBlock);
-   printBlock("after splitting the original block blockAfterHelperCall", blockAfterHelperCall);
-
-
-   ///////////////////////////////////////
-   // 4. Move the helper call node to the end of the originalBlock
-   //
-   // As the block is split after the helper call node, it is possible that as part of un-commoning
-   // code to store nodes into registers or temp-slots is appended to the original block by the call
-   // to splitPostGRA above.  Move the helper call treetop to the end of originalBlock, along with
-   // any stores resulting from un-commoning of the nodes in the helper call tree so that it can be
-   // split into its own call block.
-   TR::TreeTop *originalBlockExit = originalBlock->getExit();
-   TR::TreeTop *iterTT = tt->getNextTreeTop();
-
-   if (iterTT != originalBlockExit)
-      {
-      // Remove TreeTop for call node, and gather it and the treetops for stores that
-      // resulted from un-commoning in a TreeTop chain from tt to lastTTForCallBlock
-      tt->unlink(false);
-      TR::TreeTop *lastTTForCallBlock = tt;
-
-      while (iterTT != originalBlockExit)
-         {
-         TR::TreeTop *nextTT = iterTT->getNextTreeTop();
-         TR::ILOpCodes op = iterTT->getNode()->getOpCodeValue();
-
-         printTT("iterTT", iterTT);
-
-         if ((op == TR::aRegStore || op == TR::astore) && iterTT->getNode()->getFirstChild() == node)
-            {
-            if (trace())
-               traceMsg(comp, "Moving treetop node n%dn [%p] for store of the helper result to the end of block_%d in preparation of final block split\n", iterTT->getNode()->getGlobalIndex(), iterTT->getNode(), originalBlock->getNumber());
-
-            // Remove store node from originalBlock temporarily
-            iterTT->unlink(false);
-            lastTTForCallBlock->join(iterTT);
-            lastTTForCallBlock = iterTT;
-            }
-
-         iterTT = nextTT;
-         }
-
-      // Insert "tt->iterTT->...->iterTT" before BBEnd
-      // Move the treetops that were gathered for the call and any stores of the
-      // result to the end of the block in preparation for the split of the call block
-      originalBlockExit->getPrevTreeTop()->join(tt);
-      lastTTForCallBlock->join(originalBlockExit);
-      }
-
-   printBlock("after moving the nodes originalBlock", originalBlock);
-
-
-   ///////////////////////////////////////
-   // 5. Split at the helper call node into its own block
-   TR::Block *helperCallBlock = originalBlock->split(tt, cfg);
-
-   helperCallBlock->setIsExtensionOfPreviousBlock(true);
-
-   if (trace())
-      traceMsg(comp, "Isolated helper call node n%dn in block_%d\n", node->getGlobalIndex(), helperCallBlock->getNumber());
-
-   printBlock("after split the helper call originalBlock", originalBlock);
-   printBlock("after split the helper call helperCallBlock", helperCallBlock);
-
-
-   ///////////////////////////////////////
-   // 6. Create a store node that will be used to save the return value
-   // of the helper call or the regular array load. It uses the same register
-   // as the anchored node.
-   TR::Node *anchoredNode = anchoredCallTT->getNode()->getFirstChild();
-   TR::Node *storeNode = TR::TreeLowering::createStoreNodeForAnchoredNode(anchoredNode, TR::Node::aconst(0), "aconst(0)");
-   originalBlock->append(TR::TreeTop::create(comp, storeNode));
-
-   if (trace())
-      traceMsg(comp, "Append storeNode n%dn %s to block_%d\n", storeNode->getGlobalIndex(), storeNode->getOpCode().getName(), originalBlock->getNumber());
-
-   printBlock("after append storeNode nodes originalBlock", originalBlock);
-
-
-   ///////////////////////////////////////
-   // 7. Create the ificmpeq node that checks classFlags
+   // X. Create ificmpne node that checks classFlags
    TR::SymbolReference *vftSymRef = comp->getSymRefTab()->findOrCreateVftSymbolRef();
    TR::SymbolReference *arrayCompSymRef = comp->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef();
    TR::SymbolReference *classFlagsSymRef = comp->getSymRefTab()->findOrCreateClassFlagsSymbolRef();
@@ -1040,10 +1065,10 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
    TR::Node *isValueTypeNode = TR::Node::create(node, TR::iand, 2, loadClassFlags, TR::Node::iconst(node, J9ClassIsValueType));
 
    // The branch destination will be set up later when the regular array load block is created
-   TR::Node *ifNode = TR::Node::createif(TR::ificmpeq, isValueTypeNode, TR::Node::iconst(node, 0));
+   TR::Node *ifNode = TR::Node::createif(TR::ificmpne, isValueTypeNode, TR::Node::iconst(node, 0));
 
    // Copy register dependency to the ificmpeq node that's being appended to the current block
-   copyRegisterDependencyBasedOnAnchoredNode(helperCallBlock, ifNode, anchoredNode, storeNode);
+   copyRegisterDependency(arrayElementLoadBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpeq node that checks classFlags to the original block
    originalBlock->append(TR::TreeTop::create(comp, ifNode));
@@ -1051,73 +1076,106 @@ TR::TreeLowering::lowerLoadArrayElement(TR::Node *node, TR::TreeTop *tt)
    if (trace())
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
 
-   printBlock("after append ifNode nodes originalBlock", originalBlock);
+   printBlock("after append ifNode: originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 8. Split the regular array element load from the anchored call
-   //
-   // Store the regular array element load result to the same anchored node register
-   TR::Node *storeArrayElementNode = TR::TreeLowering::createStoreNodeForAnchoredNode(anchoredNode, elementLoadNode, "array element load");
-
-   anchoredCallTT->insertBefore(TR::TreeTop::create(comp, storeArrayElementNode));
-
-   printBlock("before split at anchored call blockAfterHelperCall", blockAfterHelperCall);
-
-   TR::Block *blockAfterArrayElementLoad = blockAfterHelperCall->splitPostGRA(anchoredCallTT, cfg, true, NULL);
-
-   if (trace())
-      traceMsg(comp, "Isolated the anchored call node n%dn in block_%d\n", anchoredCallTT->getNode()->getGlobalIndex(), blockAfterArrayElementLoad->getNumber());
-
-   printBlock("after split at anchored call blockAfterHelperCall", blockAfterHelperCall);
-   printBlock("after split at anchored call blockAfterArrayElementLoad", blockAfterArrayElementLoad);
-
-   // Fix the register load to the stored array element if register is used
-   if (blockAfterHelperCall->getExit()->getNode()->getNumChildren() != 0
-         && storeArrayElementNode->getOpCodeValue() == TR::aRegStore)
+   // Copy duplicateGlRegDeps to arrayElementLoadBlock.
+   if (duplicateGlRegDeps)
       {
-      TR::Node *blkDeps = blockAfterHelperCall->getExit()->getNode()->getFirstChild();
-
-      for (int i = 0; i < blkDeps->getNumChildren(); i++)
-         {
-         TR::Node *regDep = blkDeps->getChild(i);
-
-         if (trace())
-            traceMsg(comp,"blkDeps n%dn [%d] %s %s storeArrayElementNode to %s\n",
-                  regDep->getGlobalIndex(), i, regDep->getOpCode().getName(),
-                  comp->getDebug()->getGlobalRegisterName(regDep->getGlobalRegisterNumber()),
-                  comp->getDebug()->getGlobalRegisterName(storeArrayElementNode->getGlobalRegisterNumber()));
-
-         if (regDep->getOpCodeValue() == TR::aRegLoad &&
-             regDep->getGlobalRegisterNumber() == storeArrayElementNode->getGlobalRegisterNumber())
-            {
-            TR::Node * depNode = TR::Node::create(TR::PassThrough, 1, storeArrayElementNode->getChild(0));
-            depNode->setGlobalRegisterNumber(storeArrayElementNode->getGlobalRegisterNumber());
-            blkDeps->addChildren(&depNode, 1);
-
-            blkDeps->removeChild(i);
-            break;
-            }
-         }
+      arrayElementLoadBlock->getExit()->getNode()->setNumChildren(1);
+      arrayElementLoadBlock->getExit()->getNode()->setChild(0, duplicateGlRegDeps);
+      }
+   else
+      {
+      arrayElementLoadBlock->getExit()->getNode()->setNumChildren(0);
       }
 
+   // Fix the register dependency after ifNode copying: PassThrough storeArrayElementNode to blockAfterHelperCall
+   if (storeArrayElementNode->getOpCodeValue() == TR::aRegStore)
+      {
+      TR::Node *blkDeps = arrayElementLoadBlock->getExit()->getNode()->getFirstChild();
+
+      TR::Node * depNode = TR::Node::create(TR::PassThrough, 1, storeArrayElementNode->getChild(0));
+      depNode->setGlobalRegisterNumber(storeArrayElementNode->getGlobalRegisterNumber());
+      blkDeps->addChildren(&depNode, 1);
+      }
+
+   printBlock("after fixing register dependency: arrayElementLoadBlock", arrayElementLoadBlock);
+
 
    ///////////////////////////////////////
-   // 9. Set up the edges between the blocks
-   ifNode->setBranchDestination(blockAfterHelperCall->getEntry());
+   // X. Set up the edges between the blocks
+   ifNode->setBranchDestination(helperCallBlock->getEntry());
+
+   cfg->addEdge(originalBlock, helperCallBlock);
+
+   cfg->removeEdge(arrayElementLoadBlock, helperCallBlock);
+   cfg->addEdge(arrayElementLoadBlock, blockAfterHelperCall);
+
+   TR::TreeTop *lastTreeTop = comp->getMethodSymbol()->getLastTreeTop();
+   printTT("lastTreeTop", lastTreeTop);
+
+   // Force nodeIter to first TreeTop of next block so that
+   // moving callBlock won't cause problems while iterating
+   while (nodeIter.currentTree() != blockAfterHelperCall->getEntry())
+       ++nodeIter;
+
+   arrayElementLoadBlock->getExit()->join(blockAfterHelperCall->getEntry());
+
+   lastTreeTop->insertTreeTopsAfterMe(helperCallBlock->getEntry(), helperCallBlock->getExit());
 
    // Add goto block from helper call to the block after the array element load block
-   TR::Node *gotoAfterHelperCallNode = TR::Node::create(helperCallBlock->getExit()->getNode(), TR::Goto, 0, blockAfterArrayElementLoad->getEntry());
-
-   copyRegisterDependency(helperCallBlock->getExit()->getNode(), gotoAfterHelperCallNode);
-
+   TR::Node *gotoAfterHelperCallNode = TR::Node::create(helperCallBlock->getExit()->getNode(), TR::Goto, 0, blockAfterHelperCall->getEntry());
    helperCallBlock->append(TR::TreeTop::create(comp, gotoAfterHelperCallNode));
 
-   cfg->addEdge(originalBlock, blockAfterHelperCall);
+   if (helperCallBlock->getExit()->getNode()->getNumChildren() > 0)
+      {
+      TR::Node* deps = helperCallBlock->getExit()->getNode()->getChild(0);
+      helperCallBlock->getExit()->getNode()->setNumChildren(0);
+      gotoAfterHelperCallNode->addChildren(&deps, 1);
+      }
+   }
 
-   cfg->removeEdge(helperCallBlock, blockAfterHelperCall);
+void
+TR::TreeLowering::moveTTAndStoreNodeToEnd(TR::TreeTop *blockExit, TR::TreeTop *ttToBeMoved, TR::Node *storedNode)
+   {
+   TR::TreeTop *iterTT = ttToBeMoved->getNextTreeTop();
 
-   cfg->addEdge(helperCallBlock, blockAfterArrayElementLoad);
+   if (iterTT != blockExit)
+      {
+      // Remove TreeTop for call node, and gather it and the treetops for stores that
+      // resulted from un-commoning in a TreeTop chain from ttToBeMoved to lastTTForCallBlock
+      ttToBeMoved->unlink(false);
+      TR::TreeTop *lastTTForCallBlock = ttToBeMoved;
+
+      while (iterTT != blockExit)
+         {
+         TR::TreeTop *nextTT = iterTT->getNextTreeTop();
+         TR::ILOpCodes op = iterTT->getNode()->getOpCodeValue();
+
+         printTT("iterTT", iterTT);
+
+         if ((op == TR::aRegStore || op == TR::astore) && iterTT->getNode()->getFirstChild() == storedNode)
+            {
+            if (trace())
+               traceMsg(self()->comp(), "Moving treetop node n%dn [%p] for store of the helper result to the end of block_%d in preparation of final block split\n", iterTT->getNode()->getGlobalIndex(), iterTT->getNode(), ttToBeMoved->getEnclosingBlock()->getNumber());
+
+            // Remove store node from the block temporarily
+            iterTT->unlink(false);
+            lastTTForCallBlock->join(iterTT);
+            lastTTForCallBlock = iterTT;
+            }
+
+         iterTT = nextTT;
+         }
+
+      // Insert "ttToBeMoved->iterTT->...->iterTT" before BBEnd
+      // Move the treetops that were gathered for the call and any stores of the
+      // result to the end of the block in preparation for the split of the call block
+      blockExit->getPrevTreeTop()->join(ttToBeMoved);
+      lastTTForCallBlock->join(blockExit);
+      }
    }
 
 void
@@ -1208,98 +1266,104 @@ TR::TreeLowering::createStoreNodeForAnchoredNode(TR::Node *anchoredNode, TR::Nod
       }
    else
       {
-      TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call has been turned into unexpected opcode\n");
+      TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call node n%dn has been turned into unexpected opcode\n",
+                                anchoredNode->getGlobalIndex());
       }
 
    return storeNode;
    }
 
 /*
-+-------------------------------------------+        +---------------------------------------------+
-| treetop                                   |        |  BBStart                                    |
-|    acall  jitStoreFlattenableArrayElement |        |  treetop                                    |
-|       aload <value>                       | -----> |     aload <ArrayAddress>                    |
-|       iload <index>                       |        |  treetop                                    |
-|       aload <arrayAddress>                |        |     aload <index>                           |
-| ttAfterArrayElementStore                  |        |  treetop                                    |
-+-------------------------------------------+        |     aload <value>                           |
-                                                     |  ificmpeq ---------------------------------------------+
-                                                     |     iand                                    |          |
-                                                     |        iloadi  <isClassFlags>               |          |
-                                                     |        ...                                  |          |
-                                                     |        iconst 1024                          |          |
-                                                     |     iconst 0                                |          |
-                                                     |     GlRegDeps ()                            |          |
-                                                     |        PassThrough rcx                      |          |
-                                                     |           ==>aload                          |          |
-                                                     |        PassThrough r8                       |          |
-                                                     |           ==>aload                          |          |
-                                                     |        PassThrough rdi                      |          |
-                                                     |           ==>iload                          |          |
-                                                     |  BBEnd                                      |          |
-                                                     +---------------------------------------------+          |
-                                                     +---------------------------------------------+          |
-                                                     |  BBStart                                    |          |
-                                                     |  NULLCHK                                    |          |
-                                                     |     PassThrough                             |          |
-                                                     |        ==>aload                             |          |
-                                                     |  treetop                                    |          |
-                                                     |     acall  jitStoreFlattenableArrayElement  |          |
-                                                     |         ==>aload                            |          |
-                                                     |         ==>iload                            |          |
-                                                     |         ==>aload                            |          |
-                                                     |  ...                                        |          |
-                                                     |  goto -->-----------------------------------------+    |
-                                                     |     GlRegDeps ()                            |     |    |
-                                                     |        PassThrough rcx                      |     |    |
-                                                     |           ==>aload                          |     |    |
-                                                     |        PassThrough r8                       |     |    |
-                                                     |           ==>aload                          |     |    |
-                                                     |        PassThrough rdi                      |     |    |
-                                                     |           ==>iload                          |     |    |
-                                                     |  BBEnd                                      |     |    |
-                                                     |     GlRegDeps ()                            |     |    |
-                                                     |        PassThrough rcx                      |     |    |
-                                                     |           ==>aload                          |     |    |
-                                                     |        PassThrough r8                       |     |    |
-                                                     |           ==>aload                          |     |    |
-                                                     |        PassThrough rdi                      |     |    |
-                                                     |           ==>iload                          |     |    |
-                                                     |                                             |     |    |
-                                                     +----------------------|----------------------+     |    |
-                                                                            |                            |    |
-                                                                            |                            |    |
-                                                                            -----------------------------|-----
-                                                                            |                            |
-                                                                            |                            |
-                                                                            |                            |
-                                                     +----------------------v----------------------+     |
-                                                     |  BBStart                                    |     |
-                                                     |     GlRegDeps ()                            |     |
-                                                     |        aRegLoad ecx                         |     |
-                                                     |        aRegLoad r8d                         |     |
-                                                     |        iRegLoad edi                         |     |
-                                                     |  NULLCHK on n82n                            |     |
-                                                     |      ...                                    |     |
-                                                     |  BNDCHK                                     |     |
-                                                     |      ...                                    |     |
-                                                     |  treetop                                    |     |
-                                                     |      ArrayStoreCHK                          |     |
-                                                     |         awrtbari                            |     |
-                                                     |         ...                                 |     |
-                                                     |  BBEnd                                      |     |
-                                                     |      GlRegDeps                              |     |
-                                                     +----------------------|----------------------+     |
-                                                                            |                            |
-                                                                            ------------------------------
-                                                                            |
-                                                     +----------------------v----------------------+
-                                                     | ttAfterArrayElementStore                    |
-                                                     +---------------------------------------------+
-
+ +-------------------------------------------+
+ |treetop                                    |
+ |   acall  jitStoreFlattenableArrayElement  |
+ |      aload <value>                        |
+ |      iload <index>                        |
+ |      aload <arrayAddress>                 |
+ |ttAfterHelperCall                          |
+ +-------------------------------------------+
+               |              |
+               v              v
+ +-------------------------------------------+
+ |BBStart                                    |
+ |treetop                                    |
+ |   aload <ArrayAddress>                    |
+ |treetop                                    |
+ |   aload <index>                           |
+ |treetop                                    |
+ |   aload <value>                           |
+ |ificmpne ----------------------------------+---------------+
+ |   iand                                    |               |
+ |      iloadi  <isClassFlags>               |               |
+ |      ...                                  |               |
+ |      iconst 1024                          |               |
+ |   iconst 0                                |               |
+ |   GlRegDeps ()                            |               |
+ |      PassThrough rcx                      |               |
+ |         ==>aload                          |               |
+ |      PassThrough r8                       |               |
+ |         ==>aload                          |               |
+ |      PassThrough rdi                      |               |
+ |         ==>iload                          |               |
+ |BBEnd                                      |               |
+ +-------------------------------------------+               |
+ +-------------------------------------------+               |
+ |BBStart (extension of previous block)      |               |
+ |NULLCHK on n82n                            |               |
+ |   ...                                     |               |
+ |BNDCHK                                     |               |
+ |   ...                                     |               |
+ |treetop                                    |               |
+ |   ArrayStoreCHK                           |               |
+ |      awrtbari                             |               |
+ |      ...                                  |               |
+ |BBEnd                                      |               |
+ |   GlRegDeps ()                            |               |
+ |      PassThrough rcx                      |               |
+ |         ==>aload                          |               |
+ |      PassThrough r8                       |               |
+ |         ==>aload                          |               |
+ |      PassThrough rdi                      |               |
+ |         ==>iload                          |               |
+ +---------------------+---------------------+               |
+                       |                                     |
+                       +----------------------------+        |
+                       |                            |        |
+ +---------------------v---------------------+      |        |
+ |ttAfterArrayElementStore                   |      |        |
+ |                                           |      |        |
+ +-------------------------------------------+      |        |
+                                                    |        |
+                                                    |        |
+                       +----------------------------+--------+
+                       |                            |
+ +---------------------v---------------------+      |
+ |BBStart                                    |      |
+ |   GlRegDeps ()                            |      |
+ |      aRegLoad ecx                         |      |
+ |      aRegLoad r8d                         |      |
+ |      iRegLoad edi                         |      |
+ |NULLCHK                                    |      |
+ |   PassThrough                             |      |
+ |      ==>aload                             |      |
+ |treetop                                    |      |
+ |   acall  jitStoreFlattenableArrayElement  |      |
+ |      ==>aRegLoad                          |      |
+ |      ==>iRegLoad                          |      |
+ |      ==>aRegLoad                          |      |
+ |goto  ---------->--------------------------+------+
+ |   GlRegDeps ()                            |
+ |      PassThrough rcx                      |
+ |         ==>aload                          |
+ |      PassThrough r8                       |
+ |         ==>aload                          |
+ |      PassThrough rdi                      |
+ |         ==>iload                          |
+ |BBEnd                                      |
+ +-------------------------------------------+
  */
 void
-TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
+TR::TreeLowering::lowerStoreArrayElement(TR::PreorderNodeIterator& nodeIter, TR::Node *node, TR::TreeTop *tt)
    {
    TR::Compilation *comp = self()->comp();
    TR::Block *originalBlock = tt->getEnclosingBlock();
@@ -1318,7 +1382,7 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
 
 
    ///////////////////////////////////////
-   // 1. Anchor all the children nodes
+   // X. Anchor all the children nodes
    TR::TreeTop *anchoredArrayBaseAddressTT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, arrayBaseAddressNode));
    TR::TreeTop *anchoredElementIndexTT = TR::TreeTop::create(comp, anchoredArrayBaseAddressTT, TR::Node::create(TR::treetop, 1, elementIndexNode));
    TR::TreeTop *anchoredValueTT = TR::TreeTop::create(comp, anchoredElementIndexTT, TR::Node::create(TR::treetop, 1, valueNode));
@@ -1329,7 +1393,7 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
 
 
    ///////////////////////////////////////
-   // 2. Create the new ArrayStoreCHK, BNDCHK, NULLCHK
+   // X. Create the new ArrayStoreCHK
    TR::Node *anchoredElementIndexNode = anchoredElementIndexTT->getNode()->getFirstChild();
    TR::Node *anchoredArrayBaseAddressNode = anchoredArrayBaseAddressTT->getNode()->getFirstChild();
    TR::Node *anchoredValueNode = anchoredValueTT->getNode()->getFirstChild();
@@ -1347,54 +1411,51 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
    if (trace())
       traceMsg(comp, "Created arrayStoreCHKNode n%dn\n", arrayStoreCHKNode->getGlobalIndex());
 
-   TR::TreeTop *ttAfterHelperCall = tt->getNextTreeTop();
-
-   printTT("before insert arrayStoreCHKNode ttAfterHelperCall", ttAfterHelperCall);
-
-   ttAfterHelperCall->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(TR::PassThrough, 1, anchoredArrayBaseAddressNode), comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
-
-   printBlock("after insert NULLCHK", originalBlock);
-
-   int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
-   if (comp->useCompressedPointers())
-      dataWidth = TR::Compiler->om.sizeofReferenceField();
-
-   TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
-   arraylengthNode->setArrayStride(dataWidth);
-   ttAfterHelperCall->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
-
-   printBlock("after insert BNDCHK", originalBlock);
-
    TR::TreeTop * arrayStoreCHKTT = NULL;
-   arrayStoreCHKTT = ttAfterHelperCall->insertBefore(TR::TreeTop::create(comp, arrayStoreCHKNode));
+   arrayStoreCHKTT = tt->insertBefore(TR::TreeTop::create(comp, arrayStoreCHKNode));
 
-   if (comp->useCompressedPointers())
-      arrayStoreCHKTT = ttAfterHelperCall->insertBefore(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementStoreNode)));
-
-   printBlock("after insert arrayStoreCHKNode", originalBlock);
+   printBlock("after insert arrayStoreCHKNode: originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 3. Split the block after the helper call
-   printTT("splitPostGRA at tt->getNextTreeTop()", tt->getNextTreeTop());
-
+   // X. (1) Split the block after the helper call
    TR::Block *blockAfterHelperCall = originalBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
 
-   printBlock("after splitting the original block", originalBlock);
-   printBlock("blockAfterHelperCall after splitting the original block", blockAfterHelperCall);
+   printBlock("after split at tt->getNextTreeTop(): blockAfterHelperCall", blockAfterHelperCall);
+   printBlock("after split at tt->getNextTreeTop(): originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 4. Move the helper call node to the end of the originalBlock
-   //
-   // As the block is split after the helper call node, it is possible that as part of un-commoning
-   // code to store nodes into registers or temp-slots is appended to the original block by the call
-   // to splitPostGRA above.  Move the helper call treetop to the end of originalBlock, along with
-   // any stores resulting from un-commoning of the nodes in the helper call tree so that it can be
-   // split into its own call block.
-   // Remove TreeTop for call node, and gather it and the treetops for stores that
-   // resulted from un-commoning in a TreeTop chain from tt to lastTTForCallBlock
+   // X. Save the GlRegDeps from the first split
+   TR::Node *origRegDeps = originalBlock->getExit()->getNode()->getFirstChild();
+   TR::Node *duplicateGlRegDeps = NULL;
 
+   if (origRegDeps)
+      {
+      duplicateGlRegDeps = TR::Node::create(origRegDeps, TR::GlRegDeps);
+
+      for (int32_t i=0; i < origRegDeps->getNumChildren(); ++i)
+         {
+         TR::Node * regDep = origRegDeps->getChild(i);
+
+         if (trace())
+          traceMsg(comp,"duplicateGlRegDeps add n%dn [%d] %s %s \n", regDep->getGlobalIndex(), i,
+                regDep->getOpCode().getName(), comp->getDebug()->getGlobalRegisterName(regDep->getGlobalRegisterNumber()));
+
+         if (regDep->getOpCodeValue() == TR::PassThrough)
+            {
+            TR::Node *orig = regDep;
+            regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
+            regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
+            regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
+            }
+
+         duplicateGlRegDeps->addChildren(&regDep, 1);
+         }
+      }
+
+   ///////////////////////////////////////
+   // X. Move the helper call node to the end of the originalBlock
    TR::TreeTop *originalBlockExit = originalBlock->getExit();
    if (tt->getNextTreeTop() != originalBlockExit)
       {
@@ -1403,11 +1464,11 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
       tt->join(originalBlockExit);
       }
 
-   printBlock("after moving the nodes originalBlock", originalBlock);
+   printBlock("after moving helper call to the end: originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 5. Split at the helper call node including the nullchk on value into its own block helperCallBlock
+   // X. (2) Split at the helper call node including the nullchk on value into its own block helperCallBlock
 
    // Insert NULLCHK for VT
    TR::TreeTop *ttForHelperCallBlock = tt;
@@ -1419,19 +1480,63 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
       ttForHelperCallBlock = tt->insertBefore(TR::TreeTop::create(comp, nullCheck));
       }
 
-   TR::Block *helperCallBlock = originalBlock->split(ttForHelperCallBlock, cfg);
-
-   helperCallBlock->setIsExtensionOfPreviousBlock(true);
+   TR::Block *helperCallBlock = originalBlock->splitPostGRA(ttForHelperCallBlock, cfg, true, NULL);
 
    if (trace())
       traceMsg(comp, "Isolated helper call node n%dn in block_%d\n", node->getGlobalIndex(), helperCallBlock->getNumber());
 
-   printBlock("original block after split the helper call", originalBlock);
-   printBlock("helperCallBlock", helperCallBlock);
+   printBlock("after split at helper call: helperCallBlock", helperCallBlock);
+   printBlock("after split at helper call: originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 6. Create the ificmpeq node that checks classFlags
+   // X. Move array element store to the end of the originalBlock
+   originalBlockExit = originalBlock->getExit();
+   if (arrayStoreCHKTT->getNextTreeTop() != originalBlockExit)
+      {
+      arrayStoreCHKTT->unlink(false);
+      originalBlockExit->getPrevTreeTop()->join(arrayStoreCHKTT);
+      arrayStoreCHKTT->join(originalBlockExit);
+      }
+
+   printBlock("after moving arrayStoreCHKTT the end: originalBlock", originalBlock);
+
+
+   ///////////////////////////////////////
+   // X. (3) Split at the regular array element store
+   TR::Block *arrayElementStoreBlock = originalBlock->split(arrayStoreCHKTT, cfg);
+
+   arrayElementStoreBlock->setIsExtensionOfPreviousBlock(true);
+
+   if (trace())
+      traceMsg(comp, "Isolated array element store node n%dn in block_%d\n", arrayStoreCHKTT->getNode()->getGlobalIndex(), arrayElementStoreBlock->getNumber());
+
+   printBlock("after split array element store node: arrayElementStoreBlock", arrayElementStoreBlock);
+   printBlock("after split array element store node: originalBlock", originalBlock);
+
+   arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(TR::PassThrough, 1, anchoredArrayBaseAddressNode), comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
+
+   printBlock("after insert NULLCHK: arrayElementStoreBlock", arrayElementStoreBlock);
+
+   int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
+   if (comp->useCompressedPointers())
+      dataWidth = TR::Compiler->om.sizeofReferenceField();
+
+   TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
+   arraylengthNode->setArrayStride(dataWidth);
+   arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+
+   printBlock("after insert BNDCHK: arrayElementStoreBlock", arrayElementStoreBlock);
+
+   if (comp->useCompressedPointers())
+      {
+      arrayStoreCHKTT->insertAfter(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementStoreNode)));
+      printBlock("after insert compressedRefs: arrayElementStoreBlock", arrayElementStoreBlock);
+      }
+
+
+   ///////////////////////////////////////
+   // X. Create the ificmpne node that checks classFlags
    TR::SymbolReference *vftSymRef = comp->getSymRefTab()->findOrCreateVftSymbolRef();
    TR::SymbolReference *arrayCompSymRef = comp->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef();
    TR::SymbolReference *classFlagsSymRef = comp->getSymRefTab()->findOrCreateClassFlagsSymbolRef();
@@ -1442,10 +1547,10 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
    TR::Node *isValueTypeNode = TR::Node::create(node, TR::iand, 2, loadClassFlags, TR::Node::iconst(node, J9ClassIsValueType));
 
    // The branch destination will be set up later when the regular array element store block is created
-   TR::Node *ifNode = TR::Node::createif(TR::ificmpeq, isValueTypeNode, TR::Node::iconst(node, 0));
+   TR::Node *ifNode = TR::Node::createif(TR::ificmpne, isValueTypeNode, TR::Node::iconst(node, 0));
 
    // Copy register dependency to the ificmpeq node that's being appended to the current block
-   copyRegisterDependency(helperCallBlock->getExit()->getNode(), ifNode);
+   copyRegisterDependency(arrayElementStoreBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpeq node that checks classFlags to the original block
    originalBlock->append(TR::TreeTop::create(comp, ifNode));
@@ -1453,34 +1558,53 @@ TR::TreeLowering::lowerStoreArrayElement(TR::Node *node, TR::TreeTop *tt)
    if (trace())
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
 
-
-   ///////////////////////////////////////
-   // 7. Split after the regular array element store
-   printTT("Split at arrayStoreCHKTT->getNextTreeTop()", arrayStoreCHKTT->getNextTreeTop());
-
-   TR::Block *blockAfterArrayElementStore = blockAfterHelperCall->splitPostGRA(arrayStoreCHKTT->getNextTreeTop(), cfg, true, NULL);
-
-   if (trace())
-      traceMsg(comp, "Isolated node n%dn in block_%d\n", arrayStoreCHKTT->getNextTreeTop()->getNode()->getGlobalIndex(), blockAfterArrayElementStore->getNumber());
-
-   printBlock("blockAfterHelperCall", blockAfterHelperCall);
-   printBlock("blockAfterArrayElementStore", blockAfterArrayElementStore);
+   printBlock("after append ifNode: originalBlock", originalBlock);
 
 
    ///////////////////////////////////////
-   // 8. Set up the edges between the blocks
-   ifNode->setBranchDestination(blockAfterHelperCall->getEntry());
+   // Fix the register dependency after ifNode copying
+   if (duplicateGlRegDeps)
+      {
+      arrayElementStoreBlock->getExit()->getNode()->setNumChildren(1);
+      arrayElementStoreBlock->getExit()->getNode()->setChild(0, duplicateGlRegDeps);
+      }
+   else
+      {
+      arrayElementStoreBlock->getExit()->getNode()->setNumChildren(0);
+      }
 
-   // Add goto block from helper call to the block after the array element store block
-   TR::Node *gotoAfterHelperCallNode = TR::Node::create(helperCallBlock->getExit()->getNode(), TR::Goto, 0, blockAfterArrayElementStore->getEntry());
+   printBlock("after fixing register dependency: arrayElementStoreBlock", arrayElementStoreBlock);
 
-   copyRegisterDependency(helperCallBlock->getExit()->getNode(), gotoAfterHelperCallNode);
 
+   ///////////////////////////////////////
+   // X. Set up the edges between the blocks
+   ifNode->setBranchDestination(helperCallBlock->getEntry());
+
+   cfg->addEdge(originalBlock, helperCallBlock);
+
+   cfg->removeEdge(arrayElementStoreBlock, helperCallBlock);
+   cfg->addEdge(arrayElementStoreBlock, blockAfterHelperCall);
+
+   TR::TreeTop *lastTreeTop = comp->getMethodSymbol()->getLastTreeTop();
+   printTT("lastTreeTop", lastTreeTop);
+
+   // Force nodeIter to first TreeTop of next block so that
+   // moving callBlock won't cause problems while iterating
+   while (nodeIter.currentTree() != blockAfterHelperCall->getEntry())
+       ++nodeIter;
+
+   arrayElementStoreBlock->getExit()->join(blockAfterHelperCall->getEntry());
+
+   lastTreeTop->insertTreeTopsAfterMe(helperCallBlock->getEntry(), helperCallBlock->getExit());
+
+   // Add goto block from helper call to the block after the array element load block
+   TR::Node *gotoAfterHelperCallNode = TR::Node::create(helperCallBlock->getExit()->getNode(), TR::Goto, 0, blockAfterHelperCall->getEntry());
    helperCallBlock->append(TR::TreeTop::create(comp, gotoAfterHelperCallNode));
 
-   cfg->addEdge(originalBlock, blockAfterHelperCall);
-
-   cfg->removeEdge(helperCallBlock, blockAfterHelperCall);
-
-   cfg->addEdge(helperCallBlock, blockAfterArrayElementStore);
+   if (helperCallBlock->getExit()->getNode()->getNumChildren() > 0)
+      {
+      TR::Node* deps = helperCallBlock->getExit()->getNode()->getChild(0);
+      helperCallBlock->getExit()->getNode()->setNumChildren(0);
+      gotoAfterHelperCallNode->addChildren(&deps, 1);
+      }
    }
