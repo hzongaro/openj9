@@ -693,7 +693,7 @@ public:
 #undef SERIALIZABLE_NAME
 
 #if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
-#if JAVA_SPEC_VERSION >= 11
+#if JAVA_SPEC_VERSION >= 16
 		if( _classFileOracle->isUTF8AtIndexEqualToString(cpIndex, IDENTITY_OBJECT_NAME, sizeof(IDENTITY_OBJECT_NAME)) ) {
 			_wasIdentityInterfaceSeen = true;
 		}
