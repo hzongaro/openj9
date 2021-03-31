@@ -110,12 +110,7 @@ void
 TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, TR::Node* node, TR::TreeTop* tt)
    {
    TR::SymbolReferenceTable * symRefTab = comp()->getSymRefTab();
-
-#if 0
    static char *disableInliningCheckAastore = feGetEnv("TR_DisableVT_AASTORE_Inlining");
-#else
-   static char *enableInliningCheckAastore = feGetEnv("TR_EnableInliningCheckAastore");
-#endif
 
    if (node->getOpCode().isCall())
       {
@@ -131,15 +126,9 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_ldFlattenableArrayElement)
          {
-#if 0
          static char *disableInliningCheckAaload = feGetEnv("TR_DisableVT_AALOAD_Inlining");
 
          if (!disableInliningCheckAaload)
-#else
-         static char *enableInliningCheckAaload = feGetEnv("TR_EnableInliningCheckAaload");
-
-         if (enableInliningCheckAaload)
-#endif
             {
             const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/inlinecheck/aaload/(%s)/bc=%d",
                                                             comp()->signature(), node->getByteCodeIndex());
@@ -150,11 +139,7 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_strFlattenableArrayElement)
          {
-#if 0
          if (!disableInliningCheckAastore)
-#else
-         if (enableInliningCheckAastore)
-#endif
             {
             const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/inlinecheck/aastore/(%s)/bc=%d",
                                                             comp()->signature(), node->getByteCodeIndex());
@@ -164,11 +149,7 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
             }
          }
       }
-#if 0
    else if (node->getOpCodeValue() == TR::ArrayStoreCHK && disableInliningCheckAastore)
-#else
-   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && !enableInliningCheckAastore)
-#endif
       {
       lowerArrayStoreCHK(node, tt);
       }
