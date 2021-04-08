@@ -1599,6 +1599,17 @@ J9::ValuePropagation::doDelayedTransformations()
       indexNode->decReferenceCount();
       arrayRefNode->decReferenceCount();
 
+      const int32_t width = comp()->useCompressedPointers() ? TR::Compiler->om.sizeofReferenceField()
+                                                            : TR::Symbol::convertTypeToSize(TR::Address);
+
+      TR::Node *arrayLengthNode = TR::Node::create(callNode, TR::arraylength, 1, arrayRefNode);
+      arrayLengthNode->setArrayStride(width);
+
+      TR::Node *bndChkNode = TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arrayLengthNode, indexNode,
+                                          comp()->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp()->getMethodSymbol()));
+
+      callTree->insertBefore(TR::TreeTop::create(comp(), bndChkNode));
+
       TR::SymbolReference *elementSymRef = comp()->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, arrayRefNode);
 
       if (isLoad)
