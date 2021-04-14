@@ -614,11 +614,11 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
 
 if (comp->getOption(TR_TraceLocalValuePropagation) || comp->getOption(TR_TraceGlobalValuePropagation))
 {
-traceMsg(comp(), "  In isValue - VPResolvedClass is [%p]\n", type);
+traceMsg(comp, "  In isValue - VPResolvedClass is [%p]\n", type);
 TR_ASSERT_FATAL(type != 0, "type was null\n");
 TR_ASSERT_FATAL(clazz != 0, "clazz was null\n");
 TR_ASSERT_FATAL(clazz != -1, "clazz was -1\n");
-traceMsg(comp(), "  In isValue - type->getClass() is [%p]\n", clazz);
+traceMsg(comp, "  In isValue - type->getClass() is [%p]\n", clazz);
 }
    if (clazz == comp->getObjectClassPointer())
       {
