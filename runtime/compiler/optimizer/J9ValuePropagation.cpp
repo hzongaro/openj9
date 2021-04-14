@@ -612,7 +612,7 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    TR::Compilation *comp = TR::comp();
    TR_OpaqueClassBlock *clazz = type->getClass();
 
-if (trace())
+if (comp->getOption(TR_TraceLocalValuePropagation) || comp->getOption(TR_TraceGlobalValuePropagation))
 {
 traceMsg(comp(), "  In isValue - VPResolvedClass is [%p]\n", type);
 TR_ASSERT_FATAL(type != 0, "type was null\n");
