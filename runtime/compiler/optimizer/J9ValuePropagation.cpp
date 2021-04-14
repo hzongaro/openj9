@@ -605,13 +605,21 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
       {
       return TR_maybe;
       }
-
    // Check for a type of java/lang/Object.  If the type is fixed to
    // that class, it's not a value type; if it's not fixed, it could
    // any subtype of java/lang/Object, which includes all value types
    //
    TR::Compilation *comp = TR::comp();
    TR_OpaqueClassBlock *clazz = type->getClass();
+
+if (trace())
+{
+traceMsg(comp(), "  In isValue - VPResolvedClass is [%p]\n", type);
+TR_ASSERT_FATAL(type != 0, "type was null\n");
+TR_ASSERT_FATAL(clazz != 0, "clazz was null\n");
+TR_ASSERT_FATAL(clazz != -1, "clazz was -1\n");
+traceMsg(comp(), "  In isValue - type->getClass() is [%p]\n", clazz);
+}
    if (clazz == comp->getObjectClassPointer())
       {
       return type->isFixedClass() ? TR_no : TR_maybe;
@@ -667,7 +675,17 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::VPConstraint *lhs = getConstraint(lhsNode, lhsGlobal);
       TR::VPConstraint *rhs = getConstraint(rhsNode, rhsGlobal);
 
+if (trace())
+{
+traceMsg(comp(), "Calling isValue for LHS node n%un [%p]\n", lhsNode);
+}
+
       const TR_YesNoMaybe isLhsValue = isValue(lhs);
+
+if (trace())
+{
+traceMsg(comp(), "Calling isValue for RHS node n%un [%p]\n", lhsNode);
+}
       const TR_YesNoMaybe isRhsValue = isValue(rhs);
       const bool areSameRef = getValueNumber(lhsNode) == getValueNumber(rhsNode)
         || lhs != NULL && rhs != NULL && lhs->mustBeEqual(rhs, this);
