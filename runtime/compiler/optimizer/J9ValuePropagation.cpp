@@ -612,6 +612,7 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    //
    TR::Compilation *comp = TR::comp();
    TR_OpaqueClassBlock *clazz = type->getClass();
+
    if (clazz == comp->getObjectClassPointer())
       {
       return type->isFixedClass() ? TR_no : TR_maybe;
@@ -634,11 +635,7 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
       return TR_maybe;
       }
 
-   // No AOT validation is necessary here, since whether a class is a value
-   // type is determined by its ROM class.
-   J9Class *j9class = reinterpret_cast<J9Class*>(clazz);
-   bool val = J9_ARE_ANY_BITS_SET(j9class->classFlags, J9ClassIsValueType);
-   return val ? TR_yes : TR_no;
+   return TR::Compiler->cls.isValueTypeClass(clazz) ? TR_yes : TR_no;
    }
 
 void
