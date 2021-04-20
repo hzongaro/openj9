@@ -115,6 +115,8 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
       {
       if (symRefTab->isNonHelper(node->getSymbolReference(), TR::SymbolReferenceTable::objectEqualityComparisonSymbol))
          {
+         // turn the non-helper call into a VM helper call
+         node->setSymbolReference(symRefTab->findOrCreateAcmpHelperSymbolRef());
          fastpathAcmpHelper(nodeIter, node, tt);
          }
       else if (node->getSymbolReference()->getReferenceNumber() == TR_ldFlattenableArrayElement)
@@ -133,10 +135,6 @@ TR::TreeLowering::lowerValueTypeOperations(TR::PreorderNodeIterator& nodeIter, T
 
          lowerStoreArrayElement(node, tt);
          }
-      }
-   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && !enableInliningCheckAastore)
-      {
-      lowerArrayStoreCHK(node, tt);
       }
    }
 
@@ -577,7 +575,7 @@ TR::TreeLowering::fastpathAcmpHelper(TR::PreorderNodeIterator& nodeIter, TR::Nod
    // Move exit GlRegDeps in callBlock.
    // The correct dependencies should have been inserted by splitPostGRA,
    // so they just need to be moved from the BBEnd to the Goto.
-   if (callBlock->getEntry()->getNode()->getNumChildren() > 0)
+   if (callBlock->getExit()->getNode()->getNumChildren() > 0)
       {
       auto* const bbEnd = callBlock->getExit()->getNode();
       auto* glRegDeps = bbEnd->getChild(0);
