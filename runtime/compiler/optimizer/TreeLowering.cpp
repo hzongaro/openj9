@@ -354,6 +354,9 @@ class AcmpTransformer: public TR::TreeLowering::Transformer
 void
 AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    {
+   static char *skipEqualityFastPath = feGetEnv("TR_VT_ACMP_SkipEqualityFastPath");
+   static char *checkRHSNullFirst = feGetEnv("TR_VT_ACMP_CheckRHSNullBeforeLHS");
+
    TR::Compilation* comp = this->comp();
    TR::CFG* cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
@@ -369,8 +372,15 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
 
    // Anchor the call arguments just before the call. This ensures the values are
    // live before the call so that we can propagate their values in global registers if needed.
-   auto* const anchoredCallArg1TT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, node->getFirstChild()));
-   auto* const anchoredCallArg2TT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, node->getSecondChild()));
+   TR::Node *arg1 = checkRHSNullFirst ? node->getSecondChild() : node->getFirstChild();
+   TR::Node *arg2 = checkRHSNullFirst ? node->getFirstChild() : node->getSecondChild();
+
+   const char *firstArgName = checkRHSNullFirst ? "RHS" : "LHS";
+   const char *secondArgName = checkRHSNullFirst ? "LHS" : "RHS";
+
+   auto* const anchoredCallArg1TT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, arg1));
+   auto* const anchoredCallArg2TT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, arg2));
+
    if (trace())
       {
       traceMsg(comp, "Anchoring call arguments n%un and n%un under treetops n%un and n%un\n",
@@ -392,6 +402,18 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    // any stores resulting from un-commoning of the nodes in the helper call tree so that it can be
    // split into its own call block.
    moveNodeToEndOfBlock(callBlock, tt, node, false /* isAddress */);
+
+   // If the BBEnd of the block containing the call has a GlRegDeps node,
+   // a matching GlRegDeps node will be needed for all the branches. The
+   // fallthrough of the call block and the branch targets will be the
+   // same block. So, all register dependencies will be mostly the same.
+   // `exitGlRegDeps` is intended to point to the "reference" node used to
+   // create the GlRegDeps for each consecutive branch.
+   TR::Node* exitGlRegDeps = NULL;
+   if (callBlock->getExit()->getNode()->getNumChildren() > 0)
+      {
+      exitGlRegDeps = callBlock->getExit()->getNode()->getFirstChild();
+      }
 
    if (!performTransformation(comp, "%sInserting fastpath for lhs == rhs\n", optDetailString()))
       return;
@@ -428,29 +450,26 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       }
    else
       TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call has been turned into unexpected opcode\n");
-   tt->insertBefore(TR::TreeTop::create(comp, storeNode));
 
-   // If the BBEnd of the block containing the call has a GlRegDeps node,
-   // a matching GlRegDeps node will be needed for all the branches. The
-   // fallthrough of the call block and the branch targets will be the
-   // same block. So, all register dependencies will be mostly the same.
-   // `exitGlRegDeps` is intended to point to the "reference" node used to
-   // create the GlRegDeps for each consecutive branch.
-   TR::Node* exitGlRegDeps = NULL;
-   if (callBlock->getExit()->getNode()->getNumChildren() > 0)
-      {
-      exitGlRegDeps = callBlock->getExit()->getNode()->getFirstChild();
-      }
+if (!skipEqualityFastPath)
+{
+   tt->insertBefore(TR::TreeTop::create(comp, storeNode));
 
    // Insert fastpath for lhs == rhs (reference comparison), taking care to set the
    // proper register dependencies by copying them from the BBEnd of the call block
    // (through `exitGlRegDeps`) when needed.
    auto* ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, anchoredCallArg1TT->getNode()->getFirstChild(), anchoredCallArg2TT->getNode()->getFirstChild(), targetBlock->getEntry());
    exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreNode);
-   tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+   TR::TreeTop *ifTree = tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+
+   const char *eqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/ref-equality/acmp/(%s)/bc=%d",
+                                                               comp->signature(), ifacmpeqNode->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, eqCounterName, ifTree);
+
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
    if (trace())
       traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", ifacmpeqNode->getGlobalIndex(), callBlock->getNumber());
+}
 
    if (!performTransformation(comp, "%sInserting fastpath for lhs == NULL\n", optDetailString()))
       return;
@@ -476,6 +495,11 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
       regDepForStoreNode = NULL;
       tt->insertBefore(TR::TreeTop::create(comp, checkLhsNull));
+
+      const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/LHS-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
+                                                                  arg1->isNonNull(), comp->signature(), arg1->getByteCodeIndex());
+      TR::DebugCounter::prependDebugCounter(comp, firstNullTestCounterName, checkLHSNullTT);
+
       callBlock = splitForFastpath(callBlock, tt, targetBlock);
       if (trace())
          traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkLhsNull->getGlobalIndex(), callBlock->getNumber());
@@ -485,7 +509,6 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       if (trace())
          traceMsg(comp, "Skip fastpath for lhs == NULL because node n%un isNonNull\n", anchoredCallArg1TT->getNode()->getFirstChild()->getGlobalIndex());
       }
-
 
    if (!performTransformation(comp, "%sInserting fastpath for rhs == NULL\n", optDetailString()))
       return;
@@ -498,6 +521,11 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
       regDepForStoreNode = NULL;
       tt->insertBefore(TR::TreeTop::create(comp, checkRhsNull));
+
+      const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/RHS-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
+                                                                  arg2->isNonNull(), comp->signature(), arg2->getByteCodeIndex());
+      TR::DebugCounter::prependDebugCounter(comp, secondNullTestCounterName, checkRHSNullTT);
+
       callBlock = splitForFastpath(callBlock, tt, targetBlock);
       if (trace())
          traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkRhsNull->getGlobalIndex(), callBlock->getNumber());
@@ -521,6 +549,11 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
    regDepForStoreNode = NULL;
    tt->insertBefore(TR::TreeTop::create(comp, checkLhsIsVT));
+
+   const char *valueTypeTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/either-op-is-VT/acmp/(%s)/bc=%d",
+                                                               comp->signature(), isLhsValueType->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, valueTypeTestCounterName, checkLHSIsVTTT);
+
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
    if (trace())
       traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkLhsIsVT->getGlobalIndex(), callBlock->getNumber());
@@ -1083,7 +1116,12 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    copyRegisterDependency(arrayElementLoadBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpne node that checks classFlags to the original block
-   originalBlock->append(TR::TreeTop::create(comp, ifNode));
+   TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
+
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload/(%s)/bc=%d",
+                                                               comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
+
 
    if (enableTrace)
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
@@ -1405,7 +1443,12 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    copyRegisterDependency(arrayElementStoreBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpne node that checks classFlags to the original block
-   originalBlock->append(TR::TreeTop::create(comp, ifNode));
+   TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
+
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore/(%s)/bc=%d",
+                                                               comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
+
 
    if (enableTrace)
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
