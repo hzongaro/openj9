@@ -357,7 +357,7 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    static char *skipEqualityFastPath = feGetEnv("TR_VT_ACMP_SkipEqualityFastPath");
    static char *checkRHSNullFirst = feGetEnv("TR_VT_ACMP_CheckRHSNullBeforeLHS");
 
-   TR::Compilation* comp = self()->comp();
+   TR::Compilation* comp = this->comp();
    TR::CFG* cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
 
@@ -1093,9 +1093,9 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // Append the ificmpne node that checks classFlags to the original block
    TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
-   const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload/(%s)/bc=%d",
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload/(%s)/bc=%d",
                                                                comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
-   TR::DebugCounter::prependDebugCounter(comp, counterName, ifTree);
+   TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
 
 
    if (enableTrace)
@@ -1420,9 +1420,9 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // Append the ificmpne node that checks classFlags to the original block
    TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
-   const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore/(%s)/bc=%d",
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore/(%s)/bc=%d",
                                                                comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
-   TR::DebugCounter::prependDebugCounter(comp, counterName, ifTree);
+   TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
 
 
    if (enableTrace)
