@@ -450,10 +450,11 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       }
    else
       TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call has been turned into unexpected opcode\n");
+
+if (!skipEqualityFastPath)
+{
    tt->insertBefore(TR::TreeTop::create(comp, storeNode));
 
-if (skipEqualityFastPath)
-{
    // Insert fastpath for lhs == rhs (reference comparison), taking care to set the
    // proper register dependencies by copying them from the BBEnd of the call block
    // (through `exitGlRegDeps`) when needed.
