@@ -507,7 +507,7 @@ if (!skipEqualityFastPath)
    copyBranchGlRegDepsAndSubstitute(checkRhsNull, exitGlRegDeps, NULL);
    TR::TreeTop *checkRHSNullTT = tt->insertBefore(TR::TreeTop::create(comp, checkRhsNull));
 
-   const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=/acmp/(%s)/bc=%d",
+   const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
                                                                secondArgName, arg2->isNonNull(), comp->signature(), arg2->getByteCodeIndex());
    TR::DebugCounter::prependDebugCounter(comp, secondNullTestCounterName, checkRHSNullTT);
 
