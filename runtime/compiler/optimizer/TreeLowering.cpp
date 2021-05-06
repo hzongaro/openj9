@@ -462,8 +462,9 @@ if (!skipEqualityFastPath)
    exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreNode);
    TR::TreeTop *ifTree = tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
 
-   const char *eqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/ref-equality/acmp/(%s)/bc=%d",
-                                                               comp->signature(), ifacmpeqNode->getByteCodeIndex());
+   //const char *eqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/ref-equality/acmp/(%s)/bc=%d",
+   //                                                            comp->signature(), ifacmpeqNode->getByteCodeIndex());
+   const char *eqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/ref-equality/acmp");
    TR::DebugCounter::prependDebugCounter(comp, eqCounterName, ifTree);
 
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
@@ -492,8 +493,10 @@ if (!skipEqualityFastPath)
    exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(checkLhsNull, exitGlRegDeps, regDepForStoreNode);
    TR::TreeTop *checkLHSNullTT = tt->insertBefore(TR::TreeTop::create(comp, checkLhsNull));
 
-   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
-                                                               firstArgName, arg1->isNonNull(), comp->signature(), arg1->getByteCodeIndex());
+   // const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
+   //                                                             firstArgName, arg1->isNonNull(), comp->signature(), arg1->getByteCodeIndex());
+   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp"
+                                                               firstArgName, arg1->isNonNull());
    TR::DebugCounter::prependDebugCounter(comp, firstNullTestCounterName, checkLHSNullTT);
 
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
@@ -507,8 +510,10 @@ if (!skipEqualityFastPath)
    copyBranchGlRegDepsAndSubstitute(checkRhsNull, exitGlRegDeps, NULL);
    TR::TreeTop *checkRHSNullTT = tt->insertBefore(TR::TreeTop::create(comp, checkRhsNull));
 
-   const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
-                                                               secondArgName, arg2->isNonNull(), comp->signature(), arg2->getByteCodeIndex());
+   // const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
+   //                                                             secondArgName, arg2->isNonNull(), comp->signature(), arg2->getByteCodeIndex());
+   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp"
+                                                               secondArgName, arg2->isNonNull());
    TR::DebugCounter::prependDebugCounter(comp, secondNullTestCounterName, checkRHSNullTT);
 
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
@@ -526,8 +531,9 @@ if (!skipEqualityFastPath)
    copyBranchGlRegDepsAndSubstitute(checkLhsIsVT, exitGlRegDeps, NULL);
    TR::TreeTop *checkLHSIsVTTT = tt->insertBefore(TR::TreeTop::create(comp, checkLhsIsVT));
 
-   const char *valueTypeTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/either-op-is-VT/acmp/(%s)/bc=%d",
-                                                               comp->signature(), isLhsValueType->getByteCodeIndex());
+   // const char *valueTypeTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/either-op-is-VT/acmp/(%s)/bc=%d",
+   //                                                             comp->signature(), isLhsValueType->getByteCodeIndex());
+   const char *valueTypeTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/either-op-is-VT/acmp");
    TR::DebugCounter::prependDebugCounter(comp, valueTypeTestCounterName, checkLHSIsVTTT);
 
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
@@ -1094,8 +1100,9 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // Append the ificmpne node that checks classFlags to the original block
    TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
-   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload/(%s)/bc=%d",
-                                                               comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   // const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload/(%s)/bc=%d",
+   //                                                             comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aaload");
    TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
 
 
@@ -1421,8 +1428,9 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // Append the ificmpne node that checks classFlags to the original block
    TR::TreeTop *ifTree = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
-   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore/(%s)/bc=%d",
-                                                               comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   // const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore/(%s)/bc=%d",
+   //                                                             comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+   const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/is-value-type/aastore");
    TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
 
 
