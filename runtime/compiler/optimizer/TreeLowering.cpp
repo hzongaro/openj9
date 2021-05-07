@@ -495,7 +495,7 @@ if (!skipEqualityFastPath)
 
    // const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
    //                                                             firstArgName, arg1->isNonNull(), comp->signature(), arg1->getByteCodeIndex());
-   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp"
+   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp",
                                                                firstArgName, arg1->isNonNull());
    TR::DebugCounter::prependDebugCounter(comp, firstNullTestCounterName, checkLHSNullTT);
 
@@ -512,7 +512,7 @@ if (!skipEqualityFastPath)
 
    // const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp/(%s)/bc=%d",
    //                                                             secondArgName, arg2->isNonNull(), comp->signature(), arg2->getByteCodeIndex());
-   const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp"
+   const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/%s-is-null/isNonNull=%d/acmp",
                                                                secondArgName, arg2->isNonNull());
    TR::DebugCounter::prependDebugCounter(comp, secondNullTestCounterName, checkRHSNullTT);
 
