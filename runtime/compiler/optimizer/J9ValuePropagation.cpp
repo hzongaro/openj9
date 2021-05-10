@@ -749,6 +749,8 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          return;
          }
 
+      static char *forceACMPVPXform = feGetEnv("TR_ACMPForceVPXform");
+
       bool lhsGlobal, rhsGlobal;
       TR::Node *lhsNode = node->getChild(0);
       TR::Node *rhsNode = node->getChild(1);
@@ -766,7 +768,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       // is definitely not an instance of a value type or if both operands
       // are definitely references to the same object
       //
-      if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef)
+      if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef || forceACMPVPXform)
          {
          if (performTransformation(
                comp(),
@@ -850,6 +852,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          return;
          }
 
+      static char *forceAALOADVPXform = feGetEnv("TR_AALOADForceVPXform");
+      static char *forceAASTORREVPXform = feGetEnv("TR_AASTORREForceVPXform");
+
       bool arrayRefGlobal;
       bool storeValueGlobal;
       const int storeValueOpIndex = isLoadFlattenableArrayElement ? -1 : 0;
@@ -873,10 +878,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 
       TR_YesNoMaybe isStoreValueVT = isStoreFlattenableArrayElement ? isValue(getConstraint(storeValueNode, storeValueGlobal), storeValueReason) : TR_maybe;
 
-      // If the array's component type is definitely not a value type, or if the value
-      // being assigned in an array store operation is definitely not a value type, add
-      // a delayed transformation to replace the helper call with inline code to
-      // perform the array element access.
+      // If the array's component type is definitely not a value type, add a delayed
+      // transformation to replace the helper call with inline code to perform the
+      // array element access
       //
       if ((arrayConstraint != NULL && isCompTypeVT == TR_no)
           || (isStoreFlattenableArrayElement && isStoreValueVT == TR_no))
