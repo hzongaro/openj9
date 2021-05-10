@@ -2720,7 +2720,9 @@ TR_J9ByteCodeIlGenerator::genIfTwoOperand(TR::ILOpCodes nodeop)
 int32_t
 TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled())
+   static char *disableAcmpHelper = feGetEnv("TR_DisableACMPHelperIlGen");
+
+   if (!TR::Compiler->om.areValueTypesEnabled() || disableAcmpHelper)
       return genIfTwoOperand(ifacmpOp);
 
    int32_t branchBC = _bcIndex + next2BytesSigned();
@@ -6040,12 +6042,14 @@ TR_J9ByteCodeIlGenerator::loadFromCallSiteTable(int32_t callSiteIndex)
 void
 TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes nodeop, bool checks)
    {
+   static char *disableAALOADHelper = feGetEnv("TR_DisableAALOADHelperIlGen");
+
    // Value types prototype for flattened array elements does not yet support
    // GC policies that allow arraylets.  If arraylets are required, assume
    // we won't have flattening, so no call to flattenable array element access
    // helper is needed.
    //
-   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
+   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address && !disableAALOADHelper)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
@@ -7505,6 +7509,8 @@ TR_J9ByteCodeIlGenerator::storeAuto(TR::DataType type, int32_t slot, bool isAdju
 void
 TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes nodeop, bool checks)
    {
+   static char *disableAASTOREHelper = feGetEnv("TR_DisableAASTOREHelperIlGen");
+
    TR::Node * value = pop();
 
    handlePendingPushSaveSideEffects(value);
@@ -7514,7 +7520,7 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
    // we won't have flattening, so no call to flattenable array element access
    // helper is needed.
    //
-   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
+   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address && !disableAASTOREHelper)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
