@@ -665,6 +665,8 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          return;
          }
 
+      static char *forceACMPVPXform = feGetEnv("TR_ACMPForceVPXform");
+
       bool lhsGlobal, rhsGlobal;
       TR::Node *lhsNode = node->getChild(0);
       TR::Node *rhsNode = node->getChild(1);
@@ -680,7 +682,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       // is definitely not an instance of a value type or if both operands
       // are definitely references to the same object
       //
-      if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef)
+      if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef || forceACMPVPXform)
          {
          if (performTransformation(
                comp(),
@@ -755,6 +757,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          return;
          }
 
+      static char *forceAALOADVPXform = feGetEnv("TR_AALOADForceVPXform");
+      static char *forceAASTORREVPXform = feGetEnv("TR_AASTORREForceVPXform");
+
       bool arrayRefGlobal;
       bool storeValueGlobal;
       const int storeValueOpIndex = isLoadFlattenableArrayElement ? -1 : 0;
@@ -766,6 +771,13 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::Node *storeValueNode = isStoreFlattenableArrayElement ? node->getChild(storeValueOpIndex) : NULL;
       TR::VPConstraint *arrayConstraint = getConstraint(arrayRefNode, arrayRefGlobal);
       TR_YesNoMaybe isCompTypeVT = isArrayCompTypeValueType(arrayConstraint);
+
+      // Should we force VP to think that array operations never involve value types?
+      if (forceAALOADVPXform && isLoadFlattenableArrayElement
+          || forceAASTORREVPXform && isStoreFlattenableArrayElement)
+         {
+         isCompTypeVT = TR_no;
+         }
 
       static char *enableCheckStoreElementValueIsVT = feGetEnv("TR_EnableCheckStoreElementValueIsVT");
       TR_YesNoMaybe isStoreValueVT = (enableCheckStoreElementValueIsVT && isStoreFlattenableArrayElement)
