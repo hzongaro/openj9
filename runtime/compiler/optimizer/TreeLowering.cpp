@@ -354,8 +354,8 @@ class AcmpTransformer: public TR::TreeLowering::Transformer
 void
 AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    {
-   static char *skipEqualityFastPath = feGetEnv("TR_VT_ACMP_SkipEqualityFastPath");
-   static char *checkRHSNullFirst = feGetEnv("TR_VT_ACMP_CheckRHSNullBeforeLHS");
+   static char *fastestPathOnly = feGetEnv("TR_ACMPFastestPathOnly");
+   static char *checkRHSNullFirst = NULL; // feGetEnv("TR_VT_ACMP_CheckRHSNullBeforeLHS");
 
    TR::Compilation* comp = this->comp();
    TR::CFG* cfg = comp->getFlowGraph();
@@ -363,6 +363,12 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
 
    if (!performTransformation(comp, "%sPreparing for post-GRA block split by anchoring helper call and arguments\n", optDetailString()))
       return;
+
+   if (fastestPathOnly)
+      {
+      TR::Node::recreate(node, TR::acmpeq);
+      return;
+      }
 
    // Anchor call node after split point to ensure the returned value goes into
    // either a temp or a global register.
@@ -451,8 +457,6 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    else
       TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call has been turned into unexpected opcode\n");
 
-if (!skipEqualityFastPath)
-{
    tt->insertBefore(TR::TreeTop::create(comp, storeNode));
 
    // Insert fastpath for lhs == rhs (reference comparison), taking care to set the
@@ -469,7 +473,6 @@ if (!skipEqualityFastPath)
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
    if (trace())
       traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", ifacmpeqNode->getGlobalIndex(), callBlock->getNumber());
-}
 
    if (!performTransformation(comp, "%sInserting fastpath for lhs == NULL\n", optDetailString()))
       return;
