@@ -665,6 +665,11 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          return;
          }
 
+      if (trace())
+         {
+         traceMsg(comp(), "Considering <objectEqualityComparison> non-helper call for node n%un [%p]\n", node->getGlobalIndex(), node);
+         }
+
       static char *forceACMPVPXform = feGetEnv("TR_ACMPForceVPXform");
 
       bool lhsGlobal, rhsGlobal;
@@ -677,6 +682,14 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       const TR_YesNoMaybe isRhsValue = isValue(rhs);
       const bool areSameRef = (getValueNumber(lhsNode) == getValueNumber(rhsNode))
                               || (lhs != NULL && rhs != NULL && lhs->mustBeEqual(rhs, this));
+
+      if (trace())
+         {
+         const char *lhsValue = (isLhsValue == TR_yes) ? "yes" : ((isLhsValue == TR_no) ? "no" : "maybe");
+         const char *rhsValue = (isRhsValue == TR_yes) ? "yes" : ((isRhsValue == TR_no) ? "no" : "maybe");
+
+         traceMsg(comp(), "  isLhsValue == %s; isRhsValue == %s; areSameRef == %d\n", lhsValue, rhsValue, areSameRef);
+         }
 
       // Non-helper equality comparison call is not needed if either operand
       // is definitely not an instance of a value type or if both operands
@@ -755,6 +768,11 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       if (!lastTimeThrough())
          {
          return;
+         }
+
+      if (trace())
+         {
+         traceMsg(comp(), "Considering jit%sFlattenableArrayElement call for node n%un [%p]\n", isLoadFlattenableArrayElement ? "Load" : "Store", node->getGlobalIndex(), node);
          }
 
       static char *forceAALOADVPXform = feGetEnv("TR_AALOADForceVPXform");
@@ -1550,8 +1568,18 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 TR_YesNoMaybe
 J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint)
    {
+   if (trace())
+      {
+      traceMsg(comp(), "In isArrayCompTypeValueType for constraint [%p]\n", arrayConstraint);
+      }
+
    if (!TR::Compiler->om.areValueTypesEnabled())
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Value types support is not enabled - isArrayCompTypeValueType == no\n");
+         }
+
       return TR_no;
       }
 
@@ -1563,6 +1591,22 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    if (!(arrayConstraint && arrayConstraint->getClass()
               && arrayConstraint->getClassType()->isArray() == TR_yes))
       {
+      if (trace())
+         {
+         if (!arrayConstraint)
+            {
+            traceMsg(comp(), "Array constraint is null - isArrayCompTypeValueType == maybe\n");
+            }
+         else if (!arrayConstraint->getClass())
+            {
+            traceMsg(comp(), "No class information for arrayConstraint - isArrayCompTypeValueType == maybe\n");
+            }
+         else
+            {
+            traceMsg(comp(), "arrayConstraint class information is not known to be an array type - isArrayCompTypeValueType == maybe\n");
+            }
+         }
+
       return TR_maybe;
       }
 
@@ -1595,21 +1639,41 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    //
    if (!arrayComponentClass)
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is not known - isArrayCompTypeValueType == maybe\n");
+         }
+
       return TR_maybe;
       }
 
    if (TR::Compiler->cls.isValueTypeClass(arrayComponentClass))
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is a value type - isArrayCompTypeValueType == yes\n");
+         }
+
       return TR_yes;
       }
 
    if (TR::Compiler->cls.isClassArray(comp(), arrayComponentClass))
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is an array type - isArrayCompTypeValueType == no\n");
+         }
+
       return TR_no;
       }
 
    if (!TR::Compiler->cls.isConcreteClass(comp(), arrayComponentClass))
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is not a concrete class - isArrayCompTypeValueType == maybe\n");
+         }
+
       return TR_maybe;
       }
 
@@ -1625,7 +1689,17 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    if (sig && sig[0] == '[' && len == 19
        && !strncmp(sig, "[Ljava/lang/Object;", 19))
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is java/lang/Object and isFixedClass() == %d - isArrayCompTypeValueType == %s\n", arrayConstraint->isFixedClass(), arrayConstraint->isFixedClass() ? "no" : "maybe");
+         }
+
       return (arrayConstraint->isFixedClass()) ? TR_no : TR_maybe;
+      }
+
+   if (trace())
+      {
+      traceMsg(comp(), "Array component class must be a concrete class other than [Ljava/lang/Object; - isArrayCompTypeValueType == no\n");
       }
 
    // If we get to this point, we know this is not an array of
