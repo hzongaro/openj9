@@ -1452,6 +1452,14 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
                                                                comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
    TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
 
+   // Count how frequently the value assigned to an array element is known to be null
+   if (valueNode->isNull())
+      {
+      const char *inlineCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/null-element-store/(%s)/bc=%d",
+                                                                  comp->signature(), anchoredArrayBaseAddressNode->getByteCodeIndex());
+      TR::DebugCounter::prependDebugCounter(comp, inlineCounterName, ifTree);
+      }
+
 
    if (enableTrace)
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
