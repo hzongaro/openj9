@@ -756,7 +756,8 @@ static const OptimizationStrategy cheapTacticalGlobalRegisterAllocatorOpts[] =
 
 J9::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *methodSymbol, bool isIlGen,
       const OptimizationStrategy *strategy, uint16_t VNType)
-   : OMR::Optimizer(comp, methodSymbol, isIlGen, strategy, VNType)
+   : OMR::Optimizer(comp, methodSymbol, isIlGen, strategy, VNType),
+     _VPXFormFailureReasons(comp->trMemory())
    {
    // initialize additional J9 optimizations
 
