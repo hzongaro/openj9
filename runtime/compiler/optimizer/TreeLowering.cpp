@@ -26,6 +26,7 @@
 #include "compile/SymbolReferenceTable.hpp"
 #include "il/Block.hpp"
 #include "il/Block_inlines.hpp"
+#include "infra/HashTab.hpp"
 #include "infra/ILWalk.hpp"
 #include "optimizer/J9TransformUtil.hpp"
 
@@ -457,7 +458,22 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    // (through `exitGlRegDeps`) when needed.
    auto* ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, anchoredCallArg1TT->getNode()->getFirstChild(), anchoredCallArg2TT->getNode()->getFirstChild(), targetBlock->getEntry());
    exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreNode);
-   tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+   TR::TreeTop *ifTree = tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+
+   const char *eqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/ref-equality/acmp/(%s)/bc=%d",
+                                                               comp->signature(), ifacmpeqNode->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, eqCounterName, ifTree);
+
+   const char *failureCounterName = NULL;
+
+   TR_HashId hashId = 0;
+   if (_treeLoweringOpt->optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashId))
+      {
+      failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
+      }
+
+   TR::DebugCounter::prependDebugCounter(comp, failureCounterName, ifTree);
+
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
    if (trace())
       traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", ifacmpeqNode->getGlobalIndex(), callBlock->getNumber());
@@ -485,7 +501,12 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(checkLhsNull, exitGlRegDeps, regDepForStoreNode);
       // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
       regDepForStoreNode = NULL;
-      tt->insertBefore(TR::TreeTop::create(comp, checkLhsNull));
+      TR::TreeTop *checkLHSNullTT = tt->insertBefore(TR::TreeTop::create(comp, checkLhsNull));
+
+      const char *firstNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/LHS-is-null/acmp/(%s)/bc=%d",
+                                                                  comp->signature(), checkLhsNull->getByteCodeIndex());
+      TR::DebugCounter::prependDebugCounter(comp, firstNullTestCounterName, checkLHSNullTT);
+
       callBlock = splitForFastpath(callBlock, tt, targetBlock);
       if (trace())
          traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkLhsNull->getGlobalIndex(), callBlock->getNumber());
@@ -507,7 +528,12 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(checkRhsNull, exitGlRegDeps, regDepForStoreNode);
       // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
       regDepForStoreNode = NULL;
-      tt->insertBefore(TR::TreeTop::create(comp, checkRhsNull));
+      TR::TreeTop *checkRHSNullTT = tt->insertBefore(TR::TreeTop::create(comp, checkRhsNull));
+
+      const char *secondNullTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/RHS-is-null/acmp/(%s)/bc=%d",
+                                                                  comp->signature(), checkRhsNull->getByteCodeIndex());
+      TR::DebugCounter::prependDebugCounter(comp, secondNullTestCounterName, checkRHSNullTT);
+
       callBlock = splitForFastpath(callBlock, tt, targetBlock);
       if (trace())
          traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkRhsNull->getGlobalIndex(), callBlock->getNumber());
@@ -530,7 +556,12 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(checkLhsIsVT, exitGlRegDeps, regDepForStoreNode);
    // Set regDepForStoreNode to NULL so that the subsequent calls to copyBranchGlRegDepsAndSubstitute do not need to substitute it.
    regDepForStoreNode = NULL;
-   tt->insertBefore(TR::TreeTop::create(comp, checkLhsIsVT));
+   TR::TreeTop *checkLHSIsVTTT = tt->insertBefore(TR::TreeTop::create(comp, checkLhsIsVT));
+
+   const char *valueTypeTestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inline-check/either-op-is-VT/acmp/(%s)/bc=%d",
+                                                               comp->signature(), isLhsValueType->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, valueTypeTestCounterName, checkLHSIsVTTT);
+
    callBlock = splitForFastpath(callBlock, tt, targetBlock);
    if (trace())
       traceMsg(comp, "Added check node n%un; call node is now in block_%d\n", checkLhsIsVT->getGlobalIndex(), callBlock->getNumber());
@@ -1016,6 +1047,16 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aaload/(%s)/bc=%d", comp->signature(), node->getByteCodeIndex());
    TR::DebugCounter::incStaticDebugCounter(comp, counterName);
 
+   const char *failureCounterName = NULL;
+
+   TR_HashId hashId = 0;
+   if (_treeLoweringOpt->optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashId))
+      {
+      failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
+      }
+
+   TR::DebugCounter::prependDebugCounter(comp, failureCounterName, tt);
+
    TR::CFG *cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
 
@@ -1354,6 +1395,16 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aastore/(%s)/bc=%d", comp->signature(), node->getByteCodeIndex());
    TR::DebugCounter::incStaticDebugCounter(comp, counterName);
+
+   const char *failureCounterName = NULL;
+
+   TR_HashId hashId = 0;
+   if (_treeLoweringOpt->optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashId))
+      {
+      failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
+      }
+
+   TR::DebugCounter::prependDebugCounter(comp, failureCounterName, tt);
 
    TR::CFG *cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
