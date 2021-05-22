@@ -567,13 +567,16 @@ bool J9::ValuePropagation::transformUnsafeCopyMemoryCall(TR::Node *arraycopyNode
  *          \c TR_no if it is definitely not a value type; or\n
  *          \c TR_maybe otherwise.
  */
-static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
+static TR_YesNoMaybe isValue(TR::VPConstraint *constraint, int &failureReason)
    {
+   failureReason = 0;
+
    // If there's no information is available about the class of the operand,
    // VP has to assume that it might be a value type
    //
    if (constraint == NULL)
       {
+      failureReason = J9::ValuePropagation::VPXformNoConstraint;
       return TR_maybe;
       }
 
@@ -597,12 +600,14 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    TR::VPClassType *maybeUnresolvedType = constraint->getClassType();
    if (maybeUnresolvedType == NULL)
       {
+      failureReason = J9::ValuePropagation::VPXformNoClassType;
       return TR_maybe;
       }
 
    TR::VPResolvedClass *type = maybeUnresolvedType->asResolvedClass();
    if (type == NULL)
       {
+      failureReason = J9::ValuePropagation::VPXformUnresolvedType;
       return TR_maybe;
       }
 
@@ -621,6 +626,11 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
 
    if (clazz == comp->getObjectClassPointer())
       {
+      if (!type->isFixedClass())
+         {
+         failureReason = J9::ValuePropagation::VPXformObjectClass;
+         }
+
       return type->isFixedClass() ? TR_no : TR_maybe;
       }
 
@@ -628,6 +638,14 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    // concrete class)?  If so, it might be a value type.
    if (!TR::Compiler->cls.isConcreteClass(comp, clazz))
       {
+      if (TR::Compiler->cls.isAbstractClass(comp, clazz))
+         {
+         failureReason = J9::ValuePropagation::VPXformAbstractClass;
+         }
+      else
+         {
+         failureReason = J9::ValuePropagation::VPXformInterfaceClass;
+         }
       return TR_maybe;
       }
 
@@ -649,6 +667,67 @@ static bool owningMethodDoesNotContainBoundChecks(OMR::ValuePropagation *vp, TR:
       return true;
    return false;
    }
+
+static const char *
+getReasonName(int reasonValue) {
+   const char *reasonStr = NULL;
+
+   switch (reasonValue)
+       {
+       case J9::ValuePropagation::VPXformSuccessful:
+          {
+          reasonStr = "successful";
+          break;
+          }
+       case J9::ValuePropagation::VPXformNoConstraint:
+          {
+          reasonStr = "no-constraint";
+          break;
+          }
+       case J9::ValuePropagation::VPXformNoClassType:
+          {
+          reasonStr = "no-class-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformNotArrayType:
+          {
+          reasonStr = "not-array-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformNoComponentClassType:
+          {
+          reasonStr = "no-component-class-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformUnresolvedType:
+          {
+          reasonStr = "unresolved-class-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformObjectClass:
+          {
+          reasonStr = "object-class-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformAbstractClass:
+          {
+          reasonStr = "abstract-class-type";
+          break;
+          }
+       case J9::ValuePropagation::VPXformInterfaceClass:
+          {
+          reasonStr = "interface-class-type";
+          break;
+          }
+        default:
+          {
+          reasonStr = "unknown";
+          break;
+          }
+       }
+
+   return reasonStr;
+}
 
 void
 J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
@@ -681,8 +760,10 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::VPConstraint *lhs = getConstraint(lhsNode, lhsGlobal);
       TR::VPConstraint *rhs = getConstraint(rhsNode, rhsGlobal);
 
-      const TR_YesNoMaybe isLhsValue = isValue(lhs);
-      const TR_YesNoMaybe isRhsValue = isValue(rhs);
+      int lhsReason = 0;
+      int rhsReason = 0;
+      const TR_YesNoMaybe isLhsValue = isValue(lhs, lhsReason);
+      const TR_YesNoMaybe isRhsValue = isValue(rhs, rhsReason);
       const bool areSameRef = (getValueNumber(lhsNode) == getValueNumber(rhsNode))
                               || (lhs != NULL && rhs != NULL && lhs->mustBeEqual(rhs, this));
 
@@ -726,8 +807,10 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          {
          // Construct static debug counter to note failure to take advantage of
          // any VP constraint to eliminate this equality comparison non-helper call
-         const char *reason = "unknown";
+         int overallReason = (lhsReason > rhsReason) ? lhsReason : rhsReason;
+         const char *reason = getReasonName(overallReason);
 
+#if 0
          if (lhs == NULL && rhs == NULL)
             {
             reason = "no-constraint";
@@ -740,13 +823,20 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             {
             reason = (isRhsValue == TR_maybe) ? "rhs-may-be-vt" : "rhs-is-vt";
             }
+#endif
 
-         const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/acmp/(%s)/%s/block_%d/%s",
-                                                        comp()->signature(),
+         const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/acmp/%s/%s/(%s)/bc=%d",
+                                                        reason,
                                                         comp()->getHotnessName(comp()->getMethodHotness()),
-                                                        _curTree->getEnclosingBlock()->getNumber(),
-                                                        reason);
+                                                        comp()->signature(),
+                                                        node->getByteCodeIndex());
          TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
+
+         TR_HashId hashIndex;
+         if (counterName && !optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashIndex))
+            {
+            optimizer()->_VPXFormFailureReasons.add(node->getGlobalIndex(), hashIndex, (void *)counterName);
+            }
          }
 
       return;
@@ -781,9 +871,18 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::Node *arrayRefNode = node->getChild(arrayRefOpIndex);
       TR::Node *storeValueNode = isStoreFlattenableArrayElement ? node->getChild(storeValueOpIndex) : NULL;
       TR::VPConstraint *arrayConstraint = getConstraint(arrayRefNode, arrayRefGlobal);
-      TR_YesNoMaybe isCompTypeVT = isArrayCompTypeValueType(arrayConstraint);
+      int reasonCode = 0;
+      int storeValueReason = 0;
+      TR_YesNoMaybe isCompTypeVT = isArrayCompTypeValueType(arrayConstraint, reasonCode);
 
-      TR_YesNoMaybe isStoreValueVT = isStoreFlattenableArrayElement ? isValue(getConstraint(storeValueNode, storeValueGlobal)) : TR_maybe;
+      // Should we force VP to think that array operations never involve value types?
+      if (forceAALOADVPXform && isLoadFlattenableArrayElement
+          || forceAASTORREVPXform && isStoreFlattenableArrayElement)
+         {
+         isCompTypeVT = TR_no;
+         }
+
+      TR_YesNoMaybe isStoreValueVT = isStoreFlattenableArrayElement ? isValue(getConstraint(storeValueNode, storeValueGlobal), storeValueReason) : TR_maybe;
 
       // If the array's component type is definitely not a value type, or if the value
       // being assigned in an array store operation is definitely not a value type, add
@@ -829,6 +928,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          // any VP constraint to eliminate this array element helper call
          const char *operationName = isLoadFlattenableArrayElement ? "aaload" : "aastore";
 
+#if 0
          const char *reason = "unknown";
 
          if (arrayConstraint == NULL)
@@ -843,13 +943,31 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             {
             reason = "comp-type-may-be-vt";
             }
+#endif
 
+         const char *reason = getReasonName((storeValueReason != 0) ? storeValueReason : reasonCode);
+
+         const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/%s/%s/%s/(%s)/bc=%d",
+                                                        operationName, reason,
+                                                        comp()->getHotnessName(comp()->getMethodHotness()),
+                                                        comp()->signature(),
+                                                        node->getByteCodeIndex());
+         TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
+
+         TR_HashId hashIndex;
+         if (counterName && !optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashIndex))
+            {
+            optimizer()->_VPXFormFailureReasons.add(node->getGlobalIndex(), hashIndex, (void *)counterName);
+            }
+
+#if 0
          const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vt-helper/vp-failed/%s/(%s)/%s/block_%d/%s",
                                                         operationName, comp()->signature(),
                                                         comp()->getHotnessName(comp()->getMethodHotness()),
                                                         _curTree->getEnclosingBlock()->getNumber(),
                                                         reason);
          TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
+#endif
          }
 
       // If there is information available about the component type of the array for a call to
@@ -1583,6 +1701,18 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 TR_YesNoMaybe
 J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint)
    {
+   int reasonCode = 0;
+   return isArrayCompTypeValueType(arrayConstraint, reasonCode);
+   }
+
+TR_YesNoMaybe
+J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint, int &reasonCode)
+   {
+   if (trace())
+      {
+      traceMsg(comp(), "In isArrayCompTypeValueType for constraint [%p]\n", arrayConstraint);
+      }
+
    if (!TR::Compiler->om.areValueTypesEnabled())
       {
       return TR_no;
@@ -1596,6 +1726,34 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    if (!(arrayConstraint && arrayConstraint->getClass()
               && arrayConstraint->getClassType()->isArray() == TR_yes))
       {
+      if (!arrayConstraint)
+         {
+         reasonCode = VPXformNoConstraint;
+
+         if (trace())
+            {
+            traceMsg(comp(), "Array constraint is null - isArrayCompTypeValueType == maybe\n");
+            }
+         }
+      else if (!arrayConstraint->getClass())
+         {
+         reasonCode = VPXformNoClassType;
+
+         if (trace())
+            {
+            traceMsg(comp(), "No class information for arrayConstraint - isArrayCompTypeValueType == maybe\n");
+            }
+         }
+      else
+         {
+         reasonCode = VPXformNotArrayType;
+
+         if (trace())
+            {
+            traceMsg(comp(), "arrayConstraint class information is not known to be an array type - isArrayCompTypeValueType == maybe\n");
+            }
+         }
+
       return TR_maybe;
       }
 
@@ -1615,6 +1773,13 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    //
    if (!arrayComponentClass)
       {
+      reasonCode = VPXformNoComponentClassType;
+
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is not known - isArrayCompTypeValueType == maybe\n");
+         }
+
       return TR_maybe;
       }
 
@@ -1631,6 +1796,20 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
 
    if (!TR::Compiler->cls.isConcreteClass(comp(), arrayComponentClass))
       {
+      if (TR::Compiler->cls.isAbstractClass(comp(), arrayComponentClass))
+         {
+         reasonCode = VPXformAbstractClass;
+         }
+      else
+         {
+         reasonCode = VPXformInterfaceClass;
+         }
+
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is not a concrete class - isArrayCompTypeValueType == maybe\n");
+         }
+
       return TR_maybe;
       }
 
@@ -1646,6 +1825,16 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
    if (sig && sig[0] == '[' && len == 19
        && !strncmp(sig, "[Ljava/lang/Object;", 19))
       {
+      if (trace())
+         {
+         traceMsg(comp(), "Array component class is java/lang/Object and isFixedClass() == %d - isArrayCompTypeValueType == %s\n", arrayConstraint->isFixedClass(), arrayConstraint->isFixedClass() ? "no" : "maybe");
+         }
+
+      if (!arrayConstraint->isFixedClass())
+         {
+         reasonCode = VPXformObjectClass;
+         }
+
       return (arrayConstraint->isFixedClass()) ? TR_no : TR_maybe;
       }
 

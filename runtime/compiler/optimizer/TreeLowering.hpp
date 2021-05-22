@@ -124,7 +124,7 @@ class TreeLowering : public TR::Optimization
        */
       TR::Block* splitForFastpath(TR::Block* const block, TR::TreeTop* const splitPoint, TR::Block* const targetBlock);
 
-      private:
+      protected:
       TR::Compilation* _comp;
       TR::TreeLowering* _treeLoweringOpt;
       };
