@@ -36,6 +36,7 @@ namespace J9 { typedef J9::Optimizer OptimizerConnector; }
 
 #include <stddef.h>
 #include <stdint.h>
+#include "infra/HashTab.hpp"
 
 namespace TR { class Compilation; }
 namespace TR { class Optimizer; }
@@ -62,6 +63,8 @@ class Optimizer : public OMR::OptimizerConnector
 
    static const OptimizationStrategy *optimizationStrategy(TR::Compilation *c);
    static ValueNumberInfoBuildType valueNumberInfoBuildType();
+
+   TR_HashTabInt _VPXFormFailureReasons;
 
    private:
 

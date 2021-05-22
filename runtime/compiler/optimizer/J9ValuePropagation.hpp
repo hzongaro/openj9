@@ -68,6 +68,7 @@ class ValuePropagation : public OMR::ValuePropagation
     *          \c TR_maybe otherwise.
     */
    virtual TR_YesNoMaybe isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint);
+   TR_YesNoMaybe isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint, int &reasonCode);
 
    virtual void getParmValues();
 
@@ -155,6 +156,23 @@ class ValuePropagation : public OMR::ValuePropagation
          Unused1            = 0x80,
          };
    };
+
+   public:
+
+   enum
+      {
+      VPXformSuccessful = 0,
+      VPXformNoConstraint,
+      VPXformNoClassType,
+      VPXformNotArrayType,
+      VPXformNoComponentClassType,
+      VPXformUnresolvedType,
+      VPXformObjectClass,
+      VPXformAbstractClass,
+      VPXformInterfaceClass,
+      };
+
+   private:
 
    List<ValueTypesHelperCallTransform> _valueTypesHelperCallsToBeFolded;
    };
