@@ -992,8 +992,10 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       {
       case TR::java_util_ArrayList_grow:
          {
+         static char *recognizeArrayListThings = feGetEnv("TR_VPRecognizeArrayList");
+
          // Only constrain the call in the last run of vp to avoid adding the candidate twice if the call is inside a loop
-         if (!lastTimeThrough())
+         if (!lastTimeThrough() || !recognizeArrayListThings)
             {
             return;
             }
