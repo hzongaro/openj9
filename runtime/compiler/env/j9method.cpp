@@ -2070,6 +2070,8 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_util_ArrayList_add,      "add",     "(Ljava/lang/Object;)Z")},
       {x(TR::java_util_ArrayList_ensureCapacity,      "ensureCapacity",      "(I)V")},
       {x(TR::java_util_ArrayList_get,      "get",     "(I)Ljava/lang/Object;")},
+      {x(TR::java_util_ArrayList_grow,     "grow",    "()[Ljava/lang/Object;")},
+      {x(TR::java_util_ArrayList_grow,     "grow",    "(I)[Ljava/lang/Object;")},
       {x(TR::java_util_ArrayList_remove,   "remove",  "(I)Ljava/lang/Object;")},
       {x(TR::java_util_ArrayList_set,      "set",     "(ILjava/lang/Object;)Ljava/lang/Object;")},
       {  TR::unknownMethod}

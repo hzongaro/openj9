@@ -44,6 +44,7 @@
    java_util_ArrayList_add,
    java_util_ArrayList_ensureCapacity,
    java_util_ArrayList_get,
+   java_util_ArrayList_grow,
    java_util_ArrayList_remove,
    java_util_ArrayList_set,
    java_lang_Character_isDigit,
