@@ -471,6 +471,10 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       {
       failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
       }
+   else
+      {
+      failureCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/vp-failed/acmp/unknown/%s/(%s)/bc=%d", comp->getHotnessName(comp->getMethodHotness()), comp->signature(), node->getByteCodeIndex());
+      }
 
    TR::DebugCounter::prependDebugCounter(comp, failureCounterName, ifTree);
 
@@ -1054,6 +1058,10 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       {
       failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
       }
+   else
+      {
+      failureCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/vp-failed/aaload/unknown/%s/(%s)/bc=%d", comp->getHotnessName(comp->getMethodHotness()), comp->signature(), node->getByteCodeIndex());
+      }
 
    TR::DebugCounter::prependDebugCounter(comp, failureCounterName, tt);
 
@@ -1402,6 +1410,10 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    if (_treeLoweringOpt->optimizer()->_VPXFormFailureReasons.locate(node->getGlobalIndex(), hashId))
       {
       failureCounterName = (const char *) _treeLoweringOpt->optimizer()->_VPXFormFailureReasons.getData(hashId);
+      }
+   else
+      {
+      failureCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/vp-failed/aastore/unknown/%s/(%s)/bc=%d", comp->getHotnessName(comp->getMethodHotness()), comp->signature(), node->getByteCodeIndex());
       }
 
    TR::DebugCounter::prependDebugCounter(comp, failureCounterName, tt);
