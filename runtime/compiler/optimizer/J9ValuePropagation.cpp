@@ -649,8 +649,15 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint, int &failureReason)
    //
    if (!TR::Compiler->cls.isConcreteClass(comp, clazz))
       {
+      static char *treatAbstractAsIdentity = feGetEnv("TR_VPTreatAbstractAsIdentityObject");
+
       if (TR::Compiler->cls.isAbstractClass(comp, clazz))
          {
+         if (treatAbstractAsIdentity)
+            {
+            return TR_no;
+            }
+
          failureReason = J9::ValuePropagation::VPXformAbstractClass;
          }
       else
@@ -1820,8 +1827,20 @@ J9::ValuePropagation::isArrayCompTypeValueType(TR::VPConstraint *arrayConstraint
 
    if (!TR::Compiler->cls.isConcreteClass(comp(), arrayComponentClass))
       {
+      static char *treatAbstractAsIdentity = feGetEnv("TR_VPTreatAbstractAsIdentityObject");
+
       if (TR::Compiler->cls.isAbstractClass(comp(), arrayComponentClass))
          {
+         if (treatAbstractAsIdentity)
+            {
+            if (trace())
+               {
+               traceMsg(comp(), "Array component class is an abstract type - treating as IdentityObject and setting isArrayCompTypeValueType == no\n");
+               }
+
+            return TR_no;
+            }
+
          reasonCode = VPXformAbstractClass;
          }
       else
