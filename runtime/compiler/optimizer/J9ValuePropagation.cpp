@@ -756,19 +756,26 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          }
 
       bool arrayRefGlobal;
+      bool storeValueGlobal;
+      const int storeValueOpIndex = isLoadFlattenableArrayElement ? -1 : 0;
       const int elementIndexOpIndex = isLoadFlattenableArrayElement ? 0 : 1;
       const int arrayRefOpIndex = elementIndexOpIndex+1;
 
       TR::Node *indexNode = node->getChild(elementIndexOpIndex);
       TR::Node *arrayRefNode = node->getChild(arrayRefOpIndex);
+      TR::Node *storeValueNode = isStoreFlattenableArrayElement ? node->getChild(storeValueOpIndex) : NULL;
       TR::VPConstraint *arrayConstraint = getConstraint(arrayRefNode, arrayRefGlobal);
       TR_YesNoMaybe isCompTypeVT = isArrayCompTypeValueType(arrayConstraint);
+
+      static char *disableCheckStoreElementValueIsVT = feGetEnv("TR_DisableCheckStoreElementValueIsVT");
+      TR_YesNoMaybe isStoreValueVT = (!disableCheckStoreElementValueIsVT && isStoreFlattenableArrayElement) ? isValue(getConstraint(storeValueNode, storeValueGlobal)) : TR_maybe;
 
       // If the array's component type is definitely not a value type, add a delayed
       // transformation to replace the helper call with inline code to perform the
       // array element access
       //
-      if (arrayConstraint != NULL && isCompTypeVT == TR_no)
+      if ((arrayConstraint != NULL && isCompTypeVT == TR_no)
+          || (isStoreFlattenableArrayElement && isStoreValueVT == TR_no))
          {
          flags8_t flagsForTransform = (isLoadFlattenableArrayElement ? ValueTypesHelperCallTransform::IsArrayLoad
                                                                      : (ValueTypesHelperCallTransform::IsArrayStore

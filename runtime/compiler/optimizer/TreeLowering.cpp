@@ -1467,6 +1467,7 @@ TR::TreeLowering::lowerValueTypeOperations(TransformationManager& transformation
    {
    TR::SymbolReferenceTable * symRefTab = comp()->getSymRefTab();
    static char *disableInliningCheckAastore = feGetEnv("TR_DisableVT_AASTORE_Inlining");
+   static char *disableCheckStoreElementValueIsVT = feGetEnv("TR_DisableCheckStoreElementValueIsVT");
 
    if (node->getOpCode().isCall())
       {
@@ -1506,7 +1507,7 @@ TR::TreeLowering::lowerValueTypeOperations(TransformationManager& transformation
       }
    // If inlining check for aastore is enabled, the NULLCHK on the value reference is
    // taken care of by StoreArrayElementTransformer.
-   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && disableInliningCheckAastore)
+   else if (node->getOpCodeValue() == TR::ArrayStoreCHK && (disableInliningCheckAastore || !disableCheckStoreElementValueIsVT))
       {
       transformations.addTransformation(getTransformer<ArrayStoreCHKTransformer>(), node, tt);
       }
