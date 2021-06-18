@@ -645,6 +645,14 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
    return TR::Compiler->cls.isValueTypeClass(clazz) ? TR_yes : TR_no;
    }
 
+static bool owningMethodDoesNotContainStoreChecks(OMR::ValuePropagation *vp, TR::Node *node)
+   {
+   TR::ResolvedMethodSymbol *method = node->getSymbolReference()->getOwningMethodSymbol(vp->comp());
+   if (method && method->skipArrayStoreChecks())
+      return true;
+   return false;
+   }
+
 void
 J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
    {
@@ -770,10 +778,16 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       //
       if (arrayConstraint != NULL && isCompTypeVT == TR_no)
          {
-         flags8_t flagsForTransform = (isLoadFlattenableArrayElement ? ValueTypesHelperCallTransform::IsArrayLoad
-                                                                     : (ValueTypesHelperCallTransform::IsArrayStore
-                                                                        | ValueTypesHelperCallTransform::RequiresStoreCheck))
-                                      | ValueTypesHelperCallTransform::InsertDebugCounter;
+         flags8_t flagsForTransform(isLoadFlattenableArrayElement ? ValueTypesHelperCallTransform::IsArrayLoad
+                                                                  : ValueTypesHelperCallTransform::IsArrayStore);
+         flagsForTransform.set(ValueTypesHelperCallTransform::InsertDebugCounter);
+
+         static char *enableVTCheckOwningMethodSkipsStoreChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
+
+         if (isStoreFlattenableArrayElement && (!enableVTCheckOwningMethodSkipsStoreChecks || !owningMethodDoesNotContainStoreChecks(this, node)))
+            {
+            flagsForTransform.set(ValueTypesHelperCallTransform::RequiresStoreCheck);
+            }
 
          _valueTypesHelperCallsToBeFolded.add(
                new (trStackMemory()) ValueTypesHelperCallTransform(_curTree, node, flagsForTransform));
