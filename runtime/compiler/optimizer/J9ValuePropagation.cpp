@@ -647,7 +647,7 @@ static TR_YesNoMaybe isValue(TR::VPConstraint *constraint)
 
 static bool owningMethodDoesNotContainStoreChecks(OMR::ValuePropagation *vp, TR::Node *node)
    {
-   TR::ResolvedMethodSymbol *method = node->getSymbolReference()->getOwningMethodSymbol(vp->comp());
+   TR::ResolvedMethodSymbol *method = vp->comp()->getOwningMethodSymbol(node->getOwningMethod());
    if (method && method->skipArrayStoreChecks())
       return true;
    return false;
