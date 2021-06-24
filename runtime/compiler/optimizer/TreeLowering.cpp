@@ -43,6 +43,11 @@ TR::TreeLowering::perform()
       return 0;
       }
 
+   if (trace())
+      {
+      comp()->dumpMethodTrees("Trees before Tree Lowering Optimization");
+      }
+
    TransformationManager transformations(comp()->region());
 
    TR::ResolvedMethodSymbol* methodSymbol = comp()->getMethodSymbol();
@@ -56,6 +61,10 @@ TR::TreeLowering::perform()
 
    transformations.doTransformations();
 
+   if (trace())
+      {
+      comp()->dumpMethodTrees("Trees after Tree Lowering Optimization");
+      }
    return 0;
    }
 
@@ -354,21 +363,12 @@ class AcmpTransformer: public TR::TreeLowering::Transformer
 void
 AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    {
-   static char *fastestPathOnly = feGetEnv("TR_ACMPFastestPathOnly");
-   static char *checkRHSNullFirst = NULL; // feGetEnv("TR_VT_ACMP_CheckRHSNullBeforeLHS");
-
    TR::Compilation* comp = this->comp();
    TR::CFG* cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
 
    if (!performTransformation(comp, "%sPreparing for post-GRA block split by anchoring helper call and arguments\n", optDetailString()))
       return;
-
-   if (fastestPathOnly)
-      {
-      TR::Node::recreate(node, TR::acmpeq);
-      return;
-      }
 
    // Anchor call node after split point to ensure the returned value goes into
    // either a temp or a global register.
@@ -437,7 +437,6 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       }
    else
       TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored call has been turned into unexpected opcode\n");
-
    tt->insertBefore(TR::TreeTop::create(comp, storeNode));
 
    // If the BBEnd of the block containing the call has a GlRegDeps node,
@@ -859,6 +858,14 @@ class LoadArrayElementTransformer: public TR::TreeLowering::Transformer
    void lower(TR::Node* const node, TR::TreeTop* const tt);
    };
 
+static bool skipBoundChecks(TR::Compilation *comp, TR::Node *node)
+   {
+   TR::ResolvedMethodSymbol *method = comp->getOwningMethodSymbol(node->getOwningMethod());
+   if (method && method->skipBoundChecks())
+      return true;
+   return false;
+   }
+
 /*
  * LoadArrayElementTransformer transforms the block that contains the jitLoadFlattenableArrayElement helper call into three blocks:
  *   1. The merge block (blockAfterHelperCall) that contains the tree tops after the helper call
@@ -1079,8 +1086,11 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    arraylengthNode->setArrayStride(dataWidth);
 
    //ILGen for array element load already generates a NULLCHK
+   static char *enableVTCheckOwningMethodSkipsBoundChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
+   bool addBoundCheck = enableVTCheckOwningMethodSkipsBoundChecks ? !skipBoundChecks(comp, node) : true;
 
-   elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+   if (addBoundCheck)
+      elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
 
 
    ///////////////////////////////////////
@@ -1166,6 +1176,14 @@ class StoreArrayElementTransformer: public TR::TreeLowering::Transformer
 
    void lower(TR::Node* const node, TR::TreeTop* const tt);
    };
+
+static bool skipArrayStoreChecks(TR::Compilation *comp, TR::Node *node)
+   {
+   TR::ResolvedMethodSymbol *method = comp->getOwningMethodSymbol(node->getOwningMethod());
+   if (method && method->skipArrayStoreChecks())
+      return true;
+   return false;
+   }
 
 /*
  * StoreArrayElementTransformer transforms the block that contains the jitStoreFlattenableArrayElement helper call into three blocks:
@@ -1365,15 +1383,27 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, anchoredArrayBaseAddressNode);
    TR::Node *elementStoreNode = TR::Node::createWithSymRef(TR::awrtbari, 3, 3, elementAddress, anchoredValueNode, anchoredArrayBaseAddressNode, elementSymRef);
 
-   TR::SymbolReference *arrayStoreCHKSymRef = comp->getSymRefTab()->findOrCreateTypeCheckArrayStoreSymbolRef(comp->getMethodSymbol());
-   TR::Node *arrayStoreCHKNode = TR::Node::createWithRoomForThree(TR::ArrayStoreCHK, elementStoreNode, 0, arrayStoreCHKSymRef);
-   arrayStoreCHKNode->copyByteCodeInfo(node);
+   static char *enableVTCheckOwningMethodSkipsStoreChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
+   bool addArrayStoreCheck = enableVTCheckOwningMethodSkipsStoreChecks ? !skipArrayStoreChecks(comp, node) : true;
 
-   TR::TreeTop *arrayStoreCHKTT = originalBlock->append(TR::TreeTop::create(comp, arrayStoreCHKNode));
-
-   if (enableTrace)
-      traceMsg(comp, "Created arrayStoreCHK treetop n%dn node n%dn\n", arrayStoreCHKTT->getNode()->getGlobalIndex(), arrayStoreCHKNode->getGlobalIndex());
-
+   TR::Node *arrayStoreCHKNode = NULL;
+   TR::TreeTop *arrayStoreCHKTT = NULL;
+   if (addArrayStoreCheck)
+      {
+      TR::SymbolReference *arrayStoreCHKSymRef = comp->getSymRefTab()->findOrCreateTypeCheckArrayStoreSymbolRef(comp->getMethodSymbol());
+      arrayStoreCHKNode = TR::Node::createWithRoomForThree(TR::ArrayStoreCHK, elementStoreNode, 0, arrayStoreCHKSymRef);
+      arrayStoreCHKNode->copyByteCodeInfo(node);
+      arrayStoreCHKTT = originalBlock->append(TR::TreeTop::create(comp, arrayStoreCHKNode));
+      if (enableTrace)
+         traceMsg(comp, "Created arrayStoreCHK treetop n%dn arrayStoreCHKNode n%dn\n", arrayStoreCHKTT->getNode()->getGlobalIndex(), arrayStoreCHKNode->getGlobalIndex());
+      }
+   else
+      {
+      arrayStoreCHKTT = originalBlock->append(TR::TreeTop::create(comp, elementStoreNode));
+      elementStoreNode->incReferenceCount();
+      if (enableTrace)
+         traceMsg(comp, "Created arrayStoreCHK treetop n%dn elementStoreNode n%dn\n", arrayStoreCHKTT->getNode()->getGlobalIndex(), elementStoreNode->getGlobalIndex());
+      }
 
    ///////////////////////////////////////
    // 7. Split (3) at the regular array element store
@@ -1382,7 +1412,8 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    arrayElementStoreBlock->setIsExtensionOfPreviousBlock(true);
 
    if (enableTrace)
-      traceMsg(comp, "Isolated array element store treetop n%dn node n%dn in block_%d\n", arrayStoreCHKTT->getNode()->getGlobalIndex(), arrayStoreCHKNode->getGlobalIndex(), arrayElementStoreBlock->getNumber());
+      traceMsg(comp, "Isolated array element store treetop n%dn node n%dn in block_%d\n", arrayStoreCHKTT->getNode()->getGlobalIndex(),
+            addArrayStoreCheck ? arrayStoreCHKNode->getGlobalIndex() : elementStoreNode->getGlobalIndex(), arrayElementStoreBlock->getNumber());
 
    int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
    if (comp->useCompressedPointers())
@@ -1397,7 +1428,11 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    if (!anchoredArrayBaseAddressNode->isNonNull() && tt->getNode()->getOpCodeValue() == TR::NULLCHK)
       arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, arraylengthNode, comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
 
-   arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+   static char *enableVTCheckOwningMethodSkipsBoundChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
+   bool addBoundCheck = enableVTCheckOwningMethodSkipsBoundChecks ? !skipBoundChecks(comp, node) : true;
+
+   if (addBoundCheck)
+      arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
 
    if (comp->useCompressedPointers())
       {
