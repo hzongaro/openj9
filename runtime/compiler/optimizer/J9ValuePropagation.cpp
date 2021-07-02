@@ -795,7 +795,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          isCompTypeVT = TR_no;
          }
 
-      static char *enableCheckStoreElementValueIsVT = feGetEnv("TR_EnableCheckStoreElementValueIsVT");
+      static char *enableCheckStoreElementValueIsVT = "yes";  // feGetEnv("TR_EnableCheckStoreElementValueIsVT");
       TR_YesNoMaybe isStoreValueVT = (enableCheckStoreElementValueIsVT && isStoreFlattenableArrayElement)
                                         ? isValue(getConstraint(storeValueNode, storeValueGlobal)) : TR_maybe;
 
@@ -811,8 +811,8 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                                                                   : ValueTypesHelperCallTransform::IsArrayStore);
          flagsForTransform.set(ValueTypesHelperCallTransform::InsertDebugCounter);
 
-         static char *enableVTCheckOwningMethodSkipsStoreChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
-         static char *enableVTCheckOwningMethodSkipsBoundChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
+         static char *enableVTCheckOwningMethodSkipsStoreChecks = "yes"; // feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
+         static char *enableVTCheckOwningMethodSkipsBoundChecks = "yes"; // feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
 
          if (isStoreFlattenableArrayElement && (!enableVTCheckOwningMethodSkipsStoreChecks || !owningMethodDoesNotContainStoreChecks(this, node)))
             {

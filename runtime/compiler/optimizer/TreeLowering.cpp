@@ -1071,7 +1071,7 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    arraylengthNode->setArrayStride(dataWidth);
 
    //ILGen for array element load already generates a NULLCHK
-   static char *enableVTCheckOwningMethodSkipsBoundChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
+   static char *enableVTCheckOwningMethodSkipsBoundChecks = "yes"; //feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
    bool addBoundCheck = enableVTCheckOwningMethodSkipsBoundChecks ? !skipBoundChecks(comp, node) : true;
 
    if (addBoundCheck)
@@ -1368,7 +1368,7 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, anchoredArrayBaseAddressNode);
    TR::Node *elementStoreNode = TR::Node::createWithSymRef(TR::awrtbari, 3, 3, elementAddress, anchoredValueNode, anchoredArrayBaseAddressNode, elementSymRef);
 
-   static char *enableVTCheckOwningMethodSkipsStoreChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
+   static char *enableVTCheckOwningMethodSkipsStoreChecks = "yes"; //feGetEnv("TR_EnableVTCheckOwningMethodSkipsStoreChecks");
    bool addArrayStoreCheck = enableVTCheckOwningMethodSkipsStoreChecks ? !skipArrayStoreChecks(comp, node) : true;
 
    TR::Node *arrayStoreCHKNode = NULL;
@@ -1413,7 +1413,7 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    if (!anchoredArrayBaseAddressNode->isNonNull() && tt->getNode()->getOpCodeValue() == TR::NULLCHK)
       arrayStoreCHKTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, arraylengthNode, comp->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp->getMethodSymbol()))));
 
-   static char *enableVTCheckOwningMethodSkipsBoundChecks = feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
+   static char *enableVTCheckOwningMethodSkipsBoundChecks = "yes"; //feGetEnv("TR_EnableVTCheckOwningMethodSkipsBoundChecks");
    bool addBoundCheck = enableVTCheckOwningMethodSkipsBoundChecks ? !skipBoundChecks(comp, node) : true;
 
    if (addBoundCheck)
