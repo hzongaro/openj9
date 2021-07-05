@@ -1821,8 +1821,7 @@ J9::ValuePropagation::doDelayedTransformations()
             }
          else
             {
-            callTree->setNode(elementStoreNode);
-            elementStoreNode->incReferenceCount();
+            callTree->setNode(TR::Node::create(TR::treetop, 1, elementStoreNode));
             }
 
          // The old anchor node is no longer needed.  Remove what was previously a child
