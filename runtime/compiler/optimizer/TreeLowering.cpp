@@ -628,8 +628,8 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
    //   | ttprev                                  |
    //   | treetop                                 |
    //   |   call <nonNullableArrayNullStoreCheck> |
-   //   |     <array-reference>                   |
    //   |     <value-reference>                   |
+   //   |     <array-reference>                   |
    //   | ttnext                                  |
    //   +-----------------------------------------+
    //
@@ -677,13 +677,11 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
       TR::TreeTop *anchoredArrayTT = TR::TreeTop::create(comp(), tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, destChild));
       TR::TreeTop *anchoredSourceTT = TR::TreeTop::create(comp(), anchoredArrayTT, TR::Node::create(TR::treetop, 1, sourceChild));
 
-      TR::Node *ifNode = comp()->fej9()->checkArrayCompClassValueType(destChild, TR::ificmpeq);
-
-      TR::Node *passThru  = TR::Node::create(node, TR::PassThrough, 1, sourceChild);
-
       TR::TreeTop *nextTT = tt->getNextTreeTop();
       tt->getPrevTreeTop()->join(nextTT);
       TR::Block *nextBlock = prevBlock->splitPostGRA(nextTT, cfg);
+
+      TR::Node *ifNode = comp()->fej9()->checkArrayCompClassValueType(destChild, TR::ificmpeq);
 
       ifNode->setBranchDestination(nextBlock->getEntry());
 
@@ -712,10 +710,53 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
          ifNode->addChildren(&ifDeps, 1);
          }
 
-      prevBlock->append(TR::TreeTop::create(comp(), ifNode));
+      TR::TreeTop *ifArrayCompClassValueTypeTT = prevBlock->append(TR::TreeTop::create(comp(), ifNode));
+
+      static char *enableCheckNullFirstInNullStoreCheck = feGetEnv("TR_EnableCheckNullFirstInNullStoreCheck");
+      if (enableCheckNullFirstInNullStoreCheck)
+         {
+         bool enableTrace = trace();
+         auto* const nullConst = TR::Node::aconst(0);
+         auto* const checkValueNull = TR::Node::createif(TR::ifacmpne, sourceChild, nullConst, nextBlock->getEntry());
+
+         if (prevBlock->getExit()->getNode()->getNumChildren() != 0)
+            {
+            TR::Node *blkDeps = prevBlock->getExit()->getNode()->getFirstChild();
+            TR::Node *ifDeps = TR::Node::create(blkDeps, TR::GlRegDeps);
+
+            for (int i = 0; i < blkDeps->getNumChildren(); i++)
+               {
+               TR::Node *regDep = blkDeps->getChild(i);
+
+               if (regDep->getOpCodeValue() == TR::PassThrough)
+                  {
+                  TR::Node *orig= regDep;
+                  regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
+                  regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
+                  regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
+                  }
+
+               ifDeps->addChildren(&regDep, 1);
+               }
+
+            checkValueNull->addChildren(&ifDeps, 1);
+            }
+
+         TR::TreeTop *checkValueNullTT = ifArrayCompClassValueTypeTT->insertBefore(TR::TreeTop::create(comp(), checkValueNull));
+
+         if (enableTrace)
+             traceMsg(comp(),"checkValueNull n%dn is inserted before  n%dn in prevBlock %d\n", checkValueNull->getGlobalIndex(), ifArrayCompClassValueTypeTT->getNode()->getGlobalIndex(), prevBlock->getNumber());
+
+         prevBlock = prevBlock->split(ifArrayCompClassValueTypeTT, cfg);
+         prevBlock->setIsExtensionOfPreviousBlock(true);
+
+         if (enableTrace)
+             traceMsg(comp(),"ifArrayCompClassValueTypeTT n%dn is isolated in prevBlock %d\n", ifArrayCompClassValueTypeTT->getNode()->getGlobalIndex(), prevBlock->getNumber());
+         }
 
       TR::ResolvedMethodSymbol *currentMethod = comp()->getMethodSymbol();
 
+      TR::Node *passThru  = TR::Node::create(node, TR::PassThrough, 1, sourceChild);
       TR::Node *nullCheck = TR::Node::createWithSymRef(node, TR::NULLCHK, 1, passThru,
                                comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(currentMethod));
       TR::TreeTop *nullCheckTT = prevBlock->append(TR::TreeTop::create(comp(), nullCheck));
