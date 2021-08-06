@@ -7534,6 +7534,13 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
 
       case TR::sun_reflect_Reflection_getCallerClass:
          {
+#if defined(J9VM_OPT_JITSERVER)
+         // TODO (#13098): Enable getCallerClass optimization for JITServer
+         if (comp->getPersistentInfo()->getRemoteCompilationMode() == JITServer::SERVER ||
+             comp->getPersistentInfo()->getRemoteCompilationMode() == JITServer::CLIENT)
+            return 0;
+#endif
+
          // We need to bail out since we create a class pointer const with cpIndex of -1
          if (isAOT_DEPRECATED_DO_NOT_USE() && !comp->getOption(TR_UseSymbolValidationManager))
             {
@@ -7580,7 +7587,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
                // and we want to skip the callerIndex == -1 frame, but we cannot because the JIT cannot statically
                // determine the caller of the top-level method being compiled. We cannot perform this optimization
                // in such a case, so we make skipFrameAtDepth0 at this point and proceed.
-               if (TR::Compiler->mtd.isFrameIteratorSkipMethod(callerMethod))
+               if ((J9_ROM_METHOD_FROM_RAM_METHOD(callerMethod)->modifiers & J9AccMethodFrameIteratorSkip) == J9AccMethodFrameIteratorSkip)
                   skipFrameAtDepth0 = true;
                }
             else
@@ -7593,7 +7600,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
                break;
 
             // Skip methods with java.lang.invoke.FrameIteratorSkip annotation
-            if (!TR::Compiler->mtd.isFrameIteratorSkipMethod(callerMethod))
+            if ((J9_ROM_METHOD_FROM_RAM_METHOD(callerMethod)->modifiers & J9AccMethodFrameIteratorSkip) != J9AccMethodFrameIteratorSkip)
                {
                if (targetInlineDepth == 0)
                   {
