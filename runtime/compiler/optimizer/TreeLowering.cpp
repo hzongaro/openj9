@@ -1123,6 +1123,10 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
       arraylengthNode->setArrayStride(dataWidth);
 
+      static char *setDoNotProfileToFalse = feGetEnv("TR_SetDoNotProfileToFalse");
+      if (setDoNotProfileToFalse)
+         arraylengthNode->getByteCodeInfo().setDoNotProfile(0);
+
       elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
 
       // This might be the first time the various checking symbol references are used
@@ -1469,6 +1473,10 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       {
       TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
       arraylengthNode->setArrayStride(dataWidth);
+
+      static char *setDoNotProfileToFalse = feGetEnv("TR_SetDoNotProfileToFalse");
+      if (setDoNotProfileToFalse)
+         arraylengthNode->getByteCodeInfo().setDoNotProfile(0);
 
       //ILGen for array element store already generates a NULLCHK
       //If the helper call node is anchored under NULLCHK due to compactNullChecks, the NULLCHK is split into the helper call block.

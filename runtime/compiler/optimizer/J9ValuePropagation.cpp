@@ -1735,6 +1735,10 @@ J9::ValuePropagation::doDelayedTransformations()
          TR::Node *arrayLengthNode = TR::Node::create(callNode, TR::arraylength, 1, arrayRefNode);
          arrayLengthNode->setArrayStride(width);
 
+         static char *setDoNotProfileToFalse = feGetEnv("TR_SetDoNotProfileToFalse");
+         if (setDoNotProfileToFalse)
+            arrayLengthNode->getByteCodeInfo().setDoNotProfile(0);
+
          TR::Node *bndChkNode = TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arrayLengthNode, indexNode,
                                              comp()->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp()->getMethodSymbol()));
          callTree->insertBefore(TR::TreeTop::create(comp(), bndChkNode));
