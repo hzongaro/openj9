@@ -1810,6 +1810,11 @@ J9::ValuePropagation::doDelayedTransformations()
          TR::Node *bndChkNode = TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arrayLengthNode, indexNode,
                                              comp()->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp()->getMethodSymbol()));
          callTree->insertBefore(TR::TreeTop::create(comp(), bndChkNode));
+
+         // This might be the first time the array bounds check symbol reference is used
+         // Need to ensure aliasing for them is correctly constructed
+         //
+         optimizer()->setAliasSetsAreValid(false);
          }
 
       TR::SymbolReference *elementSymRef = comp()->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, arrayRefNode);
@@ -1850,6 +1855,11 @@ J9::ValuePropagation::doDelayedTransformations()
                nullCheckNode->setByteCodeInfo(elementStoreNode->getByteCodeInfo());
                callTree->insertBefore(TR::TreeTop::create(comp(), TR::Node::create(TR::treetop, 1,  nullCheckNode)));
                }
+
+            // This might be the first time the various checking symbol references are used
+            // Need to ensure aliasing for them is correctly constructed
+            //
+            optimizer()->setAliasSetsAreValid(false);
             }
          else
             {

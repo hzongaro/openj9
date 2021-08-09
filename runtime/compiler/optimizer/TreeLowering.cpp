@@ -1109,6 +1109,11 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       arraylengthNode->setArrayStride(dataWidth);
 
       elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+
+      // This might be the first time the various checking symbol references are used
+      // Need to ensure aliasing for them is correctly constructed
+      //
+      this->optimizer()->setAliasSetsAreValid(false);
       }
 
 
@@ -1415,6 +1420,11 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       arrayStoreTT = originalBlock->append(TR::TreeTop::create(comp, arrayStoreCHKNode));
       if (enableTrace)
          traceMsg(comp, "Created arrayStoreCHK treetop n%dn arrayStoreCHKNode n%dn\n", arrayStoreTT->getNode()->getGlobalIndex(), arrayStoreCHKNode->getGlobalIndex());
+
+      // This might be the first time the various checking symbol references are used
+      // Need to ensure aliasing for them is correctly constructed
+      //
+      this->optimizer()->setAliasSetsAreValid(false);
       }
    else
       {
@@ -1460,6 +1470,11 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
          {
          arrayStoreTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
          }
+
+      // This might be the first time the various checking symbol references are used
+      // Need to ensure aliasing for them is correctly constructed
+      //
+      this->optimizer()->setAliasSetsAreValid(false);
       }
 
    if (comp->useCompressedPointers())
