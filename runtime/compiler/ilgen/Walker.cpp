@@ -2745,6 +2745,15 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    TR::DebugCounter::prependDebugCounter(comp(), counterName, callTree);
 
    push(substitutabilityTest);
+
+   static char *enableObjectEqualityComparisonEQ1 = feGetEnv("TR_EnableObjectEqualityComparisonEQ1");
+
+   if (enableObjectEqualityComparisonEQ1)
+      {
+      push(TR::Node::iconst(1));
+      return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
+      }
+
    push(TR::Node::iconst(0));
    return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpne : TR::ificmpeq);
    }
