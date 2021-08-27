@@ -2731,11 +2731,8 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    TR::Node *rhs = pop();
    TR::Node *lhs = pop();
 
-   static char *enableObjectEqualityComparisonEQ1v3 = feGetEnv("TR_EnableObjectEqualityComparisonv3");
-
    TR::SymbolReference *comparisonNonHelper =
-      enableObjectEqualityComparisonEQ1v3 ? comp()->getSymRefTab()->findOrCreateObjectInequalityComparisonSymbolRef()
-                                          : comp()->getSymRefTab()->findOrCreateObjectEqualityComparisonSymbolRef();
+      comp()->getSymRefTab()->findOrCreateObjectInequalityComparisonSymbolRef();
 
    TR::Node *substitutabilityTest =
       TR::Node::createWithSymRef(TR::icall, 2, 2, lhs, rhs, comparisonNonHelper);
@@ -2747,37 +2744,9 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
                                                       comp()->signature(), currentByteCodeIndex());
    TR::DebugCounter::prependDebugCounter(comp(), counterName, callTree);
 
-   static char *enableObjectEqualityComparisonEQ1v2 = feGetEnv("TR_EnableObjectEqualityComparisonEQ1v2");
-
-   if (enableObjectEqualityComparisonEQ1v2 || enableObjectEqualityComparisonEQ1v3)
-      {
-      if (enableObjectEqualityComparisonEQ1v2)
-         {
-         push(TR::Node::create(TR::ixor, 2, substitutabilityTest, TR::Node::iconst(1)));
-         }
-      else
-         {
-         push(substitutabilityTest);
-         }
-
-      push(TR::Node::iconst(0));
-      return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
-      }
-   else
-      {
-      push(substitutabilityTest);
-      }
-
-   static char *enableObjectEqualityComparisonEQ1 = feGetEnv("TR_EnableObjectEqualityComparisonEQ1");
-
-   if (enableObjectEqualityComparisonEQ1)
-      {
-      push(TR::Node::iconst(1));
-      return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
-      }
-
+   push(substitutabilityTest);
    push(TR::Node::iconst(0));
-   return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpne : TR::ificmpeq);
+   return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
    }
 
 //----------------------------------------------
