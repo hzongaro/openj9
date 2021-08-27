@@ -2755,6 +2755,10 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
          {
          push(TR::Node::create(TR::ixor, 2, substitutabilityTest, TR::Node::iconst(1)));
          }
+      else
+         {
+         push(substitutabilityTest);
+         }
 
       push(TR::Node::iconst(0));
       return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
