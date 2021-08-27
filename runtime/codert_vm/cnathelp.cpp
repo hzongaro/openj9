@@ -2806,6 +2806,16 @@ old_fast_jitAcmpHelper(J9VMThread *currentThread)
 	JIT_RETURN_UDATA(currentThread->javaVM->internalVMFunctions->valueTypeCapableAcmp(currentThread, lhs, rhs));
 }
 
+void J9FASTCALL
+old_fast_jitAcmpNEHelper(J9VMThread *currentThread)
+{
+	OLD_JIT_HELPER_PROLOGUE(2);
+	DECLARE_JIT_PARM(j9object_t, lhs, 1);
+	DECLARE_JIT_PARM(j9object_t, rhs, 2);
+
+	JIT_RETURN_UDATA(!currentThread->javaVM->internalVMFunctions->valueTypeCapableAcmp(currentThread, lhs, rhs));
+}
+
 void* J9FASTCALL
 old_fast_jitTypeCheckArrayStore(J9VMThread *currentThread)
 {
@@ -3667,6 +3677,19 @@ fast_jitTypeCheckArrayStoreWithNullCheck(J9VMThread *currentThread, j9object_t d
 BOOLEAN J9FASTCALL
 #if defined(J9VM_ARCH_X86) || defined(J9VM_ARCH_S390)
 /* TODO Will be cleaned once all platforms adopt the correct parameter order */
+fast_jitAcmpNEHelper(J9VMThread *currentThread, j9object_t lhs, j9object_t rhs)
+#else /* J9VM_ARCH_X86 || J9VM_ARCH_S390*/
+fast_jitAcmpNEHelper(J9VMThread *currentThread, j9object_t rhs, j9object_t lhs)
+#endif /* J9VM_ARCH_X86 || J9VM_ARCH_S390*/
+{
+	JIT_HELPER_PROLOGUE();
+
+	return !currentThread->javaVM->internalVMFunctions->valueTypeCapableAcmp(currentThread, lhs, rhs);
+}
+
+BOOLEAN J9FASTCALL
+#if defined(J9VM_ARCH_X86) || defined(J9VM_ARCH_S390)
+/* TODO Will be cleaned once all platforms adopt the correct parameter order */
 fast_jitAcmpHelper(J9VMThread *currentThread, j9object_t lhs, j9object_t rhs)
 #else /* J9VM_ARCH_X86 || J9VM_ARCH_S390*/
 fast_jitAcmpHelper(J9VMThread *currentThread, j9object_t rhs, j9object_t lhs)
@@ -3943,6 +3966,7 @@ initPureCFunctionTable(J9JavaVM *vm)
 	jitConfig->old_fast_jitLoadFlattenableArrayElement = (void*) old_fast_jitLoadFlattenableArrayElement;
 	jitConfig->old_fast_jitStoreFlattenableArrayElement = (void*) old_fast_jitStoreFlattenableArrayElement;
 	jitConfig->old_fast_jitAcmpHelper = (void*)old_fast_jitAcmpHelper;
+	jitConfig->old_fast_jitAcmpNEHelper = (void*)old_fast_jitAcmpNEHelper;
 	jitConfig->fast_jitNewValue = (void*)fast_jitNewValue;
 	jitConfig->fast_jitNewValueNoZeroInit = (void*)fast_jitNewValueNoZeroInit;
 	jitConfig->fast_jitNewObject = (void*)fast_jitNewObject;

@@ -3816,6 +3816,7 @@ typedef struct J9JITConfig {
 	void *old_fast_jitLoadFlattenableArrayElement;
 	void *old_fast_jitStoreFlattenableArrayElement;
 	void *old_fast_jitAcmpHelper;
+	void *old_fast_jitAcmpNEHelper;
 	void *fast_jitNewValue;
 	void *fast_jitNewValueNoZeroInit;
 	void *fast_jitNewObject;
