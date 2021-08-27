@@ -279,6 +279,7 @@ J9::AliasBuilder::createAliasInfo()
       TR_newObject,
       TR_newObjectNoZeroInit,
       TR_acmpHelper,
+      TR_acmpNEHelper,
       TR_newValue,
       TR_newValueNoZeroInit,
       TR_newArray,

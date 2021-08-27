@@ -1581,10 +1581,15 @@ TR::TreeLowering::lowerValueTypeOperations(TransformationManager& transformation
 
    if (node->getOpCode().isCall())
       {
-      if (symRefTab->isNonHelper(node->getSymbolReference(), TR::SymbolReferenceTable::objectEqualityComparisonSymbol))
+      const bool isObjectEqualityTest = symRefTab->isNonHelper(node->getSymbolReference(), TR::SymbolReferenceTable::objectEqualityComparisonSymbol);
+      const bool isObjectInequalityTest = symRefTab->isNonHelper(node->getSymbolReference(), TR::SymbolReferenceTable::objectInequalityComparisonSymbol);
+
+      if (isObjectEqualityTest || isObjectInequalityTest)
          {
          // turn the non-helper call into a VM helper call
-         node->setSymbolReference(symRefTab->findOrCreateAcmpHelperSymbolRef());
+         node->setSymbolReference(isObjectEqualityTest ? symRefTab->findOrCreateAcmpHelperSymbolRef()
+                                                       : symRefTab->findOrCreateAcmpNEHelperSymbolRef());
+
          static const bool disableAcmpFastPath =  NULL != feGetEnv("TR_DisableVT_AcmpFastpath");
          if (!disableAcmpFastPath)
             {

@@ -252,6 +252,13 @@ J9::SymbolReferenceTable::findOrCreateAcmpHelperSymbolRef(TR::ResolvedMethodSymb
 
 
 TR::SymbolReference *
+J9::SymbolReferenceTable::findOrCreateAcmpNEHelperSymbolRef(TR::ResolvedMethodSymbol * owningMEthodSymbol)
+   {
+   return findOrCreateRuntimeHelper(TR_acmpNEHelper, true, false, true);
+   }
+
+
+TR::SymbolReference *
 J9::SymbolReferenceTable::findOrCreateGetFlattenableFieldSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol)
    {
    return findOrCreateRuntimeHelper(TR_getFlattenableField, true, true, true);
@@ -2412,6 +2419,19 @@ J9::SymbolReferenceTable::findOrCreateVMThreadFloatTemp1SymbolRef()
       aliasBuilder.addressStaticSymRefs().set(getNonhelperIndex(j9VMThreadFloatTemp1Symbol));
       }
    return element(j9VMThreadFloatTemp1Symbol);
+   }
+
+TR::SymbolReference *
+J9::SymbolReferenceTable::findOrCreateObjectInequalityComparisonSymbolRef()
+   {
+   TR::SymbolReference *symRef = element(objectInequalityComparisonSymbol);
+   if (symRef != NULL)
+      return symRef;
+
+   symRef = self()->findOrCreateCodeGenInlinedHelper(objectInequalityComparisonSymbol);
+   symRef->setCanGCandReturn();
+   symRef->setCanGCandExcept();
+   return symRef;
    }
 
 TR::SymbolReference *

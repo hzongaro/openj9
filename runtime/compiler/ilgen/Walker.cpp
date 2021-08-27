@@ -2731,8 +2731,11 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    TR::Node *rhs = pop();
    TR::Node *lhs = pop();
 
+   static char *enableObjectEqualityComparisonEQ1v3 = feGetEnv("TR_EnableObjectEqualityComparisonv3");
+
    TR::SymbolReference *comparisonNonHelper =
-      comp()->getSymRefTab()->findOrCreateObjectEqualityComparisonSymbolRef();
+      enableObjectEqualityComparisonEQ1v3 ? comp()->getSymRefTab()->findOrCreateObjectInequalityComparisonSymbolRef()
+                                          : comp()->getSymRefTab()->findOrCreateObjectEqualityComparisonSymbolRef();
 
    TR::Node *substitutabilityTest =
       TR::Node::createWithSymRef(TR::icall, 2, 2, lhs, rhs, comparisonNonHelper);
@@ -2746,9 +2749,13 @@ TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
 
    static char *enableObjectEqualityComparisonEQ1v2 = feGetEnv("TR_EnableObjectEqualityComparisonEQ1v2");
 
-   if (enableObjectEqualityComparisonEQ1v2)
+   if (enableObjectEqualityComparisonEQ1v2 || enableObjectEqualityComparisonEQ1v3)
       {
-      push(TR::Node::create(TR::ixor, 2, substitutabilityTest, TR::Node::iconst(1)));
+      if (enableObjectEqualityComparisonEQ1v2)
+         {
+         push(TR::Node::create(TR::ixor, 2, substitutabilityTest, TR::Node::iconst(1)));
+         }
+
       push(TR::Node::iconst(0));
       return genIfImpl(ifacmpOp == TR::ifacmpeq ? TR::ificmpeq : TR::ificmpne);
       }

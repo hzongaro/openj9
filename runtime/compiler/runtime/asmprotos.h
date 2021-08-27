@@ -95,6 +95,7 @@ JIT_HELPER(jitPutFlattenableStaticField);  // asm calling-convention helper
 JIT_HELPER(jitLoadFlattenableArrayElement);  // asm calling-convention helper
 JIT_HELPER(jitStoreFlattenableArrayElement);  // asm calling-convention helper
 JIT_HELPER(jitAcmpHelper);  // asm calling-convention helper
+JIT_HELPER(jitAcmpNEHelper);  // asm calling-convention helper
 JIT_HELPER(jitNewValue);  // asm calling-convention helper
 JIT_HELPER(jitObjectHashCode);  // asm calling-convention helper
 JIT_HELPER(jitPostJNICallOffloadCheck);  // asm calling-convention helper
