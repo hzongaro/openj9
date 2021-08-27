@@ -703,7 +703,7 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
                }
             const char *signature = self()->signature();
 
-            TR::DebugCounter::incStaticDebugCounter(self(), TR::DebugCounter::debugCounterName(self(), "inlineAllocation/dynamicArray/failed/valueTypes/(%s)", signature));
+            TR::DebugCounter::incStaticDebugCounter(self(), TR::DebugCounter::debugCounterName(self(), "vt-il-limit/dynamicArrayAllocation/(%s)/bc=%d", signature, node->getByteCodeIndex()));
             return -1;
             }
          else

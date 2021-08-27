@@ -560,6 +560,7 @@ TR_J9ByteCodeIlGenerator::genILFromByteCodes()
             (!TR::Compiler->om.areValueTypesEnabled()
             || !TR::Compiler->cls.isClassRefValueType(comp(), method()->classOfMethod(), currNode->getSecondChild()->getSymbolReference()->getCPIndex())))
           {
+TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "vt-il-limit/checkcast-null/(%s)/bc=%d", comp()->signature(), currNode->getByteCodeIndex()), currTree, 1, TR::DebugCounter::Free);
           unresolvedCheckcastTopsNeedingNullGuard.add(currTree);
           }
       else if (currNode->getOpCodeValue() == TR::treetop
