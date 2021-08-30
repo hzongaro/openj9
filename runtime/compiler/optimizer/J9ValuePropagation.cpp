@@ -692,6 +692,8 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       //
       if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef)
          {
+         TR::ILOpCode acmpOp = isObjectEqualityCompare ? TR::acmpeq : TR::acmpne;
+
          if (performTransformation(
                comp(),
                "%sChanging n%un from %s to %s\n",
@@ -699,7 +701,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                node->getGlobalIndex(),
                comp()->getSymRefTab()->getNonHelperSymbolName(isObjectEqualityCompare ? TR::SymbolReferenceTable::objectEqualityComparisonSymbol
                                                                                       : TR::SymbolReferenceTable::objectInequalityComparisonSymbol),
-               isObjectEqualityCompare ? "acmpeq" : "acmpne"))
+               acmpOp.getName()))
             {
             // Add a delayed transformation just for the purpose of being able to
             // insert a dynamic debug counter
@@ -709,12 +711,13 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                                               ValueTypesHelperCallTransform::IsRefCompare
                                               | ValueTypesHelperCallTransform::InsertDebugCounter));
 
+
             // Replace the non-helper equality comparison with an address comparison
-            TR::Node::recreate(node, isObjectEqualityCompare ? TR::acmpeq : TR::acmpne);
+            TR::Node::recreate(node, acmpOp.getOpCodeValue());
 
             // It might now be possible to fold.
-            ValuePropagationPtr acmpeqHandler = constraintHandlers[TR::acmpeq];
-            TR::Node *replacement = acmpeqHandler(this, node);
+            ValuePropagationPtr acmpHandler = constraintHandlers[acmpOp.getOpCodeValue()];
+            TR::Node *replacement = acmpHandler(this, node);
             TR_ASSERT_FATAL_WITH_NODE(node, replacement == node, "can't replace n%un here",
                   node->getGlobalIndex());
             }
