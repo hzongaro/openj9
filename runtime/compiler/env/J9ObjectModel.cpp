@@ -105,6 +105,7 @@ J9::ObjectModel::initialize()
 bool
 J9::ObjectModel::areValueTypesEnabled()
    {
+static char *disableCompilerValueTypes = feGetEnv("TR_disableValueTypesInCompiler");
 #if defined(J9VM_OPT_JITSERVER)
    if (auto stream = TR::CompilationInfo::getStream())
       {
@@ -114,7 +115,7 @@ J9::ObjectModel::areValueTypesEnabled()
 #endif /* defined(J9VM_OPT_JITSERVER) */
 
    J9JavaVM * javaVM = TR::Compiler->javaVM;
-   return javaVM->internalVMFunctions->areValueTypesEnabled(javaVM);
+   return !disableCompilerValueTypes && javaVM->internalVMFunctions->areValueTypesEnabled(javaVM);
    }
 
 
