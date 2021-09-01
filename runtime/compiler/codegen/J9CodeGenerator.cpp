@@ -5081,7 +5081,8 @@ J9::CodeGenerator::getMonClass(TR::Node* monNode)
 TR_YesNoMaybe
 J9::CodeGenerator::isMonitorValueBasedOrValueType(TR::Node* monNode)
    {
-   if (TR::Compiler->om.areValueTypesEnabled() || TR::Compiler->om.areValueBasedMonitorChecksEnabled())
+static char *disableValueTypes = feGetEnv("TR_disableVT2");
+   if (!disableValueTypes && (TR::Compiler->om.areValueTypesEnabled() || TR::Compiler->om.areValueBasedMonitorChecksEnabled()))
       {
       TR_OpaqueClassBlock *clazz = self()->getMonClass(monNode);
 

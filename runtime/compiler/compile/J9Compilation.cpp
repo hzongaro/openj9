@@ -695,7 +695,9 @@ J9::Compilation::canAllocateInline(TR::Node* node, TR_OpaqueClassBlock* &classIn
       if (classRef->getOpCodeValue() != TR::loadaddr)
          {
          classInfo = NULL;
-         if (areValueTypesEnabled)
+static char *allowDynamicArrayAllocation = feGetEnv("TR_VTAllowDynamicArrayAllocation");
+
+         if (areValueTypesEnabled && !allowDynamicArrayAllocation)
             {
             if (self()->getOption(TR_TraceCG))
                {

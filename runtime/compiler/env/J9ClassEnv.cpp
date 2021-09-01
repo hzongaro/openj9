@@ -498,7 +498,8 @@ static void addEntryForFieldImpl(TR_VMField *field, TR::TypeLayoutBuilder &tlb, 
    uint32_t mergedLength = 0;
    J9UTF8 *signature = J9ROMFIELDSHAPE_SIGNATURE(field->shape);
 
-   if (TR::Compiler->om.areValueTypesEnabled() &&
+static char *disableValueTypes = feGetEnv("TR_disableVT8");
+   if (!disableValueTypes && TR::Compiler->om.areValueTypesEnabled() &&
        vm->internalVMFunctions->isNameOrSignatureQtype(signature) &&
        vm->internalVMFunctions->isFlattenableFieldFlattened(definingClass, field->shape))
       {

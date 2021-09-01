@@ -4801,7 +4801,8 @@ TR_ResolvedJ9Method::methodModifiers()
 bool
 TR_ResolvedJ9Method::isConstructor()
    {
-   if (!TR::Compiler->om.areValueTypesEnabled())
+static char *disableValueTypes = feGetEnv("TR_disableVT3");
+   if (disableValueTypes || !TR::Compiler->om.areValueTypesEnabled())
       return (nameLength()==6 && !strncmp(nameChars(), "<init>", 6));
    else
       return (nameLength()==6 && !isStatic() && (returnType()==TR::NoType) && !strncmp(nameChars(), "<init>", 6));
@@ -9251,7 +9252,8 @@ TR_J9ByteCodeIlGenerator::packReferenceChainOffsets(TR::Node *node, std::vector<
 bool
 TR_ResolvedJ9Method::isFieldQType(int32_t cpIndex)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled() ||
+static char *disableValueTypes = feGetEnv("TR_disableVT4");
+   if (disableValueTypes || !TR::Compiler->om.areValueTypesEnabled() ||
       (-1 == cpIndex))
       return false;
 
@@ -9266,7 +9268,8 @@ TR_ResolvedJ9Method::isFieldQType(int32_t cpIndex)
 bool
 TR_ResolvedJ9Method::isFieldFlattened(TR::Compilation *comp, int32_t cpIndex, bool isStatic)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled() ||
+static char *disableValueTypes = feGetEnv("TR_disableVT5");
+   if (disableValueTypes || !TR::Compiler->om.areValueTypesEnabled() ||
       (-1 == cpIndex))
       return false;
 

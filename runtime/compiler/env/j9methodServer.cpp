@@ -1878,7 +1878,8 @@ TR_ResolvedJ9JITServerMethod::archetypeArgPlaceholderSlot()
 bool
 TR_ResolvedJ9JITServerMethod::isFieldQType(int32_t cpIndex)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled() ||
+static char *disableValueTypes = feGetEnv("TR_disableVT6");
+   if (disableValueTypes || !TR::Compiler->om.areValueTypesEnabled() ||
       (-1 == cpIndex))
       return false;
 
@@ -1894,7 +1895,8 @@ TR_ResolvedJ9JITServerMethod::isFieldQType(int32_t cpIndex)
 bool
 TR_ResolvedJ9JITServerMethod::isFieldFlattened(TR::Compilation *comp, int32_t cpIndex, bool isStatic)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled() ||
+static char *disableValueTypes = feGetEnv("TR_disableVT7");
+   if (disableValueTypes || !TR::Compiler->om.areValueTypesEnabled() ||
       (-1 == cpIndex))
       return false;
 
