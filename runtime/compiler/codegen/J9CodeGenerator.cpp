@@ -5079,15 +5079,20 @@ J9::CodeGenerator::getMonClass(TR::Node* monNode)
    }
 
 TR_YesNoMaybe
-J9::CodeGenerator::isMonitorValueBasedOrValueType(TR::Node* monNode)
+J9::CodeGenerator::isMonitorValueBasedOrValueType(TR::Node* monNode, int &failureReason)
    {
 static char *disableValueTypes = feGetEnv("TR_disableVT2");
+failureReason = J9::CodeGenerator::MonIdentityTypeClass;;
+
    if (!disableValueTypes && (TR::Compiler->om.areValueTypesEnabled() || TR::Compiler->om.areValueBasedMonitorChecksEnabled()))
       {
       TR_OpaqueClassBlock *clazz = self()->getMonClass(monNode);
 
       if (!clazz)
+{
+failureReason = J9::CodeGenerator::MonNoClass;
          return TR_maybe;
+}
 
       //java.lang.Object class is only set when monitor is java.lang.Object but not its subclass
       if (clazz == self()->comp()->getObjectClassPointer())
@@ -5098,10 +5103,16 @@ static char *disableValueTypes = feGetEnv("TR_disableVT2");
          return TR_no;
 
       if (!TR::Compiler->cls.isConcreteClass(self()->comp(), clazz))
+{
+failureReason = TR::Compiler->cls.isAbstractClass(self()->comp(), clazz) ? J9::CodeGenerator::MonAbstractClass : J9::CodeGenerator::MonInterfaceClass;
          return TR_maybe;
+}
 
       if (TR::Compiler->cls.isValueBasedOrValueTypeClass(clazz))
+{
+failureReason = J9::CodeGenerator::MonValueBasedOrTypeClass;
          return TR_yes;
+}
       }
    return TR_no;
    }

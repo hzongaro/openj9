@@ -937,7 +937,8 @@ J9::ARM64::TreeEvaluator::monexitEvaluator(TR::Node *node, TR::CodeGenerator *cg
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
    int32_t lwOffset = fej9->getByteOffsetToLockword(cg->getMonClass(node));
    TR::InstOpCode::Mnemonic op;
-   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node);
+int failureReason = 0;
+   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node, failureReason);
 
    if (comp->getOption(TR_FullSpeedDebug) ||
        (isMonitorValueBasedOrValueType == TR_yes) ||
@@ -2843,7 +2844,8 @@ J9::ARM64::TreeEvaluator::monentEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
    int32_t lwOffset = fej9->getByteOffsetToLockword(cg->getMonClass(node));
    TR::InstOpCode::Mnemonic op;
-   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node);
+int failureReason = 0;
+   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node, failureReason);
 
    if (comp->getOption(TR_FullSpeedDebug) ||
        (isMonitorValueBasedOrValueType == TR_yes) ||

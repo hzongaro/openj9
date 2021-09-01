@@ -325,7 +325,15 @@ public:
     *    TR_no The monitor object is definitely not value based class type or value type
     *    TR_maybe It is unknown whether the monitor object is value based class type or value type
     */
-   TR_YesNoMaybe isMonitorValueBasedOrValueType(TR::Node* monNode);
+   TR_YesNoMaybe isMonitorValueBasedOrValueType(TR::Node* monNode, int &failureReason);
+
+enum {
+     MonIdentityTypeClass = 0,
+     MonNoClass,
+     MonAbstractClass,
+     MonInterfaceClass,
+     MonValueBasedOrTypeClass
+     };
 
 protected:
 

@@ -289,7 +289,8 @@ ReduceSynchronizedFieldLoad::performOnTreeTops(TR::TreeTop* startTreeTop, TR::Tr
          // Locking on value types or value based classes is prohibited by the spec.,
          // so this optimization can only be performed if we are certain (at compile time)
          // the locking object is not a value type or value based
-         if (cg->isMonitorValueBasedOrValueType(monentNode) != TR_no)
+int failureReason = 0;
+         if (cg->isMonitorValueBasedOrValueType(monentNode, failureReason) != TR_no)
             continue;
          if (comp->getOption(TR_TraceCG))
             {

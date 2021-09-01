@@ -4706,8 +4706,47 @@ J9::X86::TreeEvaluator::VMmonentEvaluator(
    bool reservingLock = false;
    bool normalLockPreservingReservation = false;
    bool dummyMethodMonitor = false;
-   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node);
+   int failureReason = 0;
+   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node, failureReason);
    static const char *doCmpFirst = feGetEnv("TR_AddCMPBeforeCMPXCHG");
+
+   const char *reason = "unknown";
+   switch (failureReason)
+      {
+      case J9::CodeGenerator::MonIdentityTypeClass:
+         {
+         reason = "identity";
+         break;
+         }
+      case J9::CodeGenerator::MonNoClass:
+         {
+         reason = "no-class";
+         break;
+         }
+      case J9::CodeGenerator::MonAbstractClass:
+         {
+         reason = "abstract-class";
+         break;
+         }
+      case J9::CodeGenerator::MonInterfaceClass:
+         {
+         reason = "interface-class";
+         break;
+         }
+      case J9::CodeGenerator::MonValueBasedOrTypeClass:
+         {
+         reason = "value-based-or-type-class";
+         break;
+         }
+      default:
+         {
+         break;
+         }
+      }
+
+cg->generateDebugCounter(
+         TR::DebugCounter::debugCounterName(comp, "mon-value-type-check/%s/(%s)/ci=%d/bc=%d", reason, comp->signature(), node->getByteCodeInfo().getCallerIndex(), node->getByteCodeInfo().getByteCodeIndex()),
+         1, TR::DebugCounter::Cheap);
 
    int lwOffset = fej9->getByteOffsetToLockword((TR_OpaqueClassBlock *) cg->getMonClass(node));
    if (comp->getOption(TR_MimicInterpreterFrameShape) ||
@@ -5330,7 +5369,8 @@ TR::Register
    bool dummyMethodMonitor = false;
    bool gen64BitInstr = cg->comp()->target().is64Bit() && !fej9->generateCompressedLockWord();
    int lwOffset = fej9->getByteOffsetToLockword((TR_OpaqueClassBlock *) cg->getMonClass(node));
-   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node);
+int failureReason = 0;
+   TR_YesNoMaybe isMonitorValueBasedOrValueType = cg->isMonitorValueBasedOrValueType(node, failureReason);
 
    if ((comp->getOption(TR_MimicInterpreterFrameShape) /*&& !comp->getOption(TR_EnableLiveMonitorMetadata)*/) ||
        noInline ||
