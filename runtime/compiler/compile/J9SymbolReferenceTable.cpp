@@ -2471,7 +2471,6 @@ J9::SymbolReferenceTable::findOrCreateNonNullableArrayNullStoreCheckSymbolRef()
       return symRef;
 
    symRef = self()->findOrCreateCodeGenInlinedHelper(nonNullableArrayNullStoreCheckSymbol);
-   symRef->setCanGCandReturn();
    symRef->setCanGCandExcept();
    return symRef;
    }
