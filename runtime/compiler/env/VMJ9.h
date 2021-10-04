@@ -247,7 +247,6 @@ public:
    virtual int32_t adjustedInliningWeightBasedOnArgument(int32_t origWeight, TR::Node *argNode, TR::ParameterSymbol *parmSymbol,  TR::Compilation *comp);
    virtual bool canAllowDifferingNumberOrTypesOfArgsAndParmsInInliner();
 /////
-   virtual bool isGetImplInliningSupported();
 
    /**
     * \brief Indicates whether the native \c java.lang.ref.Reference
@@ -1395,7 +1394,6 @@ public:
    virtual bool               sameClassLoaders(TR_OpaqueClassBlock *, TR_OpaqueClassBlock *);
    virtual bool               isUnloadAssumptionRequired(TR_OpaqueClassBlock *, TR_ResolvedMethod *);
    virtual bool               classHasBeenExtended(TR_OpaqueClassBlock *);
-   virtual bool               isGetImplInliningSupported();
    virtual bool               isGetImplAndRefersToInliningSupported();
    virtual bool               isPublicClass(TR_OpaqueClassBlock *clazz);
    virtual bool               hasFinalizer(TR_OpaqueClassBlock * classPointer);

@@ -156,7 +156,6 @@ class OMR_EXTENSIBLE Compilation : public OMR::CompilationConnector
    void *getCurMethodMetadata() {return _curMethodMetadata;}
    void setCurMethodMetadata(void *m) {_curMethodMetadata = m;}
 
-   void setGetImplInlineable(bool b) { setGetImplAndRefersToInlineable(b); }
    /**
     * \brief Sets whether the native \c java.lang.ref.Reference
     * methods, \c getImpl and \c refersTo, can be inlined.

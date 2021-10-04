@@ -6714,12 +6714,6 @@ TR_J9VM::classHasBeenReplaced(TR_OpaqueClassBlock * clazzPointer)
    }
 
 bool
-TR_J9VMBase::isGetImplInliningSupported()
-   {
-   return isGetImplAndRefersToInliningSupported();
-   }
-
-bool
 TR_J9VMBase::isGetImplAndRefersToInliningSupported()
    {
    J9JavaVM * jvm = _jitConfig->javaVM;
@@ -9214,12 +9208,6 @@ bool
 TR_J9SharedCacheVM::classHasBeenExtended(TR_OpaqueClassBlock * classPointer)
    {
    return true;
-   }
-
-bool
-TR_J9SharedCacheVM::isGetImplInliningSupported()
-   {
-   return isGetImplAndRefersToInliningSupported();
    }
 
 bool

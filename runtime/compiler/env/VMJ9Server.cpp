@@ -630,12 +630,6 @@ TR_J9ServerVM::classHasBeenExtended(TR_OpaqueClassBlock *clazz)
    }
 
 bool
-TR_J9ServerVM::isGetImplInliningSupported()
-   {
-   return isGetImplAndRefersToInliningSupported();
-   }
-
-bool
 TR_J9ServerVM::isGetImplAndRefersToInliningSupported()
    {
    JITServer::ServerStream *stream = _compInfoPT->getMethodBeingCompiled()->_stream;

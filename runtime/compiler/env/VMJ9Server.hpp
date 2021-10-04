@@ -86,7 +86,6 @@ public:
    virtual TR_OpaqueClassBlock * getComponentClassFromArrayClass(TR_OpaqueClassBlock *arrayClass) override;
    virtual bool classHasBeenReplaced(TR_OpaqueClassBlock *) override;
    virtual bool classHasBeenExtended(TR_OpaqueClassBlock *) override;
-   virtual bool isGetImplInliningSupported() override;
    virtual bool isGetImplAndRefersToInliningSupported() override;
    virtual bool compiledAsDLTBefore(TR_ResolvedMethod *) override;
    virtual bool tlhHasBeenCleared() override;
@@ -335,7 +334,6 @@ public:
    virtual bool sameClassLoaders(TR_OpaqueClassBlock *, TR_OpaqueClassBlock *) override { return false; }
    virtual bool isUnloadAssumptionRequired(TR_OpaqueClassBlock *, TR_ResolvedMethod *) override { return true; }
    virtual bool classHasBeenExtended(TR_OpaqueClassBlock *) override { return true; }
-   virtual bool isGetImplInliningSupported() override { return false; }
    virtual bool isGetImplAndRefersToInliningSupported() override { return false; }
    virtual TR_ResolvedMethod * getObjectNewInstanceImplMethod(TR_Memory *) override { return NULL; }
    virtual TR::CodeCache * getResolvedTrampoline(TR::Compilation *, TR::CodeCache* curCache, J9Method * method, bool inBinaryEncoding) override { return 0; }
