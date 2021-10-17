@@ -537,6 +537,15 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
 
    auto* const vftSymRef = comp->getSymRefTab()->findOrCreateVftSymbolRef();
 
+   const char *vttestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/acmp/isvttest/(%s)/bci=[%d,%d]", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, vttestCounterName, tt);
+   TR::Node *checkTypeEqNode =
+         TR::Node::create(node, TR::acmpne, 2,
+               TR::Node::createWithSymRef(node, TR::aloadi, 1, anchoredCallArg1TT->getNode()->getFirstChild(), vftSymRef),
+               TR::Node::createWithSymRef(node, TR::aloadi, 1, anchoredCallArg2TT->getNode()->getFirstChild(), vftSymRef));
+   const char *typeeqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/acmp/typeNEtrue/(%s)/bci=[%d,%d]", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+   TR::DebugCounter::prependDebugCounter(comp, typeeqCounterName, tt, checkTypeEqNode);
+
    auto* const lhsVft = TR::Node::createWithSymRef(node, TR::aloadi, 1, anchoredCallArg1TT->getNode()->getFirstChild(), vftSymRef);
    auto* const isLhsValueType = comp->fej9()->testIsClassValueType(lhsVft);
    auto* const checkLhsIsVT = TR::Node::createif(TR::ificmpeq, isLhsValueType, TR::Node::iconst(0), targetBlock->getEntry());
@@ -1027,7 +1036,7 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
           elementIndexNode->getGlobalIndex(), arrayBaseAddressNode->getGlobalIndex(), tt->getNextTreeTop()->getNode()->getGlobalIndex()))
       return;
 
-   const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aaload/(%s)/bc=%d", comp->signature(), node->getByteCodeIndex());
+   const char *counterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aaload/(%s)/bci=%d", comp->signature(), node->getByteCodeIndex());
    TR::DebugCounter::incStaticDebugCounter(comp, counterName);
 
    TR::CFG *cfg = comp->getFlowGraph();
@@ -1042,6 +1051,25 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::TreeTop *anchoredCallTT = TR::TreeTop::create(comp, tt, TR::Node::create(TR::treetop, 1, node));
    TR::TreeTop *anchoredElementIndexTT = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, elementIndexNode));
    TR::TreeTop *anchoredArrayBaseAddressTT = TR::TreeTop::create(comp, anchoredElementIndexTT, TR::Node::create(TR::treetop, 1, arrayBaseAddressNode));
+
+TR::SymbolReference *vftSymRef = comp->getSymRefTab()->findOrCreateVftSymbolRef();
+TR::SymbolReference *arrayCompSymRef = comp->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef();
+// TR_OpaqueClassBlock *jloClassObject = comp->getObjectClassPointer();
+// TR::SymbolReference *jloClassSymRef = comp->getSymRefTab()->findOrCreateClassSymbol(comp->getMethodSymbol(), -1, jloClassObject, false);
+TR::SymbolReference *jloClassSymRef = comp->getSymRefTab()->findOrCreateClassSymbol(comp->getMethodSymbol(), -1,
+                                                                  comp->fej9()->getClassFromSignature("java/lang/Object", 16, comp->getCurrentMethod(), true));
+
+TR::Node *vft = TR::Node::createWithSymRef(TR::aloadi, 1, 1, arrayBaseAddressNode, vftSymRef);
+TR::Node *arrayCompClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, vft, arrayCompSymRef);
+TR::Node *jloClassAddrNode = TR::Node::createWithSymRef(node, TR::loadaddr, 0, jloClassSymRef);
+TR::Node *checkJLOTypeEQNode = TR::Node::create(node, TR::acmpeq, 2, arrayCompClass, jloClassAddrNode);
+
+const char *vttestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aaload/isvttest/(%s)/bci=[%d,%d]", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+TR::DebugCounter::prependDebugCounter(TR::comp(), vttestCounterName, tt);
+
+const char *jloClassEqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aaload/comptypeobjtrue/(%s)/bci=[%d,%d]", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+TR::DebugCounter::prependDebugCounter(TR::comp(), jloClassEqCounterName, tt, checkJLOTypeEQNode);
+
 
    if (enableTrace)
       traceMsg(comp, "Anchored call node under treetop n%un (0x%p), elementIndex under treetop n%un (0x%p), arrayBaseAddress under treetop n%un (0x%p)\n",
@@ -1156,7 +1184,7 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    copyRegisterDependency(arrayElementLoadBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpne node that checks classFlags to the original block
-   originalBlock->append(TR::TreeTop::create(comp, ifNode));
+   TR::TreeTop *ifTT = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
    if (enableTrace)
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
@@ -1375,6 +1403,24 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::TreeTop *anchoredElementIndexTT = TR::TreeTop::create(comp, anchoredArrayBaseAddressTT, TR::Node::create(TR::treetop, 1, elementIndexNode));
    TR::TreeTop *anchoredValueTT = TR::TreeTop::create(comp, anchoredElementIndexTT, TR::Node::create(TR::treetop, 1, valueNode));
 
+TR::SymbolReference *vftSymRef = comp->getSymRefTab()->findOrCreateVftSymbolRef();
+TR::SymbolReference *arrayCompSymRef = comp->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef();
+// TR_OpaqueClassBlock *jloClassObject = comp->getObjectClassPointer();
+// TR::SymbolReference *jloClassSymRef = comp->getSymRefTab()->findOrCreateClassSymbol(comp->getMethodSymbol(), -1, jloClassObject, false);
+TR::SymbolReference *jloClassSymRef = comp->getSymRefTab()->findOrCreateClassSymbol(comp->getMethodSymbol(), -1,
+                                                                  comp->fej9()->getClassFromSignature("java/lang/Object", 16, comp->getCurrentMethod(), true));
+
+TR::Node *vft = TR::Node::createWithSymRef(TR::aloadi, 1, 1, arrayBaseAddressNode, vftSymRef);
+TR::Node *arrayCompClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, vft, arrayCompSymRef);
+TR::Node *jloClassAddrNode = TR::Node::createWithSymRef(node, TR::loadaddr, 0, jloClassSymRef);
+TR::Node *checkJLOTypeEQNode = TR::Node::create(node, TR::acmpeq, 2, arrayCompClass, jloClassAddrNode);
+
+const char *vttestCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aastore/isvttest/(%s)/bc=%d,%d", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+TR::DebugCounter::prependDebugCounter(TR::comp(), vttestCounterName, tt);
+
+const char *jloClassEqCounterName = TR::DebugCounter::debugCounterName(comp, "vt-helper/inlinecheck/aastore/comptypeobjtrue/(%s)/bc=%d,%d", comp->signature(), node->getInlinedSiteIndex(), node->getByteCodeIndex());
+TR::DebugCounter::prependDebugCounter(TR::comp(), jloClassEqCounterName, tt, checkJLOTypeEQNode);
+
    if (enableTrace)
       traceMsg(comp, "Anchored elementIndex under treetop n%un (0x%p), arrayBaseAddress under treetop n%un (0x%p), value under treetop n%un (0x%p), \n",
             anchoredElementIndexTT->getNode()->getGlobalIndex(), anchoredElementIndexTT->getNode(),
@@ -1522,7 +1568,7 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    copyRegisterDependency(arrayElementStoreBlock->getExit()->getNode(), ifNode);
 
    // Append the ificmpne node that checks classFlags to the original block
-   originalBlock->append(TR::TreeTop::create(comp, ifNode));
+   TR::TreeTop *ifTT = originalBlock->append(TR::TreeTop::create(comp, ifNode));
 
    if (enableTrace)
       traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
