@@ -455,7 +455,7 @@ computeJavaHashForExpandedString(J9JavaVM *javaVM, j9object_t s)
 {
 static long count = 0L;
 count++;
-if (count % 1000000L == 0L) fprintf(stderr, "HZ - Number of calls to computeJavaHashForExpandedString %ld\n", computeJavaHashForExpandedString);
+if (count % 1000000L == 0L) fprintf(stderr, "HZ - Number of calls to computeJavaHashForExpandedString %ld\n", count);
 	U_32 hash = 0;
 	I_32 i;
 	I_32 length = J9VMJAVALANGSTRING_LENGTH_VM(javaVM, s);
