@@ -1,4 +1,4 @@
-/*[INCLUDE-IF JAVA_SPEC_VERSION < 17]*/
+/*[INCLUDE-IF JAVA_SPEC_VERSION < 18]*/
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -8631,6 +8631,76 @@ written authorization of the copyright holder.
 
 		return builder.toString();
 	}
+    /**
+     * Decodes ASCII from the source byte array into the destination
+     * char array. Used via JavaLangAccess from UTF_8 and other charset
+     * decoders.
+     *
+     * @return the number of bytes successfully decoded, at most len
+     */
+    /* package-private */
+    static int decodeASCII(byte[] sa, int sp, char[] da, int dp, int len) {
+        if (!StringCoding.hasNegatives(sa, sp, len)) {
+            StringLatin1.inflate(sa, sp, da, dp, len);
+            return len;
+        } else {
+            int start = sp;
+            int end = sp + len;
+            while (sp < end && sa[sp] >= 0) {
+                da[dp++] = (char) sa[sp++];
+            }
+            return sp - start;
+        }
+    }
+    /**
+     * Designated join routine.
+     *
+     * @param prefix the non-null prefix
+     * @param suffix the non-null suffix
+     * @param delimiter the non-null delimiter
+     * @param elements the non-null array of non-null elements
+     * @param size the number of elements in the array (<= elements.length)
+     * @return the joined string
+     */
+//    @ForceInline
+    static String join(String prefix, String suffix, String delimiter, String[] elements, int size) {
+        int icoder = prefix.coder() | suffix.coder();
+        long len = (long) prefix.length() + suffix.length();
+        if (size > 1) { // when there are more than one element, size - 1 delimiters will be emitted
+            len += (long) (size - 1) * delimiter.length();
+            icoder |= delimiter.coder();
+        }
+        // assert len > 0L; // max: (long) Integer.MAX_VALUE << 32
+        // following loop wil add max: (long) Integer.MAX_VALUE * Integer.MAX_VALUE to len
+        // so len can overflow at most once
+        for (int i = 0; i < size; i++) {
+            var el = elements[i];
+            len += el.length();
+            icoder |= el.coder();
+        }
+        byte coder = (byte) icoder;
+        // long len overflow check, char -> byte length, int len overflow check
+        if (len < 0L || (len <<= coder) != (int) len) {
+            throw new OutOfMemoryError("Requested string length exceeds VM limit");
+        }
+        byte[] value = StringConcatHelper.newArray(len);
+
+        int off = 0;
+        prefix.getBytes(value, off, coder); off += prefix.length();
+        if (size > 0) {
+            var el = elements[0];
+            el.getBytes(value, off, coder); off += el.length();
+            for (int i = 1; i < size; i++) {
+                delimiter.getBytes(value, off, coder); off += delimiter.length();
+                el = elements[i];
+                el.getBytes(value, off, coder); off += el.length();
+            }
+        }
+        suffix.getBytes(value, off, coder);
+        // assert off + suffix.length() == value.length >> coder;
+
+        return new String(value, coder);
+    }
 
 	/**
 	 * Translate the escape sequences in this string as if in a string literal
