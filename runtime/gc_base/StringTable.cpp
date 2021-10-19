@@ -347,6 +347,14 @@ done:
 static BOOLEAN
 stringHashEqualFn(void *leftKey, void *rightKey, void *userData)
 {
+static int count = 0;
+static int pow = 0;
+count++;
+if (count == (2 << pow)) { 
+pow++;
+fprintf(stderr, "HZ - Number of calls to stringHashEqualFn %d\n", count);
+}
+
 	J9JavaVM *javaVM = (J9JavaVM*) userData;
 	j9object_t left_s = NULL;
 	U_32 leftLength = 0;
@@ -453,9 +461,13 @@ j9gc_stringHashEqualFn(void *leftKey, void *rightKey, void *userData)
 U_32 
 computeJavaHashForExpandedString(J9JavaVM *javaVM, j9object_t s)
 {
-static long count = 0L;
+static int count = 0;
+static int pow = 0;
 count++;
-if (count % 1000000L == 0L) fprintf(stderr, "HZ - Number of calls to computeJavaHashForExpandedString %ld\n", count);
+if (count == (2 << pow)) {
+pow++;
+fprintf(stderr, "HZ - Number of calls to computeJavaHashForExpandedString %d\n", count);
+}
 	U_32 hash = 0;
 	I_32 i;
 	I_32 length = J9VMJAVALANGSTRING_LENGTH_VM(javaVM, s);
@@ -483,6 +495,14 @@ if (count % 1000000L == 0L) fprintf(stderr, "HZ - Number of calls to computeJava
 static UDATA
 stringHashFn(void *key, void *userData)
 {
+static int count = 0;
+static int pow = 0;
+count++;
+if (count == (2 << pow)) { 
+pow++;
+fprintf(stderr, "HZ - Number of calls to stringHashFn %d\n", count);
+}
+
 	Assert_MM_false(userData == NULL);
 	J9JavaVM *javaVM = (J9JavaVM*) userData;
 	U_32 hashCode;
