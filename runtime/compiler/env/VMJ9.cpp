@@ -3076,23 +3076,33 @@ TR_J9VMBase::testAreSomeClassFlagsSet(TR::Node *j9ClassRefNode, uint32_t flagsTo
    }
 
 TR::Node *
-TR_J9VMBase::testIsClassValueType(TR::Node *j9ClassRefNode)
+TR_J9VMBase::testIsClassValueType(TR::Node *j9ClassRefNode, TR::ILOpCodes ifCmpOp)
    {
-   return testAreSomeClassFlagsSet(j9ClassRefNode, J9ClassIsValueType);
+   TR::Node *maskedValueTypeFlagNode = testAreSomeClassFlagsSet(j9ClassRefNode, J9ClassIsValueType);
+   TR::Node *ifNode = TR::Node::createif(ifCmpOp, maskedValueTypeFlagNode, TR::Node::iconst(j9ClassRefNode, 0));
+
+   return ifNode;
    }
 
 TR::Node *
-TR_J9VMBase::checkArrayCompClassValueType(TR::Node *arrayBaseAddressNode, TR::ILOpCodes ifCmpOp)
+TR_J9VMBase::loadArrayCompClass(TR::Node *arrayBaseAddressNode)
    {
    TR::SymbolReference *vftSymRef = TR::comp()->getSymRefTab()->findOrCreateVftSymbolRef();
    TR::SymbolReference *arrayCompSymRef = TR::comp()->getSymRefTab()->findOrCreateArrayComponentTypeSymbolRef();
 
    TR::Node *vft = TR::Node::createWithSymRef(TR::aloadi, 1, 1, arrayBaseAddressNode, vftSymRef);
    TR::Node *arrayCompClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, vft, arrayCompSymRef);
-   TR::Node *testIsValueTypeNode = testIsClassValueType(arrayCompClass);
-   TR::Node *ifNode = TR::Node::createif(ifCmpOp, testIsValueTypeNode, TR::Node::iconst(arrayBaseAddressNode, 0));
 
-   return ifNode;
+   return arrayCompClass;
+   }
+
+TR::Node *
+TR_J9VMBase::checkArrayCompClassValueType(TR::Node *arrayBaseAddressNode, TR::ILOpCodes ifCmpOp)
+   {
+   TR::Node *arrayCompClass = loadArrayCompClass(arrayBaseAddressNode);
+   TR::Node *testIsValueTypeNode = testIsClassValueType(arrayCompClass, ifCmpOp);
+
+   return testIsValueTypeNode;
    }
 
 TR::TreeTop *

@@ -1137,7 +1137,9 @@ public:
     * \return \ref TR::Node that evaluates to a non-zero integer if the class is a value type,
     *         or zero if the class is an identity type
     */
-   TR::Node * testIsClassValueType(TR::Node *j9ClassRefNode);
+   TR::Node * testIsClassValueType(TR::Node *j9ClassRefNode, TR::ILOpCodes ifCmpOp);
+
+   TR::Node * loadArrayCompClass(TR::Node *arrayBaseAddressNode);
 
    /**
     * \brief Check whether or not the array component class is value type
