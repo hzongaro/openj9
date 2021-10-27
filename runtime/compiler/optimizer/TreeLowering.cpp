@@ -880,6 +880,43 @@ static bool skipBoundChecks(TR::Compilation *comp, TR::Node *node)
    return false;
    }
 
+static void replaceNodesInSubtree(TR::Node *subtreeNode, TR::Node *originalNode, TR::Node *replacementNode)
+{
+   for (int i = 0; i < subtreeNode->getNumChildren(); i++)
+      {
+      TR::Node *currNode = subtreeNode->getChild(i);
+      if (currNode == originalNode)
+         {
+         subtreeNode->setAndIncChild(i, replacementNode);
+         currNode->decReferenceCount();
+         }
+      else
+         {
+         replaceNodesInSubtree(currNode, originalNode, replacementNode);
+         }
+      }
+}
+
+static void replaceNodesInBlock(TR::Block *block, TR::Node *originalNode, TR::Node *replacementNode)
+{
+TR::TreeTop *currTT = block->getEntry();
+
+   do
+      {
+      TR::Node *currNode = currTT->getNode();
+      if (currNode != replacementNode)
+         {
+         replaceNodesInSubtree(currNode, originalNode, replacementNode);
+         }
+      else
+         {
+         currTT->setNode(replacementNode);
+         }
+      currTT = currTT->getNextTreeTop();
+      }
+   while (currTT != NULL && currTT->getNode()->getOpCodeValue() != TR::BBStart);
+}
+
 /*
  * LoadArrayElementTransformer transforms the block that contains the jitLoadFlattenableArrayElement helper call into three blocks:
  *   1. The merge block (blockAfterHelperCall) that contains the tree tops after the helper call
@@ -990,6 +1027,11 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::Node *elementIndexNode = node->getFirstChild();
    TR::Node *arrayBaseAddressNode = node->getSecondChild();
 
+if (enableTrace)
+{
+traceMsg(comp, "Transforming loadArrayElement call node n%dn under treetop node n%dn\n", node->getGlobalIndex(), tt->getNode()->getGlobalIndex());
+}
+
    if (!performTransformation(comp, "%sTransforming loadArrayElement treetop n%dn node n%dn [%p] in block_%d: elementIndexNode n%dn arrayBaseAddressNode n%dn ttAfterHelperCall n%dn\n", optDetailString(),
           tt->getNode()->getGlobalIndex(), node->getGlobalIndex(), node, originalBlock->getNumber(),
           elementIndexNode->getGlobalIndex(), arrayBaseAddressNode->getGlobalIndex(), tt->getNextTreeTop()->getNode()->getGlobalIndex()))
@@ -1012,10 +1054,13 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::TreeTop *anchoredArrayBaseAddressTT = TR::TreeTop::create(comp, anchoredElementIndexTT, TR::Node::create(TR::treetop, 1, arrayBaseAddressNode));
 
    if (enableTrace)
+{
       traceMsg(comp, "Anchored call node under treetop n%un (0x%p), elementIndex under treetop n%un (0x%p), arrayBaseAddress under treetop n%un (0x%p)\n",
             anchoredCallTT->getNode()->getGlobalIndex(), anchoredCallTT->getNode(),
             anchoredElementIndexTT->getNode()->getGlobalIndex(), anchoredElementIndexTT->getNode(),
             anchoredArrayBaseAddressTT->getNode()->getGlobalIndex(), anchoredArrayBaseAddressTT->getNode());
+comp->dumpMethodTrees("IL after anchoring nodes");
+}
 
 
    ///////////////////////////////////////
@@ -1036,8 +1081,8 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // the helper call. It should not be copied here, otherwise the helper call will get moved up to
    // the GlRegDeps of arrayElementLoadBlock BBExit due to un-commoning in split.
    TR::Node *anchoredNode = anchoredCallTT->getNode()->getFirstChild();
-   TR_GlobalRegisterNumber registerToSkip = (anchoredNode->getOpCodeValue() == TR::aRegLoad) ? anchoredNode->getGlobalRegisterNumber() : -1;
-   TR::Node *tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, registerToSkip);
+   // TR_GlobalRegisterNumber registerToSkip = (anchoredNode->getOpCodeValue() == TR::aRegLoad) ? anchoredNode->getGlobalRegisterNumber() : -1;
+   // TR::Node *tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, registerToSkip);
 
 
    ///////////////////////////////////////
@@ -1047,37 +1092,81 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 5. Split (2) at the helper call
-   TR::Block *helperCallBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
+   // TR::Block *helperCallBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
+
+   TR::Block *arrayElementLoadBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
+   TR_BlockCloner cloner(cfg, true, false);
+   TR::Block *helperCallBlock = cloner.cloneBlocks(arrayElementLoadBlock, arrayElementLoadBlock);
 
    if (enableTrace)
+{
       traceMsg(comp, "Isolated helper call treetop n%dn node n%dn in block_%d\n", tt->getNode()->getGlobalIndex(), node->getGlobalIndex(), helperCallBlock->getNumber());
+comp->dumpMethodTrees("IL after splitting array element load/call block");
+}
 
+   TR::TreeTop *clonedHelperTT = helperCallBlock->getEntry()->getNextTreeTop();
+   TR::Node *helperCallNode = clonedHelperTT->getNode()->getFirstChild();
+
+   TR_ASSERT_FATAL_WITH_NODE(clonedHelperTT->getNode(), helperCallNode->getOpCode().isCall(), "Expected first TreeTop of helperCallBlock to contain the call node that is being rewritten\n"); 
 
    ///////////////////////////////////////
    // 6. Create array element load node and append to the originalBlock
    TR::Node *anchoredArrayBaseAddressNode = anchoredArrayBaseAddressTT->getNode()->getFirstChild();
-   TR::Node *anchoredElementIndexNode = anchoredElementIndexTT->getNode()->getFirstChild();
 
-   TR::Node *elementAddress = J9::TransformUtil::calculateElementAddress(comp, anchoredArrayBaseAddressNode, anchoredElementIndexNode, TR::Address);
-   TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, anchoredArrayBaseAddressNode);
+   ///////////////////////////////////////
+   // x. ????
+   TR::Node *arrayCompTypeNode = comp->fej9()->loadArrayCompClass(anchoredArrayBaseAddressNode);
+   TR::SymbolReference *jloClassSymRef = comp->getSymRefTab()->findOrCreateClassSymbol(comp->getMethodSymbol(), -1,
+                                                  comp->fej9()->getClassFromSignature("java/lang/Object", 16, comp->getCurrentMethod(), true));
+   TR::Node *jloClassAddrNode = TR::Node::createWithSymRef(node, TR::loadaddr, 0, jloClassSymRef);
+   TR::Node *ifObjectArrayNode = TR::Node::createif(TR::ifacmpeq, arrayCompTypeNode, jloClassAddrNode);
+   TR::TreeTop *ifObjectArrayTT = originalBlock->append(TR::TreeTop::create(comp, ifObjectArrayNode));
+
+   ///////////////////////////////////////
+   // 9. Create ificmpne node that checks classFlags
+
+   // The branch destination will be set up later
+   TR::Node *ifValueTypeNode = comp->fej9()->testIsClassValueType(arrayCompTypeNode, TR::ificmpne);
+
+   // Copy register dependency to the ificmpne node that's being appended to the current block
+   copyRegisterDependency(originalBlock->getExit()->getNode(), ifValueTypeNode);
+
+   // Append the ificmpne node that checks classFlags to the original block
+   TR::TreeTop *ifValueTypeTT = originalBlock->append(TR::TreeTop::create(comp, ifValueTypeNode));
+
+   if (enableTrace)
+      traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifValueTypeNode->getGlobalIndex(), originalBlock->getNumber());
+
+   // TR::Node *anchoredElementIndexNode = anchoredElementIndexTT->getNode()->getFirstChild();
+
+   TR::Node *postSplitElementIndexNode = node->getFirstChild();
+   TR::Node *postSplitArrayBaseAddressNode = node->getSecondChild();
+
+   TR::Node *elementAddress = J9::TransformUtil::calculateElementAddress(comp, postSplitArrayBaseAddressNode, postSplitElementIndexNode, TR::Address);
+   TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, postSplitArrayBaseAddressNode);
    TR::Node *elementLoadNode = TR::Node::createWithSymRef(comp->il.opCodeForIndirectArrayLoad(TR::Address), 1, 1, elementAddress, elementSymRef);
    elementLoadNode->copyByteCodeInfo(node);
 
-   TR::TreeTop *elementLoadTT = NULL;
+   // TR::TreeTop *elementLoadTT = NULL;
    if (comp->useCompressedPointers())
-      elementLoadTT = originalBlock->append(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementLoadNode)));
+      tt->setNode(TR::Node::createCompressedRefsAnchor(elementLoadNode));
    else
-      elementLoadTT = originalBlock->append(TR::TreeTop::create(comp, TR::Node::create(node, TR::treetop, 1, elementLoadNode)));
+      tt->setNode(TR::Node::create(node, TR::treetop, 1, elementLoadNode));
+
+   replaceNodesInBlock(arrayElementLoadBlock, node, elementLoadNode);
 
    if (enableTrace)
-      traceMsg(comp, "Created array element load treetop n%dn node n%dn\n", elementLoadTT->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex());
-
+      traceMsg(comp, "Created array element load treetop n%dn node n%dn\n", tt->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex());
 
    ///////////////////////////////////////
    // 7. Store the return value from the array element load to the same register or temp used by the anchored node
    TR::Node *storeArrayElementNode = createStoreNodeForAnchoredNode(anchoredNode, elementLoadNode, comp, enableTrace, "array element load");
 
-   elementLoadTT->insertAfter(TR::TreeTop::create(comp, storeArrayElementNode));
+   // Finished with original call node
+   // node->recursivelyDecReferenceCount();
+
+
+   tt->insertAfter(TR::TreeTop::create(comp, storeArrayElementNode));
 
    if (enableTrace)
       traceMsg(comp, "Store array element load node n%dn to n%dn %s\n", elementLoadNode->getGlobalIndex(), storeArrayElementNode->getGlobalIndex(), storeArrayElementNode->getOpCode().getName());
@@ -1085,12 +1174,12 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 8. Split (3) at the array element load node
-   TR::Block *arrayElementLoadBlock = originalBlock->split(elementLoadTT, cfg);
+   // TR::Block *arrayElementLoadBlock = originalBlock->split(elementLoadTT, cfg);
 
-   arrayElementLoadBlock->setIsExtensionOfPreviousBlock(true);
+   // arrayElementLoadBlock->setIsExtensionOfPreviousBlock(true);
 
-   if (enableTrace)
-      traceMsg(comp, "Isolated array element load treetop n%dn node n%dn in block_%d\n", elementLoadTT->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex(), arrayElementLoadBlock->getNumber());
+   // if (enableTrace)
+   //   traceMsg(comp, "Isolated array element load treetop n%dn node n%dn in block_%d\n", elementLoadTT->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex(), arrayElementLoadBlock->getNumber());
 
    int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
    if (comp->useCompressedPointers())
@@ -1102,10 +1191,10 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // so only add a BNDCHK if it's needed
    if (!skipBoundChecks(comp, node))
       {
-      TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, anchoredArrayBaseAddressNode);
+      TR::Node *arraylengthNode = TR::Node::create(TR::arraylength, 1, postSplitArrayBaseAddressNode);
       arraylengthNode->setArrayStride(dataWidth);
 
-      elementLoadTT->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, anchoredElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
+      tt->insertBefore(TR::TreeTop::create(comp, TR::Node::createWithSymRef(TR::BNDCHK, 2, 2, arraylengthNode, postSplitElementIndexNode, comp->getSymRefTab()->findOrCreateArrayBoundsCheckSymbolRef(comp->getMethodSymbol()))));
 
       // This might be the first time the various checking symbol references are used
       // Need to ensure aliasing for them is correctly constructed
@@ -1114,27 +1203,13 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       }
 
 
-   ///////////////////////////////////////
-   // 9. Create ificmpne node that checks classFlags
-
-   // The branch destination will be set up later
-   TR::Node *ifNode = comp->fej9()->checkArrayCompClassValueType(anchoredArrayBaseAddressNode, TR::ificmpne);
-
-   // Copy register dependency to the ificmpne node that's being appended to the current block
-   copyRegisterDependency(arrayElementLoadBlock->getExit()->getNode(), ifNode);
-
-   // Append the ificmpne node that checks classFlags to the original block
-   originalBlock->append(TR::TreeTop::create(comp, ifNode));
-
-   if (enableTrace)
-      traceMsg(comp, "Append ifNode n%dn to block_%d\n", ifNode->getGlobalIndex(), originalBlock->getNumber());
-
 
    ///////////////////////////////////////
    // 10. Copy tmpGlRegDeps to arrayElementLoadBlock
 
    // Adjust the reference count of the GlRegDeps of the BBExit since it will be replaced by
    // the previously saved tmpGlRegDeps
+/*
    if (arrayElementLoadBlock->getExit()->getNode()->getNumChildren() > 0)
       {
       TR::Node *origRegDeps = arrayElementLoadBlock->getExit()->getNode()->getFirstChild();
@@ -1148,8 +1223,10 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       arrayElementLoadBlock->getExit()->getNode()->setNumChildren(1);
       arrayElementLoadBlock->getExit()->getNode()->setAndIncChild(0, tmpGlRegDeps);
       }
+*/
 
    // Add storeArrayElementNode to GlRegDeps to pass the return value from the array element load to blockAfterHelperCall
+/*
    if (storeArrayElementNode->getOpCodeValue() == TR::aRegStore)
       {
       TR::Node *blkDeps = arrayElementLoadBlock->getExit()->getNode()->getFirstChild();
@@ -1158,16 +1235,20 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       depNode->setGlobalRegisterNumber(storeArrayElementNode->getGlobalRegisterNumber());
       blkDeps->addChildren(&depNode, 1);
       }
+*/
 
+   TR::Block *isValueTypeArrayTestBlock = splitForFastpath(originalBlock, ifValueTypeTT, helperCallBlock);
+   copyRegisterDependency(isValueTypeArrayTestBlock->getExit()->getNode(), ifObjectArrayNode);
 
    ///////////////////////////////////////
    // 11. Set up the edges between the blocks
-   ifNode->setBranchDestination(helperCallBlock->getEntry());
+   ifObjectArrayNode->setBranchDestination(arrayElementLoadBlock->getEntry());
+   ifValueTypeNode->setBranchDestination(helperCallBlock->getEntry());
 
-   cfg->addEdge(originalBlock, helperCallBlock);
+   cfg->addEdge(isValueTypeArrayTestBlock, helperCallBlock);
 
-   cfg->removeEdge(arrayElementLoadBlock, helperCallBlock);
-   cfg->addEdge(arrayElementLoadBlock, blockAfterHelperCall);
+   cfg->removeEdge(originalBlock, helperCallBlock);
+   cfg->addEdge(originalBlock, arrayElementLoadBlock);
 
    // Move helper call to the end of the tree list
    arrayElementLoadBlock->getExit()->join(blockAfterHelperCall->getEntry());
@@ -1178,6 +1259,8 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // Add Goto from the helper call to the merge block
    TR::Node *gotoAfterHelperCallNode = TR::Node::create(helperCallBlock->getExit()->getNode(), TR::Goto, 0, blockAfterHelperCall->getEntry());
    helperCallBlock->append(TR::TreeTop::create(comp, gotoAfterHelperCallNode));
+
+   cfg->addEdge(helperCallBlock, blockAfterHelperCall);
 
    if (helperCallBlock->getExit()->getNode()->getNumChildren() > 0)
       {
@@ -1505,9 +1588,6 @@ comp->dumpMethodTrees("Trees after splitting array element store and helper call
          traceMsg(comp, "Created treetop node with awrtbari child as treetop n%dn elementStoreNode n%dn\n", tt->getNode()->getGlobalIndex(), elementStoreNode->getGlobalIndex());
       }
 
-   // Finished with the original call node now - it's replaced with the array element store
-   node->recursivelyDecReferenceCount();
-
    TR::TreeTop *startOfStoreSeqTT = tt;
 
    ///////////////////////////////////////
@@ -1559,6 +1639,9 @@ comp->dumpMethodTrees("Trees after splitting array element store and helper call
       {
       tt->insertAfter(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementStoreNode)));
       }
+
+   // Finished with the original call node now - it's replaced with the array element store
+   node->recursivelyDecReferenceCount();
 
 if (enableTrace)
 {
@@ -1619,7 +1702,8 @@ comp->dumpMethodTrees("Trees after copying register dependencies");
    cfg->addEdge(originalBlock, arrayElementStoreBlock);
 
 //   cfg->removeEdge(arrayElementStoreBlock, helperCallBlock);
-   cfg->addEdge(arrayElementStoreBlock, blockAfterHelperCall);
+//   cfg->addEdge(arrayElementStoreBlock, blockAfterHelperCall);
+
 
    arrayElementStoreBlock->getExit()->join(blockAfterHelperCall->getEntry());
 
@@ -1637,6 +1721,8 @@ comp->dumpMethodTrees("Trees after copying register dependencies");
       deps->decReferenceCount();
       gotoAfterHelperCallNode->addChildren(&deps, 1);
       }
+
+   cfg->addEdge(helperCallBlock, blockAfterHelperCall);
    }
 
 /**
