@@ -816,7 +816,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             // component type is a value type) and an ArrayStoreCHK are required;
             // otherwise, only the ArrayStoreCHK is required.
             //
-            if ((isCompTypeVT != TR_no) && storeValueConstraint && !storeValueConstraint->isNonNullObject())
+            if ((isCompTypeVT != TR_no) && (storeValueConstraint == NULL || !storeValueConstraint->isNonNullObject()))
                {
                flagsForTransform.set(ValueTypesHelperCallTransform::RequiresStoreAndNullCheck);
                }
