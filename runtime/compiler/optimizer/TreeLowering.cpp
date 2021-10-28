@@ -626,10 +626,14 @@ class NonNullableArrayNullStoreCheckTransformer: public TR::TreeLowering::Transf
    };
 
 /**
- * If value types are enabled, and the value that is being assigned to the array
- * element might be a null reference, lower the ArrayStoreCHK by splitting the
- * block before the ArrayStoreCHK, and inserting a NULLCHK guarded by a check
- * of whether the array's component type is a value type.
+ * If value types are enabled, a check of whether a null reference is being
+ * assigned to a value type array might be needed.  This is represented in the
+ * IL with a call to the <nonNullableArrayNullStoreCheck> non-helper.
+ *
+ * Lower the call by splitting the block before the call, and replacing it
+ a with a NULLCHK guarded by tests of whether the value is null and whether
+ * the array's component type is a value type.  If the value is known to be
+ * non-null at this point in the compilation, the call is simply removed.
  *
  * @param node is the current node in the tree walk
  * @param tt is the treetop at the root of the tree ancoring the current node
@@ -706,29 +710,10 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
       ifNode->setBranchDestination(nextBlock->getEntry());
 
       // Copy register dependencies from the end of the block split
-      // to the ificmpeq that's being added to the end of that block
-      if (prevBlock->getExit()->getNode()->getNumChildren() != 0)
-         {
-         TR::Node *blkDeps = prevBlock->getExit()->getNode()->getFirstChild();
-         TR::Node *ifDeps = TR::Node::create(blkDeps, TR::GlRegDeps);
-
-         for (int i = 0; i < blkDeps->getNumChildren(); i++)
-            {
-            TR::Node *regDep = blkDeps->getChild(i);
-
-            if (regDep->getOpCodeValue() == TR::PassThrough)
-               {
-               TR::Node *orig= regDep;
-               regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
-               regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
-               regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
-               }
-
-            ifDeps->addChildren(&regDep, 1);
-            }
-
-         ifNode->addChildren(&ifDeps, 1);
-         }
+      // to the ificmpeq, which checks for a value type, that's being
+      // added to the end of that block
+      //
+      copyRegisterDependency(prevBlock->getExit()->getNode(), ifNode);
 
       TR::TreeTop *ifArrayCompClassValueTypeTT = prevBlock->append(TR::TreeTop::create(comp(), ifNode));
 
@@ -736,33 +721,18 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
       auto* const nullConst = TR::Node::aconst(0);
       auto* const checkValueNull = TR::Node::createif(TR::ifacmpne, sourceChild, nullConst, nextBlock->getEntry());
 
-      if (prevBlock->getExit()->getNode()->getNumChildren() != 0)
-         {
-         TR::Node *blkDeps = prevBlock->getExit()->getNode()->getFirstChild();
-         TR::Node *ifDeps = TR::Node::create(blkDeps, TR::GlRegDeps);
-
-         for (int i = 0; i < blkDeps->getNumChildren(); i++)
-            {
-            TR::Node *regDep = blkDeps->getChild(i);
-
-            if (regDep->getOpCodeValue() == TR::PassThrough)
-               {
-               TR::Node *orig= regDep;
-               regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
-               regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
-               regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
-               }
-
-            ifDeps->addChildren(&regDep, 1);
-            }
-
-         checkValueNull->addChildren(&ifDeps, 1);
-         }
+      // Copy register dependencies from the end of the block split to the
+      // ifacmpne, which checks for a null value, that's being added to the
+      // end of that block
+      //
+      copyRegisterDependency(prevBlock->getExit()->getNode(), checkValueNull);
 
       TR::TreeTop *checkValueNullTT = ifArrayCompClassValueTypeTT->insertBefore(TR::TreeTop::create(comp(), checkValueNull));
 
       if (enableTrace)
-          traceMsg(comp(),"checkValueNull n%dn is inserted before  n%dn in prevBlock %d\n", checkValueNull->getGlobalIndex(), ifArrayCompClassValueTypeTT->getNode()->getGlobalIndex(), prevBlock->getNumber());
+         {
+         traceMsg(comp(),"checkValueNull n%dn is inserted before  n%dn in prevBlock %d\n", checkValueNull->getGlobalIndex(), ifNode->getGlobalIndex(), prevBlock->getNumber());
+         }
 
       TR::Block *compTypeTestBlock = prevBlock->split(ifArrayCompClassValueTypeTT, cfg);
       compTypeTestBlock->setIsExtensionOfPreviousBlock(true);
@@ -770,7 +740,9 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
       cfg->addEdge(prevBlock, nextBlock);
 
       if (enableTrace)
-          traceMsg(comp(),"ifArrayCompClassValueTypeTT n%dn is isolated in compTypeTestBlock %d\n", ifArrayCompClassValueTypeTT->getNode()->getGlobalIndex(), compTypeTestBlock->getNumber());
+         {
+         traceMsg(comp(),"ifArrayCompClassValueTypeTT n%dn is isolated in compTypeTestBlock %d\n", ifNode->getGlobalIndex(), compTypeTestBlock->getNumber());
+         }
 
       TR::ResolvedMethodSymbol *currentMethod = comp()->getMethodSymbol();
 
