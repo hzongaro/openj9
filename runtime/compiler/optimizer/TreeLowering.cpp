@@ -614,6 +614,32 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
       }
    }
 
+static void
+copyRegisterDependency(TR::Node *fromNode, TR::Node *toNode)
+   {
+   if (fromNode->getNumChildren() != 0)
+      {
+      TR::Node *blkDeps = fromNode->getFirstChild();
+      TR::Node *newDeps = TR::Node::create(blkDeps, TR::GlRegDeps);
+
+      for (int i = 0; i < blkDeps->getNumChildren(); i++)
+         {
+         TR::Node *regDep = blkDeps->getChild(i);
+
+         if (regDep->getOpCodeValue() == TR::PassThrough)
+            {
+            TR::Node *orig= regDep;
+            regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
+            regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
+            regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
+            }
+
+         newDeps->addChildren(&regDep, 1);
+         }
+
+      toNode->addChildren(&newDeps, 1);
+      }
+   }
 
 class NonNullableArrayNullStoreCheckTransformer: public TR::TreeLowering::Transformer
    {
@@ -837,33 +863,6 @@ createStoreNodeForAnchoredNode(TR::Node *anchoredNode, TR::Node *nodeToBeStored,
       }
 
    return storeNode;
-   }
-
-static void
-copyRegisterDependency(TR::Node *fromNode, TR::Node *toNode)
-   {
-   if (fromNode->getNumChildren() != 0)
-      {
-      TR::Node *blkDeps = fromNode->getFirstChild();
-      TR::Node *newDeps = TR::Node::create(blkDeps, TR::GlRegDeps);
-
-      for (int i = 0; i < blkDeps->getNumChildren(); i++)
-         {
-         TR::Node *regDep = blkDeps->getChild(i);
-
-         if (regDep->getOpCodeValue() == TR::PassThrough)
-            {
-            TR::Node *orig= regDep;
-            regDep = TR::Node::create(orig, TR::PassThrough, 1, orig->getFirstChild());
-            regDep->setLowGlobalRegisterNumber(orig->getLowGlobalRegisterNumber());
-            regDep->setHighGlobalRegisterNumber(orig->getHighGlobalRegisterNumber());
-            }
-
-         newDeps->addChildren(&regDep, 1);
-         }
-
-      toNode->addChildren(&newDeps, 1);
-      }
    }
 
 class LoadArrayElementTransformer: public TR::TreeLowering::Transformer
