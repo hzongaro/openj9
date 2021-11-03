@@ -688,11 +688,13 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       const bool areSameRef = (getValueNumber(lhsNode) == getValueNumber(rhsNode))
                               || (lhs != NULL && rhs != NULL && lhs->mustBeEqual(rhs, this));
 
+static char *forceAcmpVPXform = feGetEnv("TR_ForceAcmpVPXform");
+
       // Non-helper equality/inequality comparison call is not needed if
       // either operand is definitely not an instance of a value type or
       // if both operands are definitely references to the same object
       //
-      if (isLhsValue == TR_no || isRhsValue == TR_no || areSameRef)
+      if (forceAcmpVPXform || isLhsValue == TR_no || isRhsValue == TR_no || areSameRef)
          {
          TR::ILOpCode acmpOp = isObjectEqualityCompare ? comp()->il.opCodeForCompareEquals(TR::Address)
                                                        : comp()->il.opCodeForCompareNotEquals(TR::Address);
@@ -796,13 +798,18 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          isStoreValueVT = isValue(storeValueConstraint);
          }
 
+static char *forceAaloadVPXform = feGetEnv("TR_ForceAaloadVPXform");
+static char *forceAastoreVPXform = feGetEnv("TR_ForceAastoreVPXform");
+
       // If the array's component type is definitely not a value type, or if the value
       // being assigned in an array store operation is definitely not a value type, add
       // a delayed transformation to replace the helper call with inline code to
       // perform the array element access.
       //
       if ((arrayConstraint != NULL && isCompTypeVT == TR_no)
-          || (isStoreFlattenableArrayElement && isStoreValueVT == TR_no))
+          || (isStoreFlattenableArrayElement && isStoreValueVT == TR_no)
+          || (forceAaloadVPXform && isLoadFlattenableArrayElement)
+          || (forceAastoreVPXform && isStoreFlattenableArrayElement))
          {
          flags8_t flagsForTransform(isLoadFlattenableArrayElement ? ValueTypesHelperCallTransform::IsArrayLoad
                                                                   : ValueTypesHelperCallTransform::IsArrayStore);
@@ -816,7 +823,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             // component type is a value type) and an ArrayStoreCHK are required;
             // otherwise, only the ArrayStoreCHK is required.
             //
-            if ((isCompTypeVT != TR_no) && (storeValueConstraint == NULL || !storeValueConstraint->isNonNullObject()))
+            if ((isCompTypeVT != TR_no) && (storeValueConstraint == NULL || !storeValueConstraint->isNonNullObject()) && !forceAastoreVPXform)
                {
                flagsForTransform.set(ValueTypesHelperCallTransform::RequiresStoreAndNullCheck);
                }
