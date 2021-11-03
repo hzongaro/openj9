@@ -371,7 +371,7 @@ AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    {
    TR::Compilation* comp = this->comp();
 
-static char *forceInlineAcmpLowering = feGetEnv("TR_ForceInlineAcmpLowering");
+static char *forceInlineAcmpLowering = "yes"; // feGetEnv("TR_ForceInlineAcmpLowering");
 
 if (forceInlineAcmpLowering)
 {
@@ -725,7 +725,7 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
    //   | ttnext                         |
    //   +--------------------------------+
    //
-static char *forceInlineNonnullLowering = feGetEnv("TR_ForceInlineNonnullLowering");
+static char *forceInlineNonnullLowering = "yes"; // feGetEnv("TR_ForceInlineNonnullLowering");
 
    TR::Node *sourceChild = node->getFirstChild();
    TR::Node *destChild = node->getSecondChild();
@@ -998,7 +998,7 @@ static bool skipBoundChecks(TR::Compilation *comp, TR::Node *node)
 void
 LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    {
-static char *forceInlineAaloadLowering = feGetEnv("TR_ForceInlineAaloadLowering");
+static char *forceInlineAaloadLowering = "yes"; // feGetEnv("TR_ForceInlineAaloadLowering");
 
    bool enableTrace = trace();
    TR::Compilation *comp = this->comp();
@@ -1364,7 +1364,7 @@ static bool skipArrayStoreChecks(TR::Compilation *comp, TR::Node *node)
 void
 StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    {
-static char *forceInlineAastoreLowering = feGetEnv("TR_ForceInlineAastoreLowering");
+static char *forceInlineAastoreLowering = "yes"; // feGetEnv("TR_ForceInlineAastoreLowering");
    bool enableTrace = trace();
    TR::Compilation *comp = this->comp();
    TR::Block *originalBlock = tt->getEnclosingBlock();
