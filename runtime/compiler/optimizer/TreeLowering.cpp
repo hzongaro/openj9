@@ -370,6 +370,16 @@ void
 AcmpTransformer::lower(TR::Node * const node, TR::TreeTop * const tt)
    {
    TR::Compilation* comp = this->comp();
+
+static char *forceInlineAcmpLowering = feGetEnv("TR_ForceInlineAcmpLowering");
+
+if (forceInlineAcmpLowering)
+{
+const bool isObjectEqualityTest = (node->getSymbolReference() == comp->getSymRefTab()->findOrCreateAcmpeqHelperSymbolRef());
+TR::Node::recreate(node, isObjectEqualityTest ? TR::acmpeq : TR::acmpne);
+return;
+}
+
    TR::CFG* cfg = comp->getFlowGraph();
    cfg->invalidateStructure();
 
@@ -715,10 +725,12 @@ NonNullableArrayNullStoreCheckTransformer::lower(TR::Node* const node, TR::TreeT
    //   | ttnext                         |
    //   +--------------------------------+
    //
+static char *forceInlineNonnullLowering = feGetEnv("TR_ForceInlineNonnullLowering");
+
    TR::Node *sourceChild = node->getFirstChild();
    TR::Node *destChild = node->getSecondChild();
 
-   if (!sourceChild->isNonNull())
+   if (!forceInlineNonnullLowering && !sourceChild->isNonNull())
       {
       TR::CFG * cfg = comp()->getFlowGraph();
       cfg->invalidateStructure();
@@ -986,6 +998,8 @@ static bool skipBoundChecks(TR::Compilation *comp, TR::Node *node)
 void
 LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    {
+static char *forceInlineAaloadLowering = feGetEnv("TR_ForceInlineAaloadLowering");
+
    bool enableTrace = trace();
    TR::Compilation *comp = this->comp();
    TR::Block *originalBlock = tt->getEnclosingBlock();
@@ -1021,9 +1035,13 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
             anchoredArrayBaseAddressTT->getNode()->getGlobalIndex(), anchoredArrayBaseAddressTT->getNode());
 
 
+TR::Block *blockAfterHelperCall = NULL;
+
+if (!forceInlineAaloadLowering)
+{
    ///////////////////////////////////////
    // 2. Split (1) after the helper call
-   TR::Block *blockAfterHelperCall = originalBlock->splitPostGRA(anchoredCallTT, cfg, true, NULL);
+   blockAfterHelperCall = originalBlock->splitPostGRA(anchoredCallTT, cfg, true, NULL);
 
    if (enableTrace)
       traceMsg(comp, "Isolated the anchored call treetop n%dn in block_%d\n", anchoredCallTT->getNode()->getGlobalIndex(), blockAfterHelperCall->getNumber());
@@ -1038,9 +1056,15 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    // If the anchoredNode is saved to a register, there is a PassThrough for the return value from
    // the helper call. It should not be copied here, otherwise the helper call will get moved up to
    // the GlRegDeps of arrayElementLoadBlock BBExit due to un-commoning in split.
+}
    TR::Node *anchoredNode = anchoredCallTT->getNode()->getFirstChild();
+   TR::Node *tmpGlRegDeps = NULL;
+   TR::Block *helperCallBlock = NULL;
+
+if (!forceInlineAaloadLowering)
+{
    TR_GlobalRegisterNumber registerToSkip = (anchoredNode->getOpCodeValue() == TR::aRegLoad) ? anchoredNode->getGlobalRegisterNumber() : -1;
-   TR::Node *tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, registerToSkip);
+   tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, registerToSkip);
 
 
    ///////////////////////////////////////
@@ -1050,10 +1074,11 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 5. Split (2) at the helper call
-   TR::Block *helperCallBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
+   helperCallBlock = originalBlock->splitPostGRA(tt, cfg, true, NULL);
 
    if (enableTrace)
       traceMsg(comp, "Isolated helper call treetop n%dn node n%dn in block_%d\n", tt->getNode()->getGlobalIndex(), node->getGlobalIndex(), helperCallBlock->getNumber());
+}
 
 
    ///////////////////////////////////////
@@ -1063,10 +1088,26 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    TR::Node *elementAddress = J9::TransformUtil::calculateElementAddress(comp, anchoredArrayBaseAddressNode, anchoredElementIndexNode, TR::Address);
    TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, anchoredArrayBaseAddressNode);
+
+TR::TreeTop *elementLoadTT = NULL;
+TR::Node *storeArrayElementNode = NULL;
+TR::Block *arrayElementLoadBlock = NULL;
+
+if (forceInlineAaloadLowering)
+{
+TR::Node::recreate(node, comp->il.opCodeForIndirectArrayLoad(TR::Address));
+node->setSymbolReference(elementSymRef);
+node->setNumChildren(1);
+node->setAndIncChild(0, elementAddress);
+elementLoadTT = tt;
+elementIndexNode->recursivelyDecReferenceCount();
+arrayBaseAddressNode->recursivelyDecReferenceCount();
+}
+else
+{
    TR::Node *elementLoadNode = TR::Node::createWithSymRef(comp->il.opCodeForIndirectArrayLoad(TR::Address), 1, 1, elementAddress, elementSymRef);
    elementLoadNode->copyByteCodeInfo(node);
 
-   TR::TreeTop *elementLoadTT = NULL;
    if (comp->useCompressedPointers())
       elementLoadTT = originalBlock->append(TR::TreeTop::create(comp, TR::Node::createCompressedRefsAnchor(elementLoadNode)));
    else
@@ -1074,11 +1115,9 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    if (enableTrace)
       traceMsg(comp, "Created array element load treetop n%dn node n%dn\n", elementLoadTT->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex());
-
-
    ///////////////////////////////////////
    // 7. Store the return value from the array element load to the same register or temp used by the anchored node
-   TR::Node *storeArrayElementNode = createStoreNodeForAnchoredNode(anchoredNode, elementLoadNode, comp, enableTrace, "array element load");
+   storeArrayElementNode = createStoreNodeForAnchoredNode(anchoredNode, elementLoadNode, comp, enableTrace, "array element load");
 
    elementLoadTT->insertAfter(TR::TreeTop::create(comp, storeArrayElementNode));
 
@@ -1088,12 +1127,13 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 8. Split (3) at the array element load node
-   TR::Block *arrayElementLoadBlock = originalBlock->split(elementLoadTT, cfg);
+   arrayElementLoadBlock = originalBlock->split(elementLoadTT, cfg);
 
    arrayElementLoadBlock->setIsExtensionOfPreviousBlock(true);
 
    if (enableTrace)
       traceMsg(comp, "Isolated array element load treetop n%dn node n%dn in block_%d\n", elementLoadTT->getNode()->getGlobalIndex(), elementLoadNode->getGlobalIndex(), arrayElementLoadBlock->getNumber());
+}
 
    int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
    if (comp->useCompressedPointers())
@@ -1117,6 +1157,8 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       }
 
 
+if (!forceInlineAaloadLowering)
+{
    ///////////////////////////////////////
    // 9. Create ificmpne node that checks classFlags
 
@@ -1189,6 +1231,7 @@ LoadArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       deps->decReferenceCount();
       gotoAfterHelperCallNode->addChildren(&deps, 1);
       }
+}
    }
 
 class StoreArrayElementTransformer: public TR::TreeLowering::Transformer
@@ -1321,6 +1364,7 @@ static bool skipArrayStoreChecks(TR::Compilation *comp, TR::Node *node)
 void
 StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    {
+static char *forceInlineAastoreLowering = feGetEnv("TR_ForceInlineAastoreLowering");
    bool enableTrace = trace();
    TR::Compilation *comp = this->comp();
    TR::Block *originalBlock = tt->getEnclosingBlock();
@@ -1352,10 +1396,16 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
             anchoredArrayBaseAddressTT->getNode()->getGlobalIndex(), anchoredArrayBaseAddressTT->getNode(),
             anchoredValueTT->getNode()->getGlobalIndex(), anchoredValueTT->getNode());
 
+TR::Node *anchoredValueNode = NULL;
+TR::Node *tmpGlRegDeps = NULL;
+TR::Block *helperCallBlock = NULL;
+TR::Block *blockAfterHelperCall = NULL;
 
+if (!forceInlineAastoreLowering)
+{
    ///////////////////////////////////////
    // 2. Split (1) after the helper call
-   TR::Block *blockAfterHelperCall = originalBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
+   blockAfterHelperCall = originalBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
 
    if (enableTrace)
       traceMsg(comp, "Isolated the trees after the helper call in block_%d\n", blockAfterHelperCall->getNumber());
@@ -1363,7 +1413,7 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 3. Clone the GlRegDeps of the originalBlock's BBExit
-   TR::Node *tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, -1 /* registerToSkip */);
+   tmpGlRegDeps = cloneAndTweakGlRegDepsFromBBExit(originalBlock->getExit()->getNode(), comp, enableTrace, -1 /* registerToSkip */);
 
 
    ///////////////////////////////////////
@@ -1379,11 +1429,14 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
 
    ///////////////////////////////////////
    // 5. Split (2) at the helper call node including the nullchk on the value reference into its own helperCallBlock
+}
 
    // Insert NULLCHK for VT
-   TR::Node *anchoredValueNode = anchoredValueTT->getNode()->getFirstChild();
+   anchoredValueNode = anchoredValueTT->getNode()->getFirstChild();
    TR::TreeTop *ttForHelperCallBlock = tt;
 
+if (!forceInlineAastoreLowering)
+{
    if (!anchoredValueNode->isNonNull())
       {
       TR::Node *passThru  = TR::Node::create(node, TR::PassThrough, 1, anchoredValueNode);
@@ -1391,11 +1444,12 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       ttForHelperCallBlock = tt->insertBefore(TR::TreeTop::create(comp, nullCheck));
       }
 
-   TR::Block *helperCallBlock = originalBlock->splitPostGRA(ttForHelperCallBlock, cfg, true, NULL);
+   helperCallBlock = originalBlock->splitPostGRA(ttForHelperCallBlock, cfg, true, NULL);
 
    if (enableTrace)
       traceMsg(comp, "Isolated helper call treetop n%dn node n%dn in block_%d\n", tt->getNode()->getGlobalIndex(), node->getGlobalIndex(), helperCallBlock->getNumber());
 
+}
 
    ///////////////////////////////////////
    // 6. Create the new ArrayStoreCHK
@@ -1405,10 +1459,30 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
    TR::Node *elementAddress = J9::TransformUtil::calculateElementAddress(comp, anchoredArrayBaseAddressNode, anchoredElementIndexNode, TR::Address);
 
    TR::SymbolReference *elementSymRef = comp->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Address, anchoredArrayBaseAddressNode);
-   TR::Node *elementStoreNode = TR::Node::createWithSymRef(TR::awrtbari, 3, 3, elementAddress, anchoredValueNode, anchoredArrayBaseAddressNode, elementSymRef);
+
+   TR::TreeTop *arrayStoreTT = NULL;
+   TR::Node *elementStoreNode = NULL;
+
+if (!forceInlineAastoreLowering)
+{
+   elementStoreNode = TR::Node::createWithSymRef(TR::awrtbari, 3, 3, elementAddress, anchoredValueNode, anchoredArrayBaseAddressNode, elementSymRef);
+}
+else
+{
+   elementStoreNode = node;
+   TR::Node::recreate(node, TR::awrtbari);
+   node->setNumChildren(3);
+   node->setSymbolReference(elementSymRef);
+   node->setAndIncChild(0, elementAddress);
+   node->setAndIncChild(1, anchoredValueNode);
+   node->setAndIncChild(2, anchoredArrayBaseAddressNode);
+
+   valueNode->recursivelyDecReferenceCount();
+   elementIndexNode->recursivelyDecReferenceCount();
+   arrayBaseAddressNode->recursivelyDecReferenceCount();
+}
 
    TR::Node *arrayStoreCHKNode = NULL;
-   TR::TreeTop *arrayStoreTT = NULL;
 
    // Some JCL methods are known never to trigger an ArrayStoreException
    // Only add an ArrayStoreCHK if it's required
@@ -1417,7 +1491,14 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       TR::SymbolReference *arrayStoreCHKSymRef = comp->getSymRefTab()->findOrCreateTypeCheckArrayStoreSymbolRef(comp->getMethodSymbol());
       arrayStoreCHKNode = TR::Node::createWithRoomForThree(TR::ArrayStoreCHK, elementStoreNode, 0, arrayStoreCHKSymRef);
       arrayStoreCHKNode->copyByteCodeInfo(node);
+if (!forceInlineAastoreLowering)
+{
       arrayStoreTT = originalBlock->append(TR::TreeTop::create(comp, arrayStoreCHKNode));
+}
+else
+{
+      arrayStoreTT = ttForHelperCallBlock->insertAfter(TR::TreeTop::create(comp, arrayStoreCHKNode));
+}
       if (enableTrace)
          traceMsg(comp, "Created arrayStoreCHK treetop n%dn arrayStoreCHKNode n%dn\n", arrayStoreTT->getNode()->getGlobalIndex(), arrayStoreCHKNode->getGlobalIndex());
 
@@ -1428,20 +1509,32 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       }
    else
       {
+if (!forceInlineAastoreLowering)
+{
       arrayStoreTT = originalBlock->append(TR::TreeTop::create(comp, TR::Node::create(TR::treetop, 1, elementStoreNode)));
+}
+else
+{
+      arrayStoreTT = ttForHelperCallBlock->insertAfter(TR::TreeTop::create(comp, TR::Node::create(TR::treetop, 1, elementStoreNode)));
+}
       if (enableTrace)
          traceMsg(comp, "Created treetop node with awrtbari child as treetop n%dn elementStoreNode n%dn\n", arrayStoreTT->getNode()->getGlobalIndex(), elementStoreNode->getGlobalIndex());
       }
 
+TR::Block *arrayElementStoreBlock = NULL;
+
+if (!forceInlineAastoreLowering)
+{
    ///////////////////////////////////////
    // 7. Split (3) at the regular array element store
-   TR::Block *arrayElementStoreBlock = originalBlock->split(arrayStoreTT, cfg);
+   arrayElementStoreBlock = originalBlock->split(arrayStoreTT, cfg);
 
    arrayElementStoreBlock->setIsExtensionOfPreviousBlock(true);
 
    if (enableTrace)
       traceMsg(comp, "Isolated array element store treetop n%dn node n%dn in block_%d\n", arrayStoreTT->getNode()->getGlobalIndex(),
             arrayStoreCHKNode ? arrayStoreCHKNode->getGlobalIndex() : elementStoreNode->getGlobalIndex(), arrayElementStoreBlock->getNumber());
+}
 
    int32_t dataWidth = TR::Symbol::convertTypeToSize(TR::Address);
    if (comp->useCompressedPointers())
@@ -1483,6 +1576,8 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       }
 
 
+if (!forceInlineAastoreLowering)
+{
    ///////////////////////////////////////
    // 8. Create the ificmpne node that checks classFlags
 
@@ -1544,6 +1639,13 @@ StoreArrayElementTransformer::lower(TR::Node* const node, TR::TreeTop* const tt)
       deps->decReferenceCount();
       gotoAfterHelperCallNode->addChildren(&deps, 1);
       }
+}
+
+if (forceInlineAastoreLowering)
+{
+tt->getPrevTreeTop()->join(tt->getNextTreeTop());
+node->recursivelyDecReferenceCount();
+}
    }
 
 /**
