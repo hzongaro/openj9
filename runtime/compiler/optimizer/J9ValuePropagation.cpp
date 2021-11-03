@@ -688,7 +688,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       const bool areSameRef = (getValueNumber(lhsNode) == getValueNumber(rhsNode))
                               || (lhs != NULL && rhs != NULL && lhs->mustBeEqual(rhs, this));
 
-static char *forceAcmpVPXform = feGetEnv("TR_ForceAcmpVPXform");
+static char *forceAcmpVPXform = "yes"; // feGetEnv("TR_ForceAcmpVPXform");
 
       // Non-helper equality/inequality comparison call is not needed if
       // either operand is definitely not an instance of a value type or
@@ -798,8 +798,8 @@ static char *forceAcmpVPXform = feGetEnv("TR_ForceAcmpVPXform");
          isStoreValueVT = isValue(storeValueConstraint);
          }
 
-static char *forceAaloadVPXform = feGetEnv("TR_ForceAaloadVPXform");
-static char *forceAastoreVPXform = feGetEnv("TR_ForceAastoreVPXform");
+static char *forceAaloadVPXform = "yes"; // feGetEnv("TR_ForceAaloadVPXform");
+static char *forceAastoreVPXform = "yes"; // feGetEnv("TR_ForceAastoreVPXform");
 
       // If the array's component type is definitely not a value type, or if the value
       // being assigned in an array store operation is definitely not a value type, add
