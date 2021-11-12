@@ -85,6 +85,7 @@
 #include "optimizer/HandleRecompilationOps.hpp"
 #include "optimizer/MethodHandleTransformer.hpp"
 #include "optimizer/VectorAPIExpansion.hpp"
+#include "optimizer/ForceHelperTransform.hpp"
 
 
 static const OptimizationStrategy J9EarlyGlobalOpts[] =
@@ -885,6 +886,8 @@ J9::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *method
       new (comp->allocator()) TR::OptimizationManager(self(), TR_HotFieldMarking::create, OMR::hotFieldMarking);
    _opts[OMR::vectorAPIExpansion] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_VectorAPIExpansion::create, OMR::vectorAPIExpansion);
+   _opts[OMR::forceHelperTransform] =
+      new (comp->allocator()) TR::OptimizationManager(self(), ForceHelperTransform::create, OMR::forceHelperTransform);
    // NOTE: Please add new J9 optimizations here!
 
    // initialize additional J9 optimization groups

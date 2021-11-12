@@ -124,6 +124,9 @@ J9::OptimizationManager::OptimizationManager(TR::Optimizer *o, OptimizationFacto
       case OMR::handleRecompilationOps:
          _flags.set(doesNotRequireAliasSets | supportsIlGenOptLevel);
          break;
+      case OMR::forceHelperTransform:
+         _flags.set(doesNotRequireAliasSets | supportsIlGenOptLevel);
+         break;
       default:
          // do nothing
          break;
