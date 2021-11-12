@@ -85,6 +85,7 @@
 #include "optimizer/HandleRecompilationOps.hpp"
 #include "optimizer/MethodHandleTransformer.hpp"
 #include "optimizer/VectorAPIExpansion.hpp"
+#include "optimizer/ForceHelperTransform.hpp"
 
 
 static const OptimizationStrategy J9EarlyGlobalOpts[] =
@@ -272,6 +273,7 @@ static const OptimizationStrategy coldStrategyOpts[] =
 #endif
    { OMR::basicBlockExtension                                                   },
    { OMR::localValuePropagationGroup                                            },
+   { OMR::forceHelperTransform                                                  },
    { OMR::deadTreesElimination                                                  },
    { OMR::localCSE,                                  OMR::IfEnabled                  },
    { OMR::treeSimplification                                                    },
@@ -325,6 +327,7 @@ static const OptimizationStrategy warmStrategyOpts[] =
    { OMR::treeSimplification                                                    },
    { OMR::sequentialLoadAndStoreWarmGroup,           OMR::IfEnabled                  }, // disabled by default, enabled by -Xjit:enableSequentialLoadStoreWarm
    { OMR::cheapGlobalValuePropagationGroup                                      },
+   { OMR::forceHelperTransform                                                  },
    { OMR::localCSE,                                    OMR::IfVectorAPI },
    { OMR::dataAccessAccelerator                                                 }, // globalValuePropagation and inlining might expose opportunities for dataAccessAccelerator
    { OMR::globalCopyPropagation,                       OMR::IfVoluntaryOSR          },
@@ -450,6 +453,7 @@ const OptimizationStrategy hotStrategyOpts[] =
    { OMR::loopReplicator,                        OMR::IfLoops                  }, // tail-duplication in loops
    { OMR::blockSplitter,                         OMR::IfNews                   }, // treeSimplification + blockSplitter + VP => opportunity for EA
    { OMR::expensiveGlobalValuePropagationGroup                            },
+   { OMR::forceHelperTransform                                                  },
    { OMR::localCSE,                              OMR::IfVectorAPI },
    { OMR::loopCanonicalization,                  OMR::IfVectorAPI },
    { OMR::partialRedundancyEliminationGroup,     OMR::IfVectorAPI },
@@ -543,6 +547,7 @@ const OptimizationStrategy scorchingStrategyOpts[] =
    { OMR::blockSplitter,                         OMR::IfNews      }, // treeSimplification + blockSplitter + VP => opportunity for EA
    { OMR::arrayPrivatizationGroup,               OMR::IfNews      }, // must precede escape analysis
    { OMR::veryExpensiveGlobalValuePropagationGroup           },
+   { OMR::forceHelperTransform                               },
    { OMR::dataAccessAccelerator                              }, //always run after GVP
    { OMR::osrGuardRemoval,                       OMR::IfEnabled }, // run after calls/monents/asyncchecks have been removed
    { OMR::globalDeadStoreGroup,                              },
@@ -712,6 +717,7 @@ static const OptimizationStrategy cheapWarmStrategyOpts[] =
    { OMR::sequentialLoadAndStoreWarmGroup,           OMR::IfEnabled                  },
 #endif
    { OMR::cheapGlobalValuePropagationGroup                                      },
+   { OMR::forceHelperTransform                                                  },
    { OMR::localCSE,                                  OMR::IfVectorAPI },
    { OMR::dataAccessAccelerator                                                 },
 #ifdef TR_HOST_S390
@@ -891,6 +897,8 @@ J9::Optimizer::Optimizer(TR::Compilation *comp, TR::ResolvedMethodSymbol *method
       new (comp->allocator()) TR::OptimizationManager(self(), TR_HotFieldMarking::create, OMR::hotFieldMarking);
    _opts[OMR::vectorAPIExpansion] =
       new (comp->allocator()) TR::OptimizationManager(self(), TR_VectorAPIExpansion::create, OMR::vectorAPIExpansion);
+   _opts[OMR::forceHelperTransform] =
+      new (comp->allocator()) TR::OptimizationManager(self(), ForceHelperTransform::create, OMR::forceHelperTransform);
    // NOTE: Please add new J9 optimizations here!
 
    // initialize additional J9 optimization groups
