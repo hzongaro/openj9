@@ -2720,7 +2720,8 @@ TR_J9ByteCodeIlGenerator::genIfTwoOperand(TR::ILOpCodes nodeop)
 int32_t
 TR_J9ByteCodeIlGenerator::genIfAcmpEqNe(TR::ILOpCodes ifacmpOp)
    {
-   if (!TR::Compiler->om.areValueTypesEnabled())
+static char *disableAcmpHelperILGen = feGetEnv("TR_DisableAcmpHelperILGen");
+   if (!TR::Compiler->om.areValueTypesEnabled() || disableAcmpHelperILGen)
       return genIfTwoOperand(ifacmpOp);
 
    int32_t branchBC = _bcIndex + next2BytesSigned();
@@ -6051,7 +6052,8 @@ TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpCodes 
    // we won't have flattening, so no call to flattenable array element access
    // helper is needed.
    //
-   if (mayBeValueType && TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
+static char *disableAaloadHelperILGen = feGetEnv("TR_DisableAaloadHelperILGen");
+   if (mayBeValueType && TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address && !disableAaloadHelperILGen)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
@@ -7517,7 +7519,8 @@ TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOpCodes
    // we won't have flattening, so no call to flattenable array element access
    // helper is needed.
    //
-   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address)
+static char *disableAastoreHelperILGen = feGetEnv("TR_DisableAastoreHelperILGen");
+   if (TR::Compiler->om.areValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address && !disableAastoreHelperILGen)
       {
       TR::Node* elementIndex = pop();
       TR::Node* arrayBaseAddress = pop();
