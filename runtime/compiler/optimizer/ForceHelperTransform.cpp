@@ -60,7 +60,7 @@ int32_t ForceHelperTransform::perform()
    if (trace())
       {
       traceMsg(comp(), "Starting ForceHelperTransform\n");
-      comp()->dumpMethodTrees("Trees at start of ForceHelperTransform");
+      comp()->dumpMethodTrees("Trees at start of ForceHelperTransform", optimizer()->getMethodSymbol());
       }
 
    TR::NodeChecklist visited(comp());
@@ -76,7 +76,7 @@ int32_t ForceHelperTransform::perform()
    if (trace())
       {
       traceMsg(comp(), "Ending ForceHelperTransform\n");
-      comp()->dumpMethodTrees("Trees at end of ForceHelperTransform");
+      comp()->dumpMethodTrees("Trees at end of ForceHelperTransform", optimizer()->getMethodSymbol());
       }
 
    return 1;
