@@ -82,10 +82,17 @@ void TR_EscapeAnalysisTools::insertFakeEscapeForOSR(TR::Block *block, TR::Node *
    static char *disableEADefiningMap = feGetEnv("TR_DisableEAEscapeHelperDefiningMap");
    DefiningMap *induceDefiningMap = !disableEADefiningMap ? osrMethodData->getDefiningMap() : NULL;
 
-   if (_comp->trace(OMR::escapeAnalysis) && induceDefiningMap)
+   if (_comp->trace(OMR::escapeAnalysis) || _comp->getOption(TR_TraceOSR))
       {
-      traceMsg(_comp, "definingMap at induceCall n%dn %d:%d\n", induceCall->getGlobalIndex(), induceCall->getByteCodeInfo().getCallerIndex(), induceCall->getByteCodeInfo().getByteCodeIndex());
-      _comp->getOSRCompilationData()->printMap(induceDefiningMap);
+      if (induceDefiningMap)
+         {
+         traceMsg(_comp, "definingMap at induceCall n%dn %d:%d\n", induceCall->getGlobalIndex(), induceCall->getByteCodeInfo().getCallerIndex(), induceCall->getByteCodeInfo().getByteCodeIndex());
+         _comp->getOSRCompilationData()->printMap(induceDefiningMap);
+         }
+      else
+         {
+         traceMsg(_comp, "definingMap at induceCall n%dn %d:%d is EMPTY\n", induceCall->getGlobalIndex(), induceCall->getByteCodeInfo().getCallerIndex(), induceCall->getByteCodeInfo().getByteCodeIndex());
+         }
       }
 
    // Gather all live autos and pending pushes at this point for inlined methods in _loads
@@ -123,6 +130,11 @@ void TR_EscapeAnalysisTools::processSymbolReferences(TR_Array<List<TR::SymbolRef
       for (TR::SymbolReference* symRef = autosIt.getFirst(); symRef; symRef = autosIt.getNext())
          {
          TR::Symbol *p = symRef->getSymbol();
+         if (_comp->getOption(TR_TraceOSR))
+            {
+            traceMsg(_comp, "In processSymbolReferences, considering symRef #%d - isAuto == %d; isParm == %d; address == %d\n", symRef->getReferenceNumber(), p->isAuto(), p->isParm(), (p->getDataType() == TR::Address));
+            }
+
          if ((p->isAuto() || p->isParm()) && p->getDataType() == TR::Address)
             {
             // If no DefiningMap is available for the current sym ref, or the
@@ -136,12 +148,27 @@ void TR_EscapeAnalysisTools::processSymbolReferences(TR_Array<List<TR::SymbolRef
                {
                if (deadSymRefs == NULL || !deadSymRefs->isSet(symRef->getReferenceNumber()))
                   {
+                  if (_comp->getOption(TR_TraceOSR))
+                     {
+                     traceMsg(_comp, "In processSymbolReferences, loading symRef #%d\n", symRef->getReferenceNumber());
+                     }
                   _loads->push_back(TR::Node::createWithSymRef(TR::aload, 0, symRef));
+                  }
+               else
+                  {
+                  if (_comp->getOption(TR_TraceOSR))
+                     {
+                     traceMsg(_comp, "In processSymbolReferences, symRef #%d is seen as dead\n", symRef->getReferenceNumber());
+                     }
                   }
                }
             else
                {
                TR_BitVector *definingSyms = (*induceDefiningMap)[symRef->getReferenceNumber()];
+               if (_comp->getOption(TR_TraceOSR))
+                  {
+                  traceMsg(_comp, "In processSymbolReferences getting defining syms for #%d - definingSyms == %p\n", symRef->getReferenceNumber(), definingSyms);
+                  }
                TR_BitVectorIterator definingSymsIt(*definingSyms);
                while (definingSymsIt.hasMoreElements())
                   {
@@ -149,10 +176,25 @@ void TR_EscapeAnalysisTools::processSymbolReferences(TR_Array<List<TR::SymbolRef
                   TR::SymbolReference *definingSymRef = _comp->getSymRefTab()->getSymRef(definingSymRefNum);
                   TR::Symbol *definingSym = definingSymRef->getSymbol();
 
+                  if (_comp->getOption(TR_TraceOSR))
+                     {
+                     traceMsg(_comp, "In processSymbolReferences, considering definingSymRef #%d - isAuto == %d; isParm == %d\n", definingSymRefNum, definingSym->isAuto(), definingSym->isParm());
+                     }
+
                   if ((definingSym->isAuto() || definingSym->isParm())
                       && (deadSymRefs == NULL || !deadSymRefs->isSet(definingSymRefNum)))
                      {
                      _loads->push_back(TR::Node::createWithSymRef(TR::aload, 0, definingSymRef));
+
+                     if (_comp->getOption(TR_TraceOSR))
+                        {
+                        traceMsg(_comp, "In processSymbolReferences, loading definingSymRefNum #%d\n", definingSymRefNum);
+                        }
+                     }
+
+                  if (_comp->getOption(TR_TraceOSR) && deadSymRefs && deadSymRefs->isSet(definingSymRefNum))
+                     {
+                     traceMsg(_comp, "In processSymbolReferences, definingSymRefNum #%d is seen as dead\n", definingSymRefNum);
                      }
                   }
                }
