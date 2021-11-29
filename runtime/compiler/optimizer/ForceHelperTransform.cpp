@@ -145,13 +145,15 @@ void ForceHelperTransform::visitNode(TR::Node * node, TR::NodeChecklist &visited
             {
             TR::Node *storeValueNode = node->getChild(0);
 
+static char *suppressNonNullableStoreCheck = feGetEnv("TR_SuppressNonNullableStoreCheck");
+
             // If storing to an array whose component type is or might be a value type
             // and the value that's being assigned is or might be null, both a run-time
             // NULLCHK of the value is required (guarded by a check of whether the
             // component type is a value type) and an ArrayStoreCHK are required;
             // otherwise, only the ArrayStoreCHK is required.
             //
-            if (!storeValueNode->isNonNull())
+            if (!storeValueNode->isNonNull() && !suppressNonNullableStoreCheck)
                {
                flagsForTransform.set(ValueTypesHelperCallTransform::RequiresStoreAndNullCheck);
                }
