@@ -48,7 +48,7 @@
 #include "env/J9JitMemory.hpp"
 #include "optimizer/HCRGuardAnalysis.hpp"
 
-#define OPT_DETAILS "O^O VALUE PROPAGATION: "
+#define OPT_DETAILS optDetailString()
 
 J9::ValuePropagation::ValuePropagation(TR::OptimizationManager *manager)
    : OMR::ValuePropagation(manager),
@@ -2584,7 +2584,7 @@ static void transformToOptimizedCloneCall(OMR::ValuePropagation *vp, TR::Node *n
 
    //printf("helper sym 0x%x, optsym 0x%x \n", getHelpersSymRef, optimizedCloneSymRef);
 
-   if (optimizedCloneSymRef && getHelpersSymRef && performTransformation(vp->comp(), "%sChanging call to new optimizedClone at node [%p]\n", OPT_DETAILS, node))
+   if (optimizedCloneSymRef && getHelpersSymRef && performTransformation(vp->comp(), "%sChanging call to new optimizedClone at node [%p]\n", vp->optDetailString(), node))
         {
         //FIXME: add me to the list of calls to be inlined
         //
@@ -2639,7 +2639,7 @@ static TR::Node *setCloneClassInNode(OMR::ValuePropagation *vp, TR::Node *node, 
          if (answer != TR_yes)
             clazz = node->getCloneClassInNode();
          }
-      if (performTransformation(vp->comp(), "%sSetting type on Object.Clone acall node [%p] to [%p]\n", OPT_DETAILS, node, clazz))
+      if (performTransformation(vp->comp(), "%sSetting type on Object.Clone acall node [%p] to [%p]\n", vp->optDetailString(), node, clazz))
          node->setSecond((TR::Node*)clazz);
       }
    return node;
