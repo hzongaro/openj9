@@ -914,7 +914,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                // If the value was loaded from the same array that is the target of the store, no need
                // to perform ArrayStoreCHK or a call to the <nonNullableArrayNullStoreCheck> non-helper
                //
-               if (storeValueBaseNode != arrayRefNode)
+               if (storeValueBaseNode == NULL || getValueNumber(storeValueBaseNode) != getValueNumber(arrayRefNode))
                   {
                   // If storing to an array whose component type is or might be a value type
                   // and the value that's being assigned is or might be null, both a run-time
