@@ -32,7 +32,6 @@
 #include "il/Symbol.hpp"
 #include "env/CHTable.hpp"
 #include "env/ClassTableCriticalSection.hpp"
-#include "env/VMAccessCriticalSection.hpp"
 #include "env/PersistentCHTable.hpp"
 #include "env/VMJ9.h"
 #include "optimizer/Optimization_inlines.hpp"
@@ -714,8 +713,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             _valueTypesHelperCallsToBeFolded.add(
                   new (trStackMemory()) ValueTypesHelperCallTransform(_curTree, node,
                                               ValueTypesHelperCallTransform::IsRefCompare
-                                              | ValueTypesHelperCallTransform::InsertDebugCounter,
-                                              NULL));
+                                              | ValueTypesHelperCallTransform::InsertDebugCounter));
 
             // Replace the non-helper equality/inequality comparison with an address comparison
             TR::Node::recreate(node, acmpOp.getOpCodeValue());
@@ -847,7 +845,8 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          canTransformIdentityLoadStore = true;
          }
 
-      if (canTransformFlattenedArrayElementLoadStore || canTransformUnflattenedVTArrayElementLoadStore
+      if (canTransformFlattenedArrayElementLoadStore
+          || canTransformUnflattenedVTArrayElementLoadStore
           || canTransformIdentityLoadStore)
          {
          ValueTypesHelperCallTransform *callToTransform = NULL;
@@ -966,6 +965,11 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             TR::VPConstraint *indexConstraint = getConstraint(indexNode, arrayRefGlobal);
             if (indexConstraint != NULL)
                {
+               // Suppose the index lies somewhere in the range [A,B] and the array length lies
+               // somewhere in the range [C,D].  If A is known to be non-negative, and B is less
+               // than C, a BNDCHK operation on the index and array length could never throw an
+               // AIOOBE - hence no bound check is required.
+               //
                if (indexConstraint->getLowInt() >= 0 && indexConstraint->getHighInt() < lowerBoundLimit)
                   {
                   isBoundCheckRequired = false;
@@ -976,11 +980,13 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          if (isBoundCheckRequired)
             {
             callToTransform->_flags.set(ValueTypesHelperCallTransform::RequiresBoundCheck);
-            }
 
-         if (arrayLength >= 0)
-            {
-            callToTransform->_arrayLength = arrayLength;
+            // The arrayLength is only interesting if a BNDCHK will be required
+            //
+            if (arrayLength >= 0)
+               {
+               callToTransform->_arrayLength = arrayLength;
+               }
             }
 
          _valueTypesHelperCallsToBeFolded.add(callToTransform);
@@ -2220,7 +2226,7 @@ J9::ValuePropagation::doDelayedTransformations()
       const bool isStore = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::IsArrayStore);
       const bool isCompare = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::IsRefCompare);
       const bool needsStoreCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresStoreCheck);
-      const bool needsNullStoreCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresNullValueCheck);
+      const bool needsNullValueCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresNullValueCheck);
       const bool needsBoundCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresBoundCheck);
       const bool isFlattenedElement = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::IsFlattenedElement);
 
@@ -2343,7 +2349,7 @@ J9::ValuePropagation::doDelayedTransformations()
             callTree->setNode(TR::Node::create(TR::treetop, 1, elementStoreNode));
             }
 
-         if (needsNullStoreCheck)
+         if (needsNullValueCheck)
             {
             TR::SymbolReference *nonNullableArrayNullStoreCheckSymRef = comp()->getSymRefTab()->findOrCreateNonNullableArrayNullStoreCheckSymbolRef();
             TR::Node *nullCheckNode = TR::Node::createWithSymRef(TR::call, 2, 2, valueNode, arrayRefNode, nonNullableArrayNullStoreCheckSymRef);
@@ -2370,7 +2376,7 @@ J9::ValuePropagation::doDelayedTransformations()
       else
          {
          TR_ASSERT_FATAL(isStore && isFlattenedElement, "Missing flags: isLoad %d isStore %d isFlattenedElement %d for call tree n%dn\n", isLoad, isStore, isFlattenedElement, callTree->getNode()->getGlobalIndex());
-         isCallTreeRemoved = transformFlattenedArrayElementStore(callToTransform->_arrayClass, callTree, callNode, needsNullStoreCheck);
+         isCallTreeRemoved = transformFlattenedArrayElementStore(callToTransform->_arrayClass, callTree, callNode, needsNullValueCheck);
          }
 
       if (!isCallTreeRemoved)

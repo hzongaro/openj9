@@ -210,8 +210,9 @@ class ValuePropagation : public OMR::ValuePropagation
       int32_t _arrayLength;
       flags8_t _flags;
 
-      ValueTypesHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags, TR_OpaqueClassBlock *arrayClass,
-               TR_OpaqueClassBlock *storeClass = NULL, TR_OpaqueClassBlock *compClass = NULL)
+      ValueTypesHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags,
+               TR_OpaqueClassBlock *arrayClass = NULL, TR_OpaqueClassBlock *storeClass = NULL,
+               TR_OpaqueClassBlock *compClass = NULL)
          : _tree(tree), _callNode(callNode), _flags(flags), _arrayClass(arrayClass),
            _storeClassForArrayStoreCHK(storeClass), _componentClassForArrayStoreCHK(compClass), _arrayLength(-1) {}
 
