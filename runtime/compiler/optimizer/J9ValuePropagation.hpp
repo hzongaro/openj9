@@ -200,34 +200,100 @@ class ValuePropagation : public OMR::ValuePropagation
    TR::VP_BCDSign **_bcdSignConstraints;
    List<TreeNodeResultPair> _callsToBeFoldedToNode;
 
-   struct ValueTypesHelperCallTransform {
+   struct ValueTypesHelperCallTransform;
+   struct ObjectComparisonHelperCallTransform;
+   struct ArrayOperationHelperCallTransform;
+   struct ArrayElementLoadHelperCallTransform;
+   struct ArrayElementStoreHelperCallTransform;
+
+   struct ValueTypesHelperCallTransform
+      {
       TR_ALLOC(TR_Memory::ValuePropagation)
       TR::TreeTop *_tree;
       TR::Node *_callNode;
-      TR_OpaqueClassBlock *_arrayClass;
-      TR_OpaqueClassBlock *_storeClassForArrayStoreCHK;
-      TR_OpaqueClassBlock *_componentClassForArrayStoreCHK;
-      int32_t _arrayLength;
       flags8_t _flags;
-
-      ValueTypesHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags,
-               TR_OpaqueClassBlock *arrayClass = NULL, TR_OpaqueClassBlock *storeClass = NULL,
-               TR_OpaqueClassBlock *compClass = NULL)
-         : _tree(tree), _callNode(callNode), _flags(flags), _arrayClass(arrayClass),
-           _storeClassForArrayStoreCHK(storeClass), _componentClassForArrayStoreCHK(compClass), _arrayLength(-1) {}
 
       enum // flag bits
          {
-         IsArrayLoad               = 0x01,
-         IsArrayStore              = 0x02,
-         IsRefCompare              = 0x04,
          InsertDebugCounter        = 0x08,
          RequiresBoundCheck        = 0x10,
          RequiresStoreCheck        = 0x20,
          RequiresNullValueCheck    = 0x40,
          IsFlattenedElement        = 0x80, // Indicates whether or not the array elements are flattened in array load or array store.
          };
-   };
+
+      typedef enum
+         {
+         UnknownHelper = 0,
+         ComparisonHelper = 1,
+         ArrayElementLoadHelper = 2,
+         ArrayElementStoreHelper = 3,
+         } HelperKind;
+
+      HelperKind _kind;
+
+      ValueTypesHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags, HelperKind kind)
+         : _tree(tree), _callNode(callNode), _flags(flags), _kind(kind) {}
+
+      ObjectComparisonHelperCallTransform *castToObjectComparisonHelperCallTransform()
+         {
+         TR_ASSERT_FATAL(_kind == ComparisonHelper, "ValueTypesHelperCallTransform is not an ObjectComparisonHelperCallTransform\n");
+         return static_cast<ObjectComparisonHelperCallTransform *>(this);
+         }
+
+      ArrayOperationHelperCallTransform *castToArrayOperationHelperCallTransform()
+         {
+         TR_ASSERT_FATAL(_kind == ArrayElementLoadHelper || _kind == ArrayElementStoreHelper, "ValueTypesHelperCallTransform is not an ArrayOperationHelperCallTransform\n");
+         return static_cast<ArrayOperationHelperCallTransform *>(this);
+         }
+
+      ArrayElementLoadHelperCallTransform *castToArrayElementLoadHelperCallTransform()
+         {
+         TR_ASSERT_FATAL(_kind == ArrayElementLoadHelper, "ValueTypesHelperCallTransform is not an ArrayElementLoadHelperCallTransform\n");
+         return static_cast<ArrayElementLoadHelperCallTransform *>(this);
+         }
+
+      ArrayElementStoreHelperCallTransform *castToArrayElementStoreHelperCallTransform()
+         {
+         TR_ASSERT_FATAL(_kind == ArrayElementStoreHelper, "ValueTypesHelperCallTransform is not an ArrayElementStoreHelperCallTransform\n");
+         return static_cast<ArrayElementStoreHelperCallTransform *>(this);
+         }
+      };
+
+   struct ObjectComparisonHelperCallTransform : ValueTypesHelperCallTransform
+      {
+      ObjectComparisonHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags)
+         : ValueTypesHelperCallTransform(tree, callNode, flags, ComparisonHelper) {}
+      };
+
+   struct ArrayOperationHelperCallTransform : ValueTypesHelperCallTransform
+      {
+      TR_OpaqueClassBlock *_arrayClass;
+      int32_t _arrayLength;
+
+      ArrayOperationHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags, HelperKind kind, int32_t arrayLength,
+                                        TR_OpaqueClassBlock *arrayClass = NULL)
+         : ValueTypesHelperCallTransform(tree, callNode, flags, kind), _arrayClass(arrayClass), _arrayLength(arrayLength) {}
+      };
+
+   struct ArrayElementLoadHelperCallTransform : ArrayOperationHelperCallTransform
+      {
+      ArrayElementLoadHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags, int32_t arrayLength,
+                                          TR_OpaqueClassBlock *arrayClass = NULL)
+         : ArrayOperationHelperCallTransform(tree, callNode, flags, ArrayElementLoadHelper, arrayLength, arrayClass) {}
+      };
+
+   struct ArrayElementStoreHelperCallTransform : ArrayOperationHelperCallTransform
+      {
+      TR_OpaqueClassBlock *_storeClassForArrayStoreCHK;
+      TR_OpaqueClassBlock *_componentClassForArrayStoreCHK;
+
+      ArrayElementStoreHelperCallTransform(TR::TreeTop *tree, TR::Node *callNode, flags8_t flags, int32_t arrayLength,
+                                           TR_OpaqueClassBlock *arrayClass = NULL, TR_OpaqueClassBlock *storeClassForCheck = NULL,
+                                           TR_OpaqueClassBlock *componentClassForCheck = NULL)
+         : ArrayOperationHelperCallTransform(tree, callNode, flags, ArrayElementStoreHelper, arrayLength, arrayClass),
+                     _storeClassForArrayStoreCHK(storeClassForCheck), _componentClassForArrayStoreCHK(componentClassForCheck) {}
+      };
 
    List<ValueTypesHelperCallTransform> _valueTypesHelperCallsToBeFolded;
    };
