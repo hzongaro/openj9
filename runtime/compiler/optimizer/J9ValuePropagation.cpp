@@ -2235,9 +2235,9 @@ J9::ValuePropagation::doDelayedTransformations()
       TR::TreeTop *callTree = callToTransform->_tree;
       TR::Node *callNode = callToTransform->_callNode;
 
-      const bool isLoad = callToTransform->_kind == ValueTypesHelperCallTransform::ArrayElementLoadHelper;
-      const bool isStore = callToTransform->_kind == ValueTypesHelperCallTransform::ArrayElementStoreHelper;
-      const bool isCompare = callToTransform->_kind == ValueTypesHelperCallTransform::ComparisonHelper;
+      const bool isLoad = callToTransform->isArrayElementLoadHelperCallTransform();
+      const bool isStore = callToTransform->isArrayElementStoreHelperCallTransform();
+      const bool isCompare = callToTransform->isObjectComparisonHelperCallTransform();
 
       const bool needsStoreCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresStoreCheck);
       const bool needsNullValueCheck = callToTransform->_flags.testAny(ValueTypesHelperCallTransform::RequiresNullValueCheck);
