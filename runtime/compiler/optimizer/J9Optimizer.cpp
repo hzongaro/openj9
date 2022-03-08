@@ -166,7 +166,6 @@ static const OptimizationStrategy fsdStrategyOptsForMethodsWithoutSlotSharing[] 
    { OMR::treeSimplification,          OMR::IfOptServer }, // for WAS trace folding
    { OMR::localCSE,                    OMR::IfEnabledAndOptServer }, // for WAS trace folding
    { OMR::treeSimplification,          OMR::IfEnabledAndOptServer }, // for WAS trace folding
-   { OMR::forceHelperTransform                          },
    { OMR::globalValuePropagation,      },
    { OMR::treeSimplification,          OMR::IfEnabled },
    { OMR::cheapObjectAllocationGroup,  },
@@ -273,7 +272,6 @@ static const OptimizationStrategy coldStrategyOpts[] =
    { OMR::recognizedCallTransformer,                 OMR::MarkLastRun           },
 #endif
    { OMR::basicBlockExtension                                                   },
-   { OMR::forceHelperTransform                                                  },
    { OMR::localValuePropagationGroup                                            },
    { OMR::deadTreesElimination                                                  },
    { OMR::localCSE,                                  OMR::IfEnabled                  },
@@ -327,7 +325,6 @@ static const OptimizationStrategy warmStrategyOpts[] =
    { OMR::virtualGuardTailSplitter                                              }, // merge virtual guards
    { OMR::treeSimplification                                                    },
    { OMR::sequentialLoadAndStoreWarmGroup,           OMR::IfEnabled                  }, // disabled by default, enabled by -Xjit:enableSequentialLoadStoreWarm
-   { OMR::forceHelperTransform                          },
    { OMR::cheapGlobalValuePropagationGroup                                      },
    { OMR::localCSE,                                    OMR::IfVectorAPI },
    { OMR::dataAccessAccelerator                                                 }, // globalValuePropagation and inlining might expose opportunities for dataAccessAccelerator
@@ -453,7 +450,6 @@ const OptimizationStrategy hotStrategyOpts[] =
    { OMR::stripMiningGroup,                      OMR::IfLoops                  }, // strip mining in loops
    { OMR::loopReplicator,                        OMR::IfLoops                  }, // tail-duplication in loops
    { OMR::blockSplitter,                         OMR::IfNews                   }, // treeSimplification + blockSplitter + VP => opportunity for EA
-   { OMR::forceHelperTransform                          },
    { OMR::expensiveGlobalValuePropagationGroup                            },
    { OMR::localCSE,                              OMR::IfVectorAPI },
    { OMR::loopCanonicalization,                  OMR::IfVectorAPI },
@@ -547,7 +543,6 @@ const OptimizationStrategy scorchingStrategyOpts[] =
    { OMR::loopReplicator,                        OMR::IfLoops     }, // tail-duplication in loops
    { OMR::blockSplitter,                         OMR::IfNews      }, // treeSimplification + blockSplitter + VP => opportunity for EA
    { OMR::arrayPrivatizationGroup,               OMR::IfNews      }, // must precede escape analysis
-   { OMR::forceHelperTransform                          },
    { OMR::veryExpensiveGlobalValuePropagationGroup           },
    { OMR::dataAccessAccelerator                              }, //always run after GVP
    { OMR::osrGuardRemoval,                       OMR::IfEnabled }, // run after calls/monents/asyncchecks have been removed
@@ -647,7 +642,6 @@ static const OptimizationStrategy AOTStrategyOpts[] =
    { OMR::earlyLocalGroup                                  },
    { OMR::stripMiningGroup,                      OMR::IfLoops   }, // strip mining in loops
    { OMR::loopReplicator,                        OMR::IfLoops   }, // tail-duplication in loops
-   { OMR::forceHelperTransform                          },
    { OMR::expensiveGlobalValuePropagationGroup             },
    { OMR::localCSE,                              OMR::IfVectorAPI },
    { OMR::loopCanonicalization,                  OMR::IfVectorAPI },
@@ -718,7 +712,6 @@ static const OptimizationStrategy cheapWarmStrategyOpts[] =
 #ifdef TR_HOST_S390
    { OMR::sequentialLoadAndStoreWarmGroup,           OMR::IfEnabled                  },
 #endif
-   { OMR::forceHelperTransform                          },
    { OMR::cheapGlobalValuePropagationGroup                                      },
    { OMR::localCSE,                                  OMR::IfVectorAPI },
    { OMR::dataAccessAccelerator                                                 },
