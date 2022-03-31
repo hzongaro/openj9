@@ -6427,7 +6427,7 @@ TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy(TR_Indirec
          if(!isClassObsolete)
             {
             char *s = TR::Compiler->cls.classNameChars(comp(), callsite->_receiverClass, len);
-            heuristicTrace(tracer(),"Virtual call to %s is not overridden in the hierarchy of thisClass %*s\n",tracer()->traceSignature(callsite->_initialCalleeMethod), len, s);
+            heuristicTrace(tracer(),"Virtual call to %s is not overridden in the hierarchy of thisClass %.*s\n",tracer()->traceSignature(callsite->_initialCalleeMethod), len, s);
             }
          else
             {
@@ -6842,7 +6842,7 @@ void TR_J9InlinerTracer::dumpProfiledClasses (ListIterator<TR_ExtraAddressInfo>&
          if(!isClassObsolete)
            {
            const char *className = TR::Compiler->cls.classNameChars(comp(), tempreceiverClass, len);
-           heuristicTrace(this , "receiverClass %s has a profiled frequency of %f", className,val);
+           heuristicTrace(this , "receiverClass %.*s has a profiled frequency of %f", len, className, val);
            }
          else
            {
