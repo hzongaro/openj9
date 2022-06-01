@@ -6606,6 +6606,9 @@ void TR_EscapeAnalysis::makeLocalObject(Candidate *candidate)
    TR::Node::recreate(allocationNode, TR::loadaddr);
    allocationNode->setSymbolReference(symRef);
 
+   TR::ByteCodeInfo bcInfo = allocationNode->getByteCodeInfo();
+   TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/contiguous-allocation/%s/(%s)/(%d,%d)", comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex(), candidate->_treeTop);
+
    if (candidate->_seenArrayCopy || candidate->_argToCall || candidate->_seenSelfStore || candidate->_seenStoreToLocalObject)
       {
       allocationNode->setCannotTrackLocalUses(true);
@@ -7077,6 +7080,7 @@ void TR_EscapeAnalysis::makeNonContiguousLocalAllocation(Candidate *candidate)
 
   else
       {
+      TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/noncontiguous-allocation/%s/(%s)/(%d,%d)", comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex(), candidate->_treeTop);
       // Remove the tree containing the allocation node. All uses of the node
       // should have been removed by now
       //
