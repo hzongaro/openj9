@@ -1058,7 +1058,6 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
                }
             }
 
-
          if (candidate->isLocalAllocation() &&
              candidate->escapesInColdBlocks() &&
              (candidate->isLockedObject() ||
@@ -2734,7 +2733,9 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
       // allocations.  If the definition comes directly from a candidate
       // for stack allocation, it's harmless; if it's copied from a
       // variable that's aliased with a candidate for stack allocation
-      // that was allocated in the same block, it's harmless
+      // that was allocated in the same block, it's harmless; if it's the
+      // result of a method call that has only primitive or no arguments,
+      // it's harmless
       for (cursor2.SetToFirstOne(); cursor2.Valid(); cursor2.SetToNextOne())
          {
          int32_t defIndex2 = cursor2;
@@ -2872,6 +2873,38 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
 
                      rhsIsHarmless = true;
                      }
+                  }
+               }
+            }
+
+         if (!rhsIsHarmless)
+            {
+            static char *disableCheckCallInLoopIsHarmless = feGetEnv("TR_DisableCheckCallInLoopIsHarmless");
+
+            if (firstChild->getOpCode().isCall() && !disableCheckCallInLoopIsHarmless)
+               {
+               // Calls whose arguments are not addresses that might refer to heap objects
+               // are considered harmless.  The non-heap object cases are filtered out
+               // simply by permitting only loadaddr and aconst for address-type arguments.
+               //
+               bool argsAreHarmless = true;
+
+               for (int argIdx = 0; argIdx < firstChild->getNumChildren() && argsAreHarmless; argIdx++)
+                  {
+                  TR::Node *arg = firstChild->getChild(argIdx);
+                  if (arg->getType().isAddress() && arg->getOpCodeValue() != TR::loadaddr && arg->getOpCodeValue() != TR::aconst)
+                     {
+                     argsAreHarmless = false;
+                     }
+                  }
+
+               if (argsAreHarmless)
+                  {
+                  if (trace())
+                     {
+                     traceMsg(comp(), "        Call seen for defNode2 [%p] child [%p] is considered harmless\n", defNode2, firstChild);
+                     }
+                  rhsIsHarmless = true;
                   }
                }
             }
