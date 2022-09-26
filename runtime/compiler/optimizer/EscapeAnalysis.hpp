@@ -509,7 +509,7 @@ class TR_EscapeAnalysis : public TR::Optimization
    int32_t  performAnalysisOnce();
    void     findCandidates();
    void     findIgnoreableUses();
-   void     findIgnoreableUses(TR::Node *node, TR::NodeChecklist& visited);
+   void     markUsesAsIgnoreable(TR::Node *node, TR::NodeChecklist& visited);
    void     findLocalObjectsValueNumbers();
    void     findLocalObjectsValueNumbers(TR::Node *node, TR::NodeChecklist& visited);
 
@@ -769,7 +769,6 @@ class TR_EscapeAnalysis : public TR::Optimization
 #endif
    bool                       _repeatAnalysis;
    bool                       _somethingChanged;
-   bool                       _doLoopAllocationAliasChecking;
    TR_ScratchList<TR_DependentAllocations> _dependentAllocations;
    TR_BitVector *             _vnTemp;
    TR_BitVector *             _vnTemp2;
