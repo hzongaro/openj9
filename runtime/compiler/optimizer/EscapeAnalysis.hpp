@@ -590,7 +590,8 @@ class TR_EscapeAnalysis : public TR::Optimization
    bool     usesValueNumber(Candidate *candidate, int32_t valueNumber);
    Candidate *findCandidate(int32_t valueNumber);
 
-   bool     isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode);
+   bool     isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode, TR::NodeChecklist &visited);
+   bool     checkAllHarmlessInDefChainForLoopAllocation(int32_t defIndex2, Candidate *candidate, TR::Node *useNode, TR::NodeChecklist &visited);
 
    bool     detectStringCopy(TR::Node *node);
    void     markCandidatesUsedInNonColdBlock(TR::Node *node);
@@ -735,6 +736,9 @@ class TR_EscapeAnalysis : public TR::Optimization
     * fresh allocation would be treated
     */
    TR_BitVector              *_aliasesOfAllocNode;
+
+   TR_BitVector              *_harmlessDefForUsesOfAllocNode;
+   TR_BitVector              *_mightBeHarmfulDefForUsesOfAllocNode;
 
    /**
     * Contains sym refs that are just aliases for a second fresh allocation

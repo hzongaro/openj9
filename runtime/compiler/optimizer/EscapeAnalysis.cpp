@@ -677,6 +677,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
       _visitedNodes = new (trStackMemory()) TR_BitVector(comp()->getNodeCount(), trMemory(), stackAlloc, growable);
       _aliasesOfAllocNode = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
       _aliasesOfOtherAllocNode = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
+      _harmlessDefForUsesOfAllocNode = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
+      _mightBeHarmfulDefForUsesOfAllocNode = new (trStackMemory()) TR_BitVector(0, trMemory(), stackAlloc, growable);
 
       if (!_useDefInfo)
          {
@@ -1895,6 +1897,9 @@ void TR_EscapeAnalysis::checkDefsAndUses()
             _otherDefsForLoopAllocation->empty();
          else
             _otherDefsForLoopAllocation= new (trStackMemory()) TR_BitVector(_useDefInfo->getNumDefNodes(), trMemory(), stackAlloc);
+
+         _harmlessDefForUsesOfAllocNode->empty();
+         _mightBeHarmfulDefForUsesOfAllocNode->empty();
          }
 
       if (comp()->getOptions()->realTimeGC() &&
@@ -2720,11 +2725,13 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
          TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
          TR::Node *firstChild = defNode2->getFirstChild();
 
+         TR::NodeChecklist visited(comp());
+
          // Is RHS for this reaching definition harmless?  I.e., not a
          // definition that can escape the loop.  It is considered harmless if
          // it is a candidate for stack allocation, an alias of a candidate
          // or it is an entry in the cache for java.lang.Integer, et al.
-         if (!isHarmlessDefInLoop(defIndex2, candidate, useNode))
+         if (!isHarmlessDefInLoop(defIndex2, candidate, useNode, visited))
             {
             if (trace())
                {
@@ -2740,17 +2747,51 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
    return allnewsonrhs;
    }
 
-bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode)
+bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode, TR::NodeChecklist &visited)
    {
    TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
    TR::Node *firstChild = defNode2->getFirstChild();
-
-   bool rhsIsHarmless = false;
 
    if (trace())
       {
       traceMsg(comp(), "Entering isHarmlessDefInLoop for defNode n%un [%p] for candidate [%p]\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
       }
+
+   bool rhsIsHarmless = false;
+
+   if (_harmlessDefForUsesOfAllocNode->get(defNode2->getGlobalIndex()))
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "    In isHarmlessDefInLoop - defNode n%un [%p] was previously marked as harmless for candidate [%p] - returning true\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+         traceMsg(comp(), "Returning from isHarmlessDefInLoop true (1)\n");
+         }
+      return true;
+      }
+
+   if (_mightBeHarmfulDefForUsesOfAllocNode->get(defNode2->getGlobalIndex()))
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "    defNode n%un [%p] was previously marked as maybe harmful for candidate [%p] - returning false\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+         traceMsg(comp(), "Returning from isHarmlessDefInLoop false (2)\n");
+         }
+      return false;
+      }
+
+   if (visited.contains(defNode2))
+      {
+
+      if (trace())
+         {
+         traceMsg(comp(), "    defNode n%un [%p] was previously visited in isHarmlessDefInLoop for candidate [%p] - assume harmful - returning false\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+         traceMsg(comp(), "Returning from isHarmlessDefInLoop false (2.5)\n");
+         }
+      _mightBeHarmfulDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+      return false;
+      }
+
+   visited.add(defNode2);
 
    for (Candidate *otherAllocNode = _candidates.getFirst(); otherAllocNode; otherAllocNode = otherAllocNode->getNext())
       {
@@ -2913,7 +2954,131 @@ bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candid
          }
       }
 
+  if (!rhsIsHarmless)
+     {
+     if (checkAllHarmlessInDefChainForLoopAllocation(defIndex2, candidate, useNode, visited))
+        {
+        _harmlessDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+        rhsIsHarmless = true;
+        }
+     }
+
+   if (trace())
+      {
+      traceMsg(comp(), "Returning from isHarmlessDefInLoop %s (3)\n", rhsIsHarmless ? "true" : "false");
+      }
    return rhsIsHarmless;
+   }
+
+bool TR_EscapeAnalysis::checkAllHarmlessInDefChainForLoopAllocation(int32_t defIndex2, Candidate *candidate, TR::Node *useNode, TR::NodeChecklist &visited)
+   {
+   TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
+
+   if (trace())
+      {
+      traceMsg(comp(), "In checkAllHarmlessInDefChainForLoopAllocation for defNode n%un [%p] and candidate [%p]\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+      }
+
+#if 0
+   if (isHarmlessDefInLoop(defIndex2, candidate, useNode, visited))
+      {
+if (trace())
+{
+traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation true (1)\n");
+}
+      _harmlessDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+      return true;
+      }
+
+
+   if (_mightBeHarmfulDefForUsesOfAllocNode->get(defNode2->getGlobalIndex()))
+      {
+if (trace())
+{
+traceMsg(comp(), "    defNode n%un [%p] was previously marked as maybe harmful for candidate [%p] - returning false\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation false (2)\n");
+}
+      return false;
+      }
+#endif
+
+   if (defNode2->getOpCode().isStore() && defNode2->getSymbol()->isAutoOrParm()
+       && defNode2->getFirstChild() == candidate->_node)
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "      Def node [%p] is direct reference to candidate allocation [%p]\n", defNode2, candidate->_node);
+         }
+
+      _harmlessDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+
+      if (trace())
+         {
+         traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation true (3)\n");
+         }
+      return true;
+      }
+   else if ((_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(candidate->_node)) &&
+            (_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == candidate->_block) &&
+            _aliasesOfAllocNode->get(defNode2->getSymbolReference()->getReferenceNumber()))
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "      Value numbers match for def node [%p] with candidate node [%p], and def node's symref is alias of candidate allocation\n", defNode2, candidate->_node);
+         }
+
+      _harmlessDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+
+      if (trace())
+         {
+         traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation true (4)\n");
+         }
+      return true;
+      }
+   else if (defNode2->getOpCode().isStore() && defNode2->getSymbol()->isAutoOrParm()
+            && defNode2->getFirstChild()->getOpCode().isLoadVarDirect()
+            && defNode2->getFirstChild()->getSymbol()->isAutoOrParm())
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "   Checking defs of def for defNode n%un [%p] and candidate [%p]\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+         }
+      TR_UseDefInfo::BitVector defsOfDef(comp()->allocator());
+      _useDefInfo->getUseDef(defsOfDef, defNode2->getFirstChild()->getUseDefIndex());
+      TR_UseDefInfo::BitVector::Cursor cursor(defsOfDef);
+
+      bool allDefsHarmless = true;
+
+      for (cursor.SetToFirstOne(); cursor.Valid(); cursor.SetToNextOne())
+         {
+         int32_t defOfDefIndex = cursor;
+         if ((defOfDefIndex == 0)
+             || !isHarmlessDefInLoop(defOfDefIndex, candidate, useNode, visited)
+             || checkIfUseIsInLoopAndOverlapping(candidate, _useDefInfo->getTreeTop(defOfDefIndex), useNode))
+            {
+            _mightBeHarmfulDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+            allDefsHarmless = false;
+            break;
+            }
+         }
+
+      if (allDefsHarmless)
+         {
+         _harmlessDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+         if (trace())
+            {
+            traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation true (5)\n");
+            }
+         return true;
+         }
+      }
+
+   if (trace())
+      {
+      traceMsg(comp(), "Returning from checkAllHarmlessInDefChainForLoopAllocation false (6)\n");
+      }
+   _mightBeHarmfulDefForUsesOfAllocNode->set(defNode2->getGlobalIndex());
+   return  false;
    }
 
 bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *useNode, Candidate *candidate)
