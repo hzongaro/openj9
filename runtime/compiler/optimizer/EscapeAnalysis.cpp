@@ -2724,164 +2724,7 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
          // definition that can escape the loop.  It is considered harmless if
          // it is a candidate for stack allocation, an alias of a candidate
          // or it is an entry in the cache for java.lang.Integer, et al.
-         bool rhsIsHarmless = false;
-
-         for (Candidate *otherAllocNode = _candidates.getFirst(); otherAllocNode; otherAllocNode = otherAllocNode->getNext())
-            {
-            // A reaching definition that is an allocation node for a candidate
-            // for stack allocation is harmless.  Also, a reaching definition
-            // that has the value number of a candidate allocation, other than the
-            // current candidate, is harmless.  The added restriction in the
-            // second case avoids allowing the current candidate through from a
-            // a previous loop iteration.
-            if (otherAllocNode->_node == firstChild
-                   || (candidate->_node != otherAllocNode->_node
-                       && _valueNumberInfo->getValueNumber(otherAllocNode->_node)
-                            == _valueNumberInfo->getValueNumber(firstChild)))
-               {
-               rhsIsHarmless = true;
-               break;
-               }
-
-            if (trace())
-               {
-               traceMsg(comp(), "         Look at defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode->_node);
-               }
-
-            if (!rhsIsHarmless &&
-                (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(otherAllocNode->_node)))
-               {
-               TR::TreeTop *treeTop;
-               bool collectAliases = false;
-               _aliasesOfOtherAllocNode->empty();
-               _visitedNodes->empty();
-               for (treeTop = otherAllocNode->_treeTop->getEnclosingBlock()->getEntry(); treeTop; treeTop = treeTop->getNextTreeTop())
-                  {
-                  TR::Node *node = treeTop->getNode();
-                  if (node->getOpCodeValue() == TR::BBEnd)
-                     break;
-
-                  // Until we reach otherAllocNode, call visitTree to
-                  // ignore nodes in those trees.  After we've reached
-                  // otherAllocNode, call collectAliasesOfAllocations to
-                  // track its aliases in _aliasesOfOtherAllocNode
-                  if (!collectAliases)
-                     {
-                     visitTree(treeTop->getNode());
-                     }
-                  else
-                     {
-                     collectAliasesOfAllocations(treeTop->getNode(), otherAllocNode->_node);
-                     }
-
-                  if (treeTop == otherAllocNode->_treeTop)
-                     {
-                     collectAliases = true;
-                     }
-                  }
-
-               if ((_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == otherAllocNode->_block) &&
-                   _aliasesOfOtherAllocNode->get(defNode2->getSymbolReference()->getReferenceNumber()))
-                  {
-                  if (trace())
-                     {
-                     traceMsg(comp(), "      rhs is harmless for defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode->_node);
-                     }
-                  rhsIsHarmless = true;
-                  break;
-                  }
-               }
-            }
-
-         if (!rhsIsHarmless)
-            {
-            if (trace())
-               {
-               traceMsg(comp(), "   defNode2 vn=%d is local %d\n", _valueNumberInfo->getValueNumber(defNode2), _allLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode2)));
-               }
-
-            // References to objects that were previously made local are also harmless
-            if (_allLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode2)))
-               {
-               rhsIsHarmless = true;
-               }
-            }
-
-         if (!rhsIsHarmless)
-            {
-            // Another special case when it is certain that the rhs of the def is not a candidate allocation from a prior iteration
-            // In this case we are loading a value from an Integer cache anyway and that should be an allocation that has already escaped
-            // that has nothing to do with the candidate allocation
-            //
-            if (firstChild->getOpCode().hasSymbolReference() &&
-                firstChild->getSymbol()->isArrayShadowSymbol())
-               {
-               TR::Node *addr = firstChild->getFirstChild();
-               if (addr->getOpCode().isArrayRef())
-                  {
-                  TR::Node *underlyingArray = addr->getFirstChild();
-
-                  int32_t fieldNameLen = -1;
-                  char *fieldName = NULL;
-                  if (underlyingArray && underlyingArray->getOpCode().hasSymbolReference() &&
-                      underlyingArray->getSymbolReference()->getSymbol()->isStaticField())
-                     {
-                     fieldName = underlyingArray->getSymbolReference()->getOwningMethod(comp())->staticName(underlyingArray->getSymbolReference()->getCPIndex(), fieldNameLen, comp()->trMemory());
-                     }
-
-                  if (fieldName && (fieldNameLen > 10) &&
-                        !strncmp("java/lang/", fieldName, 10) &&
-                          (!strncmp("Integer$IntegerCache.cache", &fieldName[10], 26) ||
-                           !strncmp("Long$LongCache.cache", &fieldName[10], 20) ||
-                           !strncmp("Short$ShortCache.cache", &fieldName[10], 22) ||
-                           !strncmp("Byte$ByteCache.cache", &fieldName[10], 20) ||
-                           !strncmp("Character$CharacterCache.cache", &fieldName[10], 30)))
-
-                     {
-                     if (trace())
-                        {
-                        traceMsg(comp(), "         rhs is harmless for defNode2 [%p] access of Integer cache\n", defNode2);
-                        }
-
-                     rhsIsHarmless = true;
-                     }
-                  }
-               }
-            }
-
-         if (!rhsIsHarmless)
-            {
-            static char *disableCheckCallInLoopIsHarmless = feGetEnv("TR_DisableCheckCallInLoopIsHarmless");
-
-            if (firstChild->getOpCode().isCall() && !disableCheckCallInLoopIsHarmless)
-               {
-               // Calls whose arguments are not addresses that might refer to heap objects
-               // are considered harmless.  The non-heap object cases are filtered out
-               // simply by permitting only loadaddr and aconst for address-type arguments.
-               //
-               bool argsAreHarmless = true;
-
-               for (int argIdx = 0; argIdx < firstChild->getNumChildren() && argsAreHarmless; argIdx++)
-                  {
-                  TR::Node *arg = firstChild->getChild(argIdx);
-                  if (arg->getType().isAddress() && arg->getOpCodeValue() != TR::loadaddr && arg->getOpCodeValue() != TR::aconst)
-                     {
-                     argsAreHarmless = false;
-                     }
-                  }
-
-               if (argsAreHarmless)
-                  {
-                  if (trace())
-                     {
-                     traceMsg(comp(), "        Call seen for defNode2 [%p] child [%p] is considered harmless\n", defNode2, firstChild);
-                     }
-                  rhsIsHarmless = true;
-                  }
-               }
-            }
-
-         if (!rhsIsHarmless)
+         if (!isHarmlessDefInLoop(defIndex2, candidate, useNode))
             {
             if (trace())
                {
@@ -2895,6 +2738,182 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
       }
 
    return allnewsonrhs;
+   }
+
+bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode)
+   {
+   TR::Node *defNode2 = _useDefInfo->getNode(defIndex2);
+   TR::Node *firstChild = defNode2->getFirstChild();
+
+   bool rhsIsHarmless = false;
+
+   if (trace())
+      {
+      traceMsg(comp(), "Entering isHarmlessDefInLoop for defNode n%un [%p] for candidate [%p]\n", defNode2->getGlobalIndex(), defNode2, candidate->_node);
+      }
+
+   for (Candidate *otherAllocNode = _candidates.getFirst(); otherAllocNode; otherAllocNode = otherAllocNode->getNext())
+      {
+      // A reaching definition that is an allocation node for a candidate
+      // for stack allocation is harmless.  Also, a reaching definition
+      // that has the value number of a candidate allocation, other than the
+      // current candidate, is harmless.  The added restriction in the
+      // second case avoids allowing the current candidate through from a
+      // a previous loop iteration.
+      if (otherAllocNode->_node == firstChild
+             || (candidate->_node != otherAllocNode->_node
+                 && _valueNumberInfo->getValueNumber(otherAllocNode->_node)
+                      == _valueNumberInfo->getValueNumber(firstChild)))
+         {
+         rhsIsHarmless = true;
+         break;
+         }
+
+      if (trace())
+         {
+         traceMsg(comp(), "         Look at defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode->_node);
+         }
+
+      if (!rhsIsHarmless &&
+          (_valueNumberInfo->getValueNumber(defNode2) == _valueNumberInfo->getValueNumber(otherAllocNode->_node)))
+         {
+         if (trace())
+            {
+            traceMsg(comp(), "         Value number of defNode2 [%p] vn=%d matches that of otherAllocNode [%p]\n", defNode2, _valueNumberInfo->getValueNumber(defNode2), otherAllocNode->_node);
+            }
+
+         TR::TreeTop *treeTop;
+         bool collectAliases = false;
+         _aliasesOfOtherAllocNode->empty();
+         _visitedNodes->empty();
+
+         for (treeTop = otherAllocNode->_treeTop->getEnclosingBlock()->getEntry(); treeTop; treeTop = treeTop->getNextTreeTop())
+            {
+            TR::Node *node = treeTop->getNode();
+            if (node->getOpCodeValue() == TR::BBEnd)
+               break;
+
+            // Until we reach otherAllocNode, call visitTree to
+            // ignore nodes in those trees.  After we've reached
+            // otherAllocNode, call collectAliasesOfAllocations to
+            // track its aliases in _aliasesOfOtherAllocNode
+            if (!collectAliases)
+               {
+               visitTree(treeTop->getNode());
+               }
+            else
+               {
+               collectAliasesOfAllocations(treeTop->getNode(), otherAllocNode->_node);
+               }
+
+            if (treeTop == otherAllocNode->_treeTop)
+               {
+               collectAliases = true;
+               }
+            }
+
+         if ((_useDefInfo->getTreeTop(defIndex2)->getEnclosingBlock() == otherAllocNode->_block) &&
+             _aliasesOfOtherAllocNode->get(defNode2->getSymbolReference()->getReferenceNumber()))
+            {
+            if (trace())
+               {
+               traceMsg(comp(), "      rhs is harmless for defNode2 [%p] with otherAllocNode [%p]\n", defNode2, otherAllocNode->_node);
+               }
+            rhsIsHarmless = true;
+            break;
+            }
+         }
+      }
+
+   if (!rhsIsHarmless)
+      {
+      if (trace())
+         {
+         traceMsg(comp(), "   defNode2 vn=%d is local %d\n", _valueNumberInfo->getValueNumber(defNode2), _allLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode2)));
+         }
+
+      // References to objects that were previously made local are also harmless
+      if (_allLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode2)))
+         {
+         rhsIsHarmless = true;
+         }
+      }
+
+   if (!rhsIsHarmless)
+      {
+      // Another special case when it is certain that the rhs of the def is not a candidate allocation from a prior iteration
+      // In this case we are loading a value from an Integer cache anyway and that should be an allocation that has already escaped
+      // that has nothing to do with the candidate allocation
+      //
+      if (firstChild->getOpCode().hasSymbolReference() &&
+          firstChild->getSymbol()->isArrayShadowSymbol())
+         {
+         TR::Node *addr = firstChild->getFirstChild();
+         if (addr->getOpCode().isArrayRef())
+            {
+            TR::Node *underlyingArray = addr->getFirstChild();
+
+            int32_t fieldNameLen = -1;
+            char *fieldName = NULL;
+            if (underlyingArray && underlyingArray->getOpCode().hasSymbolReference() &&
+                underlyingArray->getSymbolReference()->getSymbol()->isStaticField())
+               {
+               fieldName = underlyingArray->getSymbolReference()->getOwningMethod(comp())->staticName(underlyingArray->getSymbolReference()->getCPIndex(), fieldNameLen, comp()->trMemory());
+               }
+
+            if (fieldName && (fieldNameLen > 10) &&
+                  !strncmp("java/lang/", fieldName, 10) &&
+                    (!strncmp("Integer$IntegerCache.cache", &fieldName[10], 26) ||
+                     !strncmp("Long$LongCache.cache", &fieldName[10], 20) ||
+                     !strncmp("Short$ShortCache.cache", &fieldName[10], 22) ||
+                     !strncmp("Byte$ByteCache.cache", &fieldName[10], 20) ||
+                     !strncmp("Character$CharacterCache.cache", &fieldName[10], 30)))
+
+               {
+               if (trace())
+                  {
+                  traceMsg(comp(), "         rhs is harmless for defNode2 [%p] access of Integer cache\n", defNode2);
+                  }
+
+               rhsIsHarmless = true;
+               }
+            }
+         }
+      }
+
+   if (!rhsIsHarmless)
+      {
+      static char *disableCheckCallInLoopIsHarmless = feGetEnv("TR_DisableCheckCallInLoopIsHarmless");
+
+      if (firstChild->getOpCode().isCall() && !disableCheckCallInLoopIsHarmless)
+         {
+         // Calls whose arguments are not addresses that might refer to heap objects
+         // are considered harmless.  The non-heap object cases are filtered out
+         // simply by permitting only loadaddr and aconst for address-type arguments.
+         //
+         bool argsAreHarmless = true;
+
+         for (int argIdx = 0; argIdx < firstChild->getNumChildren() && argsAreHarmless; argIdx++)
+            {
+            TR::Node *arg = firstChild->getChild(argIdx);
+            if (arg->getType().isAddress() && arg->getOpCodeValue() != TR::loadaddr && arg->getOpCodeValue() != TR::aconst)
+               {
+               argsAreHarmless = false;
+               }
+            }
+
+         if (argsAreHarmless)
+            {
+            if (trace())
+               {
+               traceMsg(comp(), "        Call seen for defNode2 [%p] child [%p] is considered harmless\n", defNode2, firstChild);
+               }
+            rhsIsHarmless = true;
+            }
+         }
+      }
+
+   return rhsIsHarmless;
    }
 
 bool TR_EscapeAnalysis::checkOverlappingLoopAllocation(TR::Node *useNode, Candidate *candidate)
