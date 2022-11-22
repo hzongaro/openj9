@@ -2621,10 +2621,10 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
       if (trace())
          traceMsg(comp(), "      Look at def node [%p] for use node [%p]\n", defNode, useNode);
 
-      bool allnewsonrhs = checkAllNewsOnRHSInLoopWithAliasing(defIndex, useNode, candidate);
+      bool allHarmlessRHS = checkAllHarmlessRHSDefsForUse(defIndex, useNode, candidate);
 
 
-      if (!allnewsonrhs &&
+      if (!allHarmlessRHS &&
           !(defNode->getOpCode().isStoreDirect() &&
             ((defNode->getFirstChild()->getOpCodeValue() == TR::aconst) ||
              (defNode->getFirstChild()->getOpCode().isLoadVar() && // load from a static or array shadow or shadow (field) based off a non local object are fine since such memory locations would imply that the object being pointed at escaped already (meaning there would be another escape point anyway)
@@ -2661,7 +2661,7 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
    return true;
    }
 
-bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR::Node *useNode, Candidate *candidate)
+bool TR_EscapeAnalysis::checkAllHarmlessRHSDefsForUse(int32_t defIndex, TR::Node *useNode, Candidate *candidate)
    {
    // _aliasesOfAllocNode contains sym refs that are just aliases for a fresh allocation
    // i.e. it is just a simple attempt at tracking allocations in cases such as :
@@ -2678,7 +2678,7 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
 
    TR::Node *defNode = _useDefInfo->getNode(defIndex);
    int32_t useIndex = useNode->getUseDefIndex();
-   bool allnewsonrhs = false;
+   bool allHarmlessRHS = false;
 
    if ((defNode->getFirstChild() == candidate->_node) &&
        (_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(useNode)))
@@ -2687,7 +2687,7 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
          {
          traceMsg(comp(), "      Value numbers match for def node [%p] with use node [%p]\n", defNode, useNode);
          }
-      allnewsonrhs = true;
+      allHarmlessRHS = true;
       }
    else if ((_valueNumberInfo->getValueNumber(defNode) == _valueNumberInfo->getValueNumber(candidate->_node)) &&
             (_useDefInfo->getTreeTop(defIndex)->getEnclosingBlock() == candidate->_block) &&
@@ -2697,11 +2697,11 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
          {
          traceMsg(comp(), "      Value numbers match for def node [%p] with candidate node [%p], and def node's symref is alias of candidate allocation\n", defNode, candidate->_node);
          }
-      allnewsonrhs = true;
+      allHarmlessRHS = true;
       }
    else
       {
-      allnewsonrhs = true;
+      allHarmlessRHS = true;
       TR_UseDefInfo::BitVector defs2(comp()->allocator());
       _useDefInfo->getUseDef(defs2, useIndex);
       TR_UseDefInfo::BitVector::Cursor cursor2(defs2);
@@ -2718,7 +2718,7 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
          int32_t defIndex2 = cursor2;
          if (defIndex2 == 0)
             {
-            allnewsonrhs = false;
+            allHarmlessRHS = false;
             break;
             }
 
@@ -2738,13 +2738,13 @@ bool TR_EscapeAnalysis::checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR
                traceMsg(comp(), "      rhs not harmless for defNode2 [%p]\n", defNode2);
                }
 
-            allnewsonrhs = false;
+            allHarmlessRHS = false;
             break;
             }
          }
       }
 
-   return allnewsonrhs;
+   return allHarmlessRHS;
    }
 
 bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candidate, TR::Node *useNode, TR::NodeChecklist &visited)
@@ -2919,6 +2919,28 @@ bool TR_EscapeAnalysis::isHarmlessDefInLoop(int32_t defIndex2, Candidate *candid
                rhsIsHarmless = true;
                }
             }
+         }
+      }
+
+   if (!rhsIsHarmless)
+      {
+      static char *disableLoadFromSomethingThatWouldBeEscape = feGetEnv("TR_DisableCheckLoadFromEscapedThingInLoop");
+
+      if (!disableLoadFromSomethingThatWouldBeEscape
+          && defNode2->getOpCode().isStoreDirect()
+          && ((defNode2->getFirstChild()->getOpCodeValue() == TR::aconst)
+              || (defNode2->getFirstChild()->getOpCode().isLoadVar() // load from a static or array shadow or shadow (field) based off a non local object are fine since such memory locations would imply that the object being pointed at escaped already (meaning there would be another escape point anyway)
+                  && (defNode2->getFirstChild()->getSymbol()->isStatic()
+                      || (defNode2->getFirstChild()->getSymbol()->isShadow()
+                          && (defNode2->getFirstChild()->getSymbol()->isArrayShadowSymbol()
+                              || !_nonColdLocalObjectsValueNumbers->get(_valueNumberInfo->getValueNumber(defNode2->getFirstChild()->getFirstChild()))))))))
+         {
+         if (trace())
+            {
+            traceMsg(comp(), "         rhs is harmless for defNode2 [%p] load from static or through shadow\n", defNode2);
+            }
+
+         rhsIsHarmless = true;
          }
       }
 

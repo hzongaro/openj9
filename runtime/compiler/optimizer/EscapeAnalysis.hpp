@@ -585,8 +585,7 @@ class TR_EscapeAnalysis : public TR::Optimization
     */
    void     collectAliasesOfAllocations(TR::Node *node, TR::Node *allocNode);
 
-   bool     checkAllNewsOnRHSInLoop(TR::Node *defNode, TR::Node *useNode, Candidate *candidate);
-   bool     checkAllNewsOnRHSInLoopWithAliasing(int32_t defIndex, TR::Node *useNode, Candidate *candidate);
+   bool     checkAllHarmlessRHSDefsForUse(int32_t defIndex, TR::Node *useNode, Candidate *candidate);
    bool     usesValueNumber(Candidate *candidate, int32_t valueNumber);
    Candidate *findCandidate(int32_t valueNumber);
 
