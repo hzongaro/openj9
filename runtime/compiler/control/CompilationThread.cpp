@@ -8991,6 +8991,7 @@ TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrary *portLib, void * 
                if (0 < opt && opt < OMR::numOpts)
                   {
                   options->enableTracing(opt);
+                  options->enableTracing(OMR::Optimizations::globalValuePropagation);
                   }
 
                // Enable additional tracing which are not part of standard optimizer tracing infrastructure
