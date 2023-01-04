@@ -6000,7 +6000,7 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                if (candidate->isLocalAllocation())
                   {
                   if (trace())
-                     traceMsg(comp(), "Redundant flush node [%p] found! Set omitSync flag on redundant flush node.\n", node);
+                     traceMsg(comp(), "Redundant flush node [%p] found for candidate [%p]! Set omitSync flag on redundant flush node.\n", node, candidate->_node);
 
                   node->setOmitSync(true);
                   node->setAllocation(NULL);
@@ -6015,7 +6015,7 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                node->setLocalObjectMonitor(true);
                requestOpt(OMR::redundantMonitorElimination);
                if (trace())
-                  traceMsg(comp(), "Mark monitor node [%p] as local object monitor\n", node);
+                  traceMsg(comp(), "Mark monitor node [%p] for candidate [%p] as local object monitor\n", node, candidate->_node);
                }
 #endif
             }
@@ -6040,12 +6040,12 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                flushTT->join(afterInsertionPoint);
                insertionPoint->join(flushTT);
                if (trace())
-                  traceMsg(comp(), "Adding flush node %p to cold block_%d\n", flush,coldBlk->getNumber());
+                  traceMsg(comp(), "Adding flush node %p for candidate %p to cold block_%d\n", flush, candidate->_node, coldBlk->getNumber());
                setHasFlushOnEntry(coldBlk->getNumber());
                }
             }
          if (trace())
-            traceMsg(comp(), "Remove redundant flush node [%p]\n", node);
+            traceMsg(comp(), "Remove redundant flush node [%p] for candidate [%p]\n", node, candidate->_node);
          removeThisNode = true;
 
          }
@@ -8649,7 +8649,7 @@ TR_FlowSensitiveEscapeAnalysis::TR_FlowSensitiveEscapeAnalysis(TR::Compilation *
                         TR::Node *afNode = TR::Node::createAllocationFence(candidate->_node, candidate->_node);
                         tt->insertBefore(TR::TreeTop::create(comp, afNode, NULL, NULL));
                         if (trace())
-                           traceMsg(comp,   "Inserted AF node %p above %p (%s).\n", afNode, tt->getNode(), tt->getNode()->getOpCode().getName() );
+                           traceMsg(comp,   "Inserted AF node %p for candidate %p above %p (%s).\n", afNode, candidate->_node, tt->getNode(), tt->getNode()->getOpCode().getName() );
                         //fprintf( stderr, "Inserted AF node %p above %p (%s).\n", afNode, tt->getNode(), tt->getNode()->getOpCode().getName() );
                         }
                      }
@@ -9457,7 +9457,7 @@ bool TR_LocalFlushElimination::examineNode(TR::Node *node, TR::TreeTop *tt, TR::
                         TR::Node *afNode = TR::Node::createAllocationFence(candidate->_node, candidate->_node);
                         tt->insertBefore(TR::TreeTop::create(comp(), afNode, NULL, NULL));
                         if (trace())
-                           traceMsg(comp(), "(local) Inserted AF node %p above node %p (%s).\n", afNode, node, node->getOpCode().getName() );
+                           traceMsg(comp(), "(local) Inserted AF node %p for candidate %p above node %p (%s).\n", afNode, candidate->_node, node, node->getOpCode().getName() );
                         //fprintf( stderr, "(local) Inserted AF node %p above node %p (%s).\n", afNode, node, node->getOpCode().getName() );
                         }
                      }
