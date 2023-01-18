@@ -75,6 +75,7 @@
 #include "infra/Link.hpp"
 #include "infra/List.hpp"
 #include "infra/SimpleRegex.hpp"
+#include "infra/String.hpp"
 #include "infra/TRCfgEdge.hpp"
 #include "infra/TRCfgNode.hpp"
 #include "optimizer/Inliner.hpp"
@@ -1234,6 +1235,54 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
          rememoize(candidate);
          _candidates.remove(candidate);
          continue;
+         }
+      }
+
+   // Suppress stack allocation for any candidates that match a pattern
+   // specified with the suppressEA option.  The string used to match
+   // the pattern is "[<bci>]", if the candidate for allocation is in
+   // the outermost method or "<method-signature>[<bci>]" if it is in
+   // an inlined method, where <bci> is the byte code offset of the
+   // candidate for stack allocation
+   TR::SimpleRegex * suppressAtRegex = comp()->getOptions()->getSuppressEAPattern();
+   if (suppressAtRegex != NULL && !_candidates.isEmpty())
+      {
+      TR::StringBuf buf(trMemory()->currentStackRegion());
+
+      for (candidate = _candidates.getFirst(); candidate; candidate = next)
+         {
+         next = candidate->getNext();
+
+         if (!candidate->isLocalAllocation())
+            {
+            continue;
+            }
+
+         TR_ByteCodeInfo bcInfo = candidate->_node->getByteCodeInfo();
+         bool suppress;
+
+         if (bcInfo.getCallerIndex() > -1)
+            {
+            buf.appendf("%s", comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()));
+            }
+
+         buf.appendf("@%d", bcInfo.getByteCodeIndex());
+            if (trace())
+               {
+               traceMsg(comp(), "  String we're trying to match for candidate [%p] suppressEA option \"%s\"\n", candidate->_node, buf.text());
+               }
+
+         if (TR::SimpleRegex::match(suppressAtRegex, buf.text()))
+            {
+            candidate->setLocalAllocation(false);
+
+            if (trace())
+               {
+               traceMsg(comp(), "  Suppressing stack allocation of candidate node [%p] - matched suppressEA option\n", candidate->_node);
+               }
+            }
+
+         buf.clear();
          }
       }
 
