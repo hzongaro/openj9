@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corp. and others
+ * Copyright (c) 2000, 2023 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1247,8 +1247,6 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
    TR::SimpleRegex * suppressAtRegex = comp()->getOptions()->getSuppressEAPattern();
    if (suppressAtRegex != NULL && !_candidates.isEmpty())
       {
-      TR::StringBuf buf(trMemory()->currentStackRegion());
-
       for (candidate = _candidates.getFirst(); candidate; candidate = next)
          {
          next = candidate->getNext();
@@ -1258,31 +1256,8 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
             continue;
             }
 
-         TR_ByteCodeInfo bcInfo = candidate->_node->getByteCodeInfo();
-         bool suppress;
-
-         if (bcInfo.getCallerIndex() > -1)
-            {
-            buf.appendf("%s", comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()));
-            }
-
-         buf.appendf("@%d", bcInfo.getByteCodeIndex());
-            if (trace())
-               {
-               traceMsg(comp(), "  String we're trying to match for candidate [%p] suppressEA option \"%s\"\n", candidate->_node, buf.text());
-               }
-
-         if (TR::SimpleRegex::match(suppressAtRegex, buf.text()))
-            {
-            candidate->setLocalAllocation(false);
-
-            if (trace())
-               {
-               traceMsg(comp(), "  Suppressing stack allocation of candidate node [%p] - matched suppressEA option\n", candidate->_node);
-               }
-            }
-
-         buf.clear();
+         TR_ByteCodeInfo &bcInfo = candidate->_node->getByteCodeInfo();
+         TR::SimpleRegex::match(suppressAtRegex, bcInfo);
          }
       }
 
