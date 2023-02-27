@@ -563,7 +563,7 @@ class TR_EscapeAnalysis : public TR::Optimization
     * \param[in] candidate A candidate for stack allocation
     */
    bool     checkUsesThroughAselect(TR::Node *node, Candidate *candidate);
-   bool     checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candidate *candidate, bool isImmediateUse);
+   bool     checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candidate *candidate, bool isImmediateUse, bool ignoreIsUseInLoop);
    bool     checkOverlappingLoopAllocation(TR::Node *useNode, Candidate *candidate);
    bool     checkOverlappingLoopAllocation(TR::Node *node, TR::Node *useNode, TR::Node *allocNode, rcount_t &numReferences);
 
