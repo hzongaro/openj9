@@ -2557,8 +2557,10 @@ bool TR_EscapeAnalysis::checkDefsAndUses(TR::Node *node, Candidate *candidate)
                               /////printf("secs Overlapping loop allocation in %s\n", comp()->signature());
                               returnValue = false;
                               }
+static char *suppressIgnoreUseInLoop = feGetEnv("TR_SuppressIgnoringUseInLoop");
+bool ignoreUseInLoop = (suppressIgnoreUseInLoop == NULL);
                            bool checkIfIgnoringUseInLoop = 
-                                   checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), true);
+                                   checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), ignoreUseInLoop);
 
                            if (!checkIfIgnoringUseInLoop)
                               {
