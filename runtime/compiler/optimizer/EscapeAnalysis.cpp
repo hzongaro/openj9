@@ -2558,13 +2558,20 @@ bool TR_EscapeAnalysis::checkDefsAndUses(TR::Node *node, Candidate *candidate)
                               returnValue = false;
                               }
                            bool checkIfIgnoringUseInLoop = 
-                                   checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), false);
+                                   checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), true);
+
+                           if (!checkIfIgnoringUseInLoop)
+                              {
+                              if (trace())
+                                 traceMsg(comp(), "   Make [%p] non-local because multiple defs to node [%p]\n", candidate->_node, useNode);
+                              returnValue = false;
+                              }
 
 static char *checkEffectOfIgnoringUseInLoop = feGetEnv("TR_CheckEffectOfIgnoringUseInLoop");
 if (checkEffectOfIgnoringUseInLoop && returnValue)
    {
    bool checkIfConsideringUseInLoop =
-           checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), true);
+           checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), false);
 
    TR_ASSERT_FATAL((checkIfIgnoringUseInLoop == checkIfConsideringUseInLoop), "checkOtherDefsOfLoopAllocation(use n%un [%p], candidate [%p]) == %d when ignoring use in loop and %d when considering use in loop\n", useNode->getGlobalIndex(), useNode, candidate->_node, checkIfIgnoringUseInLoop, checkIfConsideringUseInLoop);
    }
