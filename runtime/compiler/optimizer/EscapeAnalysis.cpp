@@ -2689,14 +2689,14 @@ if (defNode->getOpCode().isStoreDirect())
 if (defNode->getFirstChild()->getOpCodeValue() == TR::aconst)
 {
 traceMsg(comp(), "      (defNode->getFirstChild()->getOpCodeValue() == TR::aconst) == 1\n");
-} else if (defNode->getFirstChild()->getOpCode().isLoadVar())
+} else if (defNode->getFirstChild()->getOpCode().isLoadVar()) {
 traceMsg(comp(), "      (defNode->getFirstChild()->getOpCode().isLoadVar()) == 1\n");
 traceMsg(comp(), "      defNode->getFirstChild()->getSymbol()->isStatic() == %d\n", defNode->getFirstChild()->getSymbol()->isStatic());
 traceMsg(comp(), "      defNode->getFirstChild()->getSymbol()->isShadow() == %d\n", defNode->getFirstChild()->getSymbol()->isShadow());
 traceMsg(comp(), "      defNode->getFirstChild()->getSymbol()->isArrayShadowSymbol() == %d\n", defNode->getFirstChild()->getSymbol()->isArrayShadowSymbol());
 }
 }
-
+}
 
       if (!allnewsonrhs &&
           !(defNode->getOpCode().isStoreDirect() &&
