@@ -6543,7 +6543,7 @@ void TR_EscapeAnalysis::makeLocalObject(Candidate *candidate)
    // If the node is not from an inlined method, <inlined-method-sig> repeats the outermost method signature
    //
    TR_ByteCodeInfo bcInfo = allocationNode->getByteCodeInfo();
-   TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/contiguous-allocation/%s/%s/(%s)/(%d,%d)", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex()), candidate->_treeTop);
+   TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/contiguous-allocation/%s/%s/(%s)/(%d,%d)%s", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex(), (candidate->isInAColdBlock() ? "/coldblock" : "")), candidate->_treeTop);
 
    if (candidate->_seenArrayCopy || candidate->_argToCall || candidate->_seenSelfStore || candidate->_seenStoreToLocalObject)
       {
@@ -7023,7 +7023,7 @@ void TR_EscapeAnalysis::makeNonContiguousLocalAllocation(Candidate *candidate)
       // If the node is not from an inlined method, <inlined-method-sig> repeats the outermost method signature
       //
       TR_ByteCodeInfo bcInfo = candidate->_node->getByteCodeInfo();
-      TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/noncontiguous-allocation/%s/%s/(%s)/(%d,%d)", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex()), candidate->_treeTop);
+      TR::DebugCounter::prependDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "escapeAnalysis/noncontiguous-allocation/%s/%s/(%s)/(%d,%d)%s", comp()->getHotnessName(comp()->getMethodHotness()), comp()->signature(), bcInfo.getCallerIndex() > -1 ? comp()->getInlinedResolvedMethod(bcInfo.getCallerIndex())->signature(trMemory()): comp()->signature(), bcInfo.getCallerIndex(), bcInfo.getByteCodeIndex(), (candidate->isInAColdBlock() ? "/coldblock" : "")), candidate->_treeTop);
       // Remove the tree containing the allocation node. All uses of the node
       // should have been removed by now
       //
