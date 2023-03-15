@@ -279,6 +279,8 @@ yieldContinuation(J9VMThread *currentThread, BOOLEAN isFinished)
 	if (!isFinished) {
 		/* Notify GC of Continuation stack swap */
 		currentThread->javaVM->memoryManagerFunctions->postUnmountContinuation(currentThread, continuationObject);
+	} else {
+		freeContinuation(currentThread, continuationObject, FALSE);
 	}
 
 	return result;
