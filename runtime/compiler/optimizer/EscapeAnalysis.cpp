@@ -2576,14 +2576,14 @@ if (checkEffectOfIgnoringUseInLoop && returnValue)
            checkOtherDefsOfLoopAllocation(useNode, candidate, (next->getFirstChild() == candidate->_node), false);
 
    TR_ASSERT_FATAL((checkIfIgnoringUseInLoop == checkIfConsideringUseInLoop), "checkOtherDefsOfLoopAllocation(use n%un [%p], candidate [%p]) == %d when ignoring use in loop and %d when considering use in loop\n", useNode->getGlobalIndex(), useNode, candidate->_node, checkIfIgnoringUseInLoop, checkIfConsideringUseInLoop);
-   }
 
-                           if (!checkEffectOfIgnoringUseInLoop)
+                           if (!checkIfConsideringUseInLoop)
                               {
                               if (trace())
                                  traceMsg(comp(), "   Make [%p] non-local because multiple defs to node [%p]\n", candidate->_node, useNode);
                               returnValue = false;
                               }
+   }
                            }
                         else
                            returnValue = false;
@@ -2629,12 +2629,12 @@ bool TR_EscapeAnalysis::checkOtherDefsOfLoopAllocation(TR::Node *useNode, Candid
    //
    int32_t useIndex = useNode->getUseDefIndex();
    if (useIndex <= 0)
-      return true;
-
-if (trace())
 {
-traceMsg(comp(), "      In checkOtherDefsOfLoopAllocation for useNode n%un [%p] with candidate [%p] - isImmediateUse == %d\n", useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
+traceMsg(comp(), "      Entering and returning checkOtherDefsOfLoopAllocation with useIndex == %d for useNode n%un [%p] candidate %p - isImmediateUse == %d\n", useIndex, useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
+      return true;
 }
+
+traceMsg(comp(), "      Entering checkOtherDefsOfLoopAllocation for useNode n%un [%p] candidate %p - isImmediateUse == %d\n", useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
 
    TR_UseDefInfo::BitVector defs(comp()->allocator());
    _useDefInfo->getUseDef(defs, useIndex);
@@ -2721,10 +2721,9 @@ traceMsg(comp(), "         defNode n%un [%p] vn=%d; useNode n%un [%p] vn=%d\n", 
                 checkIfUseIsInLoopAndOverlapping(candidate, _useDefInfo->getTreeTop(defIndex), useNode))
                {
                if (trace())
-                  traceMsg(comp(), "         Def node [%p] same as candidate [%p]\n", defNode, candidate->_node);
-if (trace())
 {
-traceMsg(comp(), "      checkOtherDefsOfLoopAllocation returns false (1)\n");
+                  traceMsg(comp(), "         Def node [%p] same as candidate [%p]\n", defNode, candidate->_node);
+traceMsg(comp(), "      Returning false (1) from checkOtherDefsOfLoopAllocation for useNode n%un [%p] candidate %p isImmediateUse == %d\n", useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
 }
                return false;
                }
@@ -2741,7 +2740,7 @@ traceMsg(comp(), "      Recursive call to checkOtherDefsOfLoopAllocation for def
 {
 if (trace())
 {
-traceMsg(comp(), "      checkOtherDefsOfLoopAllocation returned false (2)\n");
+traceMsg(comp(), "      Returning false (2) from checkOtherDefsOfLoopAllocation for useNode n%un [%p] candidate %p isImmediateUse == %d\n", useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
 }
             return false;
 }
@@ -2752,7 +2751,7 @@ traceMsg(comp(), "      checkOtherDefsOfLoopAllocation returned false (2)\n");
       }
 if (trace())
 {
-traceMsg(comp(), "      checkOtherDefsOfLoopAllocation returned true (3)\n");
+traceMsg(comp(), "      Returning true (3) from checkOtherDefsOfLoopAllocation for useNode n%un [%p] candidate %p isImmediateUse == %d\n", useNode->getGlobalIndex(), useNode, candidate->_node, isImmediateUse);
 }
    return true;
    }
