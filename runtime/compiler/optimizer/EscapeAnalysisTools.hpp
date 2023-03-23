@@ -31,9 +31,6 @@
 
 namespace TR { class Block; class Node; }
 
-//typedef TR::typed_allocator<TR::Node *, TR::Region &> NodeDequeAllocator;
-//typedef std::deque<TR::Node *, NodeDequeAllocator> NodeDeque;
-
 class TR_EscapeAnalysisTools
    {
    public:
@@ -54,8 +51,7 @@ class TR_EscapeAnalysisTools
    void insertFakeEscapeForOSR(TR::Block *block, TR::Node *induceCall);
 
 
-   void insertFakeEscapeForLoads(TR::Block *block, TR::Node *node, NodeDeque *loads);
-   //static bool isFakeEscape(TR::Node *node) { return node->getSymbolReference()->getReferenceNumber() == TR_prepareForOSR;}
+   void insertFakeEscapeForLoads(TR::Block *block, TR::Node *node, TR_BitVector *symRefsToLoad);
    static bool isFakeEscape(TR::Node *node) { return node->isEAEscapeHelperCall(); }
    private:
    TR::Compilation *_comp;
@@ -64,7 +60,7 @@ class TR_EscapeAnalysisTools
     * Used by \ref insertFakePrepareForOSR to gather \c aloads of autos and
     * pending pushes.
     */
-   NodeDeque *_loads;
+   TR_BitVector *_symRefsToLoad;
 
    /**
     * Gather live autos and pending pushes at the point of a call to the OSR
