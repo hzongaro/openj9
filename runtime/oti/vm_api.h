@@ -4389,6 +4389,15 @@ void
 freeContinuation(J9VMThread *currentThread, j9object_t continuationObject);
 
 /**
+ * @brief Recycle the native memory allocated by Continuation.
+ *
+ * @param currentThread the thread unmounting Continuation.
+ * @param continuationObject
+ */
+void
+recycleContinuation(J9VMThread *currentThread, j9object_t continuationObject);
+
+/**
  * @brief Determine if the current continuation is pinned.
  *
  * @param currentThread

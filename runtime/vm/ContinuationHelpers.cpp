@@ -40,17 +40,22 @@ createContinuation(J9VMThread *currentThread, j9object_t continuationObject)
 	J9JavaVM *vm = currentThread->javaVM;
 	PORT_ACCESS_FROM_VMC(currentThread);
 	BOOLEAN result = TRUE;
-	J9JavaStack *stack = NULL;
-	J9SFJNINativeMethodFrame *frame = NULL;
+	J9VMContinuation *continuation = NULL;
 
-	J9VMContinuation *continuation = (J9VMContinuation *)j9mem_allocate_memory(sizeof(J9VMContinuation), OMRMEM_CATEGORY_THREADS);
-	if (NULL == continuation) {
-		vm->internalVMFunctions->setNativeOutOfMemoryError(currentThread, 0, 0);
-		result = FALSE;
-		goto end;
-	}
+	if (NULL != currentThread->cachedContinuation) {
+		continuation = currentThread->cachedContinuation;
+		currentThread->cachedContinuation = NULL;
+	} else {
+		J9JavaStack *stack = NULL;
+		J9SFJNINativeMethodFrame *frame = NULL;
+		continuation = (J9VMContinuation *)j9mem_allocate_memory(sizeof(J9VMContinuation), OMRMEM_CATEGORY_THREADS);
+		if (NULL == continuation) {
+			vm->internalVMFunctions->setNativeOutOfMemoryError(currentThread, 0, 0);
+			result = FALSE;
+			goto end;
+		}
 
-	memset(continuation, 0, sizeof(J9VMContinuation));
+		memset(continuation, 0, sizeof(J9VMContinuation));
 
 #ifdef J9VM_INTERP_GROWABLE_STACKS
 #define VMTHR_INITIAL_STACK_SIZE ((vm->initialStackSize > (UDATA) vm->stackSize) ? vm->stackSize : vm->initialStackSize)
@@ -58,30 +63,31 @@ createContinuation(J9VMThread *currentThread, j9object_t continuationObject)
 #define VMTHR_INITIAL_STACK_SIZE vm->stackSize
 #endif
 
-	if ((stack = allocateJavaStack(vm, VMTHR_INITIAL_STACK_SIZE, NULL)) == NULL) {
-		vm->internalVMFunctions->setNativeOutOfMemoryError(currentThread, 0, 0);
-		j9mem_free_memory(continuation);
-		result = FALSE;
-		goto end;
-	}
+		if ((stack = allocateJavaStack(vm, VMTHR_INITIAL_STACK_SIZE, NULL)) == NULL) {
+			vm->internalVMFunctions->setNativeOutOfMemoryError(currentThread, 0, 0);
+			j9mem_free_memory(continuation);
+			result = FALSE;
+			goto end;
+		}
 
 #undef VMTHR_INITIAL_STACK_SIZE
 
-	continuation->stackObject = stack;
-	continuation->stackOverflowMark2 = J9JAVASTACK_STACKOVERFLOWMARK(stack);
-	continuation->stackOverflowMark = continuation->stackOverflowMark2;
+		continuation->stackObject = stack;
+		continuation->stackOverflowMark2 = J9JAVASTACK_STACKOVERFLOWMARK(stack);
+		continuation->stackOverflowMark = continuation->stackOverflowMark2;
 
-	frame = ((J9SFJNINativeMethodFrame*)stack->end) - 1;
-	frame->method = NULL;
-	frame->specialFrameFlags = 0;
-	frame->savedCP = NULL;
-	frame->savedPC = (U_8*)(UDATA)J9SF_FRAME_TYPE_END_OF_STACK;
-	frame->savedA0 = (UDATA*)(UDATA)J9SF_A0_INVISIBLE_TAG;
-	continuation->sp = (UDATA*)frame;
-	continuation->literals = NULL;
-	continuation->pc = (U_8*)J9SF_FRAME_TYPE_JNI_NATIVE_METHOD;
-	continuation->arg0EA = (UDATA*)&frame->savedA0;
-	continuation->stackObject->isVirtual = TRUE;
+		frame = ((J9SFJNINativeMethodFrame*)stack->end) - 1;
+		frame->method = NULL;
+		frame->specialFrameFlags = 0;
+		frame->savedCP = NULL;
+		frame->savedPC = (U_8*)(UDATA)J9SF_FRAME_TYPE_END_OF_STACK;
+		frame->savedA0 = (UDATA*)(UDATA)J9SF_A0_INVISIBLE_TAG;
+		continuation->sp = (UDATA*)frame;
+		continuation->literals = NULL;
+		continuation->pc = (U_8*)J9SF_FRAME_TYPE_JNI_NATIVE_METHOD;
+		continuation->arg0EA = (UDATA*)&frame->savedA0;
+		continuation->stackObject->isVirtual = TRUE;
+	}
 
 	J9VMJDKINTERNALVMCONTINUATION_SET_VMREF(currentThread, continuationObject, continuation);
 
@@ -283,6 +289,47 @@ freeContinuation(J9VMThread *currentThread, j9object_t continuationObject)
 
 		/* Update Continuation object's vmRef field */
 		J9VMJDKINTERNALVMCONTINUATION_SET_VMREF(currentThread, continuationObject, NULL);
+	}
+}
+
+void
+recycleContinuation(J9VMThread *currentThread, j9object_t continuationObject)
+{
+	if (NULL == currentThread->cachedContinuation) {
+		J9VMContinuation *continuation = J9VMJDKINTERNALVMCONTINUATION_VMREF(currentThread, continuationObject);
+		if (NULL != continuation) {
+			ContinuationState continuationState = *VM_VMHelpers::getContinuationStateAddress(currentThread, continuationObject);
+			Assert_VM_true(!VM_VMHelpers::isConcurrentlyScanned(continuationState) && (NULL == VM_VMHelpers::getCarrierThread(continuationState)));
+
+			/* Free old stack used by continuation */
+			J9JavaStack *currentStack = continuation->stackObject->previous;
+			while (NULL != currentStack) {
+				J9JavaStack *previous = currentStack->previous;
+
+				freeJavaStack(currentThread->javaVM, currentStack);
+				currentStack = previous;
+			}
+
+			/* Reset stack initial state */
+			J9SFJNINativeMethodFrame *frame = ((J9SFJNINativeMethodFrame*)continuation->stackObject->end) - 1;
+			frame->method = NULL;
+			frame->specialFrameFlags = 0;
+			frame->savedCP = NULL;
+			frame->savedPC = (U_8*)(UDATA)J9SF_FRAME_TYPE_END_OF_STACK;
+			frame->savedA0 = (UDATA*)(UDATA)J9SF_A0_INVISIBLE_TAG;
+			continuation->sp = (UDATA*)frame;
+			continuation->literals = NULL;
+			continuation->pc = (U_8*)J9SF_FRAME_TYPE_JNI_NATIVE_METHOD;
+			continuation->arg0EA = (UDATA*)&frame->savedA0;
+
+			/* Move continuation struct to Thread's cachedContinuation */
+			currentThread->cachedContinuation = continuation;
+
+			/* Update Continuation object's vmRef field */
+			J9VMJDKINTERNALVMCONTINUATION_SET_VMREF(currentThread, continuationObject, NULL);
+		}
+	} else {
+		freeContinuation(currentThread, continuationObject);
 	}
 }
 

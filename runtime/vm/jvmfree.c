@@ -235,6 +235,13 @@ deallocateVMThread(J9VMThread * vmThread, UDATA decrementZombieCount, UDATA send
 		/* Deallocate thread object's tls array. */
 		freeTLS(vmThread, vmThread->threadObject);
 	}
+
+	/* Cleanup Continuation cache */
+	if (NULL != vmThread->cachedContinuation) {
+		freeJavaStack(vm, vmThread->cachedContinuation->stackObject);
+		j9mem_free_memory(continuation);
+		vmThread->cachedContinuation = NULL;
+	}
 #endif /* JAVA_SPEC_VERSION >= 19 */
 
 	/* freeing the per thread buffers in the portlibrary */
