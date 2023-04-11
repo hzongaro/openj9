@@ -238,8 +238,7 @@ deallocateVMThread(J9VMThread * vmThread, UDATA decrementZombieCount, UDATA send
 
 	/* Cleanup Continuation cache */
 	if (NULL != vmThread->cachedContinuation) {
-		freeJavaStack(vm, vmThread->cachedContinuation->stackObject);
-		j9mem_free_memory(continuation);
+		vm->internalVMFunctions->recycleContinuation(vm, NULL, vmThread->cachedContinuation, TRUE);
 		vmThread->cachedContinuation = NULL;
 	}
 #endif /* JAVA_SPEC_VERSION >= 19 */
