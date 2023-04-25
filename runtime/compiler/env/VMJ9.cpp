@@ -7731,9 +7731,9 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
             // Retrieve the offset of the instance "referent" field from Reference class
             TR::SymbolReference * callerSymRef = callNode->getSymbolReference();
             TR_ResolvedMethod * owningMethod = callerSymRef->getOwningMethod(comp);
-            int32_t len = owningMethod->classNameLength();
-            char * s = TR::Compiler->cls.classNameToSignature(owningMethod->classNameChars(), len, comp);
-            TR_OpaqueClassBlock * ReferenceClass = getClassFromSignature(s, len, owningMethod);
+            int32_t len = resolvedMethod->classNameLength();
+            char * s = TR::Compiler->cls.classNameToSignature(resolvedMethod->classNameChars(), len, comp);
+            TR_OpaqueClassBlock * ReferenceClass = getClassFromSignature(s, len, resolvedMethod);
             // defect 143867, ReferenceClass == 0 and crashed later in findFieldInClass()
             if (!ReferenceClass)
                return 0;
