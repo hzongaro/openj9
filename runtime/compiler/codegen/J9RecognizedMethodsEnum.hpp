@@ -129,6 +129,7 @@
    java_lang_ref_Reference_refersTo,
    java_lang_ref_SoftReference_get,
    java_lang_Thread_currentThread,
+   java_lang_Thread_currentCarrierThread,
    java_lang_System_arraycopy,
    java_lang_System_currentTimeMillis,
    java_lang_System_nanoTime,

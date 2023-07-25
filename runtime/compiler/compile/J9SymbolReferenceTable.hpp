@@ -245,6 +245,7 @@ class SymbolReferenceTable : public OMR::SymbolReferenceTableConnector
    TR::SymbolReference * findOrCreateDiscontiguousArraySizeSymbolRef();
    TR::SymbolReference * findOrCreateClassLoaderSymbolRef(TR_ResolvedMethod *);
    TR::SymbolReference * findOrCreateCurrentThreadSymbolRef();
+   TR::SymbolReference * findOrCreateCurrentCarrierThreadSymbolRef();
    TR::SymbolReference * findOrCreateJ9MethodExtraFieldSymbolRef(intptr_t offset);
    TR::SymbolReference * findOrCreateJ9MethodConstantPoolFieldSymbolRef(intptr_t offset);
    TR::SymbolReference * findOrCreateStartPCLinkageInfoSymbolRef(intptr_t offset);

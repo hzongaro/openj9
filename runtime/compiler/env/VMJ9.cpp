@@ -1061,6 +1061,11 @@ UDATA TR_J9VMBase::thisThreadGetJavaLiteralsOffset()                {return offs
 UDATA TR_J9VMBase::thisThreadGetJavaFrameFlagsOffset()              {return offsetof(J9VMThread, jitStackFrameFlags);}
 UDATA TR_J9VMBase::thisThreadGetMachineSPOffset()                   {return sizeof(J9VMThread);}
 UDATA TR_J9VMBase::thisThreadGetCurrentThreadOffset()               {return offsetof(J9VMThread, threadObject);}
+
+#if JAVA_SPEC_VERSION >= 19
+UDATA TR_J9VMBase::thisThreadGetCurrentCarrierThreadOffset()        {return offsetof(J9VMThread, carrierThreadObject);}
+#endif
+
 UDATA TR_J9VMBase::thisThreadGetFloatTemp1Offset()                  {return offsetof(J9VMThread, floatTemp1);}
 UDATA TR_J9VMBase::thisThreadGetFloatTemp2Offset()                  {return offsetof(J9VMThread, floatTemp2);}
 UDATA TR_J9VMBase::thisThreadGetTempSlotOffset()                    {return offsetof(J9VMThread, tempSlot);}
@@ -7657,6 +7662,9 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
          return callNode;
 
       case TR::java_lang_Thread_currentThread:
+#if JAVA_SPEC_VERSION >= 19
+      case TR::java_lang_Thread_currentCarrierThread:
+#endif
          {
          static const char * notInlineCurrentThread = feGetEnv("TR_DisableRecognizeCurrentThread");
          if (comp->cg()->getGRACompleted())
@@ -7668,9 +7676,22 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
             if (comp->getOption(TR_TraceOptDetails) || comp->getOption(TR_TraceILGen))
                traceMsg(comp, "Inline Thread.currentThread() callNode n%dn 0x%p\n", callNode->getGlobalIndex(), callNode);
 
-            comp->cg()->setInlinedGetCurrentThreadMethod();
+            TR::SymbolReference *fieldSymRef = NULL;
+            if (methodID == TR::java_lang_Thread_currentThread)
+               {
+               comp->cg()->setInlinedGetCurrentThreadMethod();
+               fieldSymRef = comp->getSymRefTab()->findOrCreateCurrentThreadSymbolRef();
+               }
+#if JAVA_SPEC_VERSION >= 19
+            else
+               {
+               comp->cg()->setInlinedGetCurrentCarrierThreadMethod();
+               fieldSymRef = comp->getSymRefTab()->findOrCreateCurrentCarrierThreadSymbolRef();
+               }
+#endif
+
             TR::Node::recreate(callNode, TR::aload);
-            callNode->setSymbolReference(comp->getSymRefTab()->findOrCreateCurrentThreadSymbolRef());
+            callNode->setSymbolReference(fieldSymRef);
 
             return callNode;
             }
@@ -9452,6 +9473,12 @@ TR_J9VMBase::isJ9VMThreadCurrentThreadImmutable()
 #else
    return true;
 #endif /* JAVA_SPEC_VERSION >= 19 */
+   }
+
+bool
+TR_J9VMBase::isJ9VMThreadCurrentCarrierThreadImmutable()
+   {
+   return false;
    }
 
 // Native method bodies

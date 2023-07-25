@@ -2838,7 +2838,8 @@ void TR_ResolvedJ9Method::construct()
 
    static X ThreadMethods[] =
       {
-      {x(TR::java_lang_Thread_currentThread,     "currentThread",   "()Ljava/lang/Thread;")},
+      {x(TR::java_lang_Thread_currentThread,        "currentThread",        "()Ljava/lang/Thread;")},
+      {x(TR::java_lang_Thread_currentCarrierThread, "currentCarrierThread", "()Ljava/lang/Thread;")},
       {  TR::unknownMethod}
       };
 
@@ -4521,6 +4522,7 @@ TR_ResolvedJ9Method::setRecognizedMethodInfo(TR::RecognizedMethod rm)
          {
          switch (rm) {
             case TR::java_lang_Thread_currentThread:
+            case TR::java_lang_Thread_currentCarrierThread:
             case TR::sun_misc_Unsafe_compareAndSwapInt_jlObjectJII_Z:
             case TR::sun_misc_Unsafe_compareAndSwapLong_jlObjectJJJ_Z:
             case TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z:

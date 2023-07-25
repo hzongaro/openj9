@@ -530,6 +530,11 @@ public:
    virtual uintptr_t         thisThreadGetMachineSPOffset();
    virtual uintptr_t         thisThreadGetJavaFrameFlagsOffset();
    virtual uintptr_t         thisThreadGetCurrentThreadOffset();
+
+#if JAVA_SPEC_VERSION >= 19
+   virtual uintptr_t         thisThreadGetCurrentCarrierThreadOffset();
+#endif
+
    virtual uintptr_t         thisThreadGetFloatTemp1Offset();
    virtual uintptr_t         thisThreadGetFloatTemp2Offset();
    virtual uintptr_t         thisThreadGetTempSlotOffset();
@@ -1387,6 +1392,7 @@ public:
     * \return True if Thread.currentThread() is immutable.
     */
    virtual bool isJ9VMThreadCurrentThreadImmutable();
+   virtual bool isJ9VMThreadCurrentCarrierThreadImmutable();
 
 protected:
 

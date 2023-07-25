@@ -1356,6 +1356,28 @@ J9::SymbolReferenceTable::findOrCreateCurrentThreadSymbolRef()
    }
 
 TR::SymbolReference *
+J9::SymbolReferenceTable::findOrCreateCurrentCarrierThreadSymbolRef()
+   {
+   if (!element(currentCarrierThreadSymbol))
+      {
+#if JAVA_SPEC_VERSION >= 19
+      TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
+      TR::Symbol * sym = TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "CurrentCarrierThread");
+      sym->setDataType(TR::Address);
+      if (fej9->isJ9VMThreadCurrentCarrierThreadImmutable())
+         {
+         sym->setImmutableField();
+         }
+      element(currentCarrierThreadSymbol) = new (trHeapMemory()) TR::SymbolReference(self(), currentCarrierThreadSymbol, sym);
+      element(currentCarrierThreadSymbol)->setOffset(fej9->thisThreadGetCurrentCarrierThreadOffset());
+#else
+      TR_ASSERT_FATAL(false, "Calling SymbolReferenceTable::findOrCreateCurrentCarrierThreadSymbolRef for version prior to 19\n");
+#endif
+      }
+   return element(currentCarrierThreadSymbol);
+   }
+
+TR::SymbolReference *
 J9::SymbolReferenceTable::findOrCreateJ9MethodConstantPoolFieldSymbolRef(intptr_t offset)
    {
    if (!element(j9methodConstantPoolSymbol))

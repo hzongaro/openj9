@@ -4677,7 +4677,9 @@ J9::CodeGenerator::setUpForInstructionSelection()
       if (!_refinedAliasWalkCollector.killsNonIntPrimitiveArrayShadows)  methodInfo->setDoesntKillNonIntPrimitiveArrayShadows(true);
       }
 
-   if (self()->comp()->target().cpu.isX86() && self()->getInlinedGetCurrentThreadMethod())
+   if (self()->comp()->target().cpu.isX86()
+       && (self()->getInlinedGetCurrentThreadMethod()
+           || self()->getInlinedGetCurrentCarrierThreadMethod()))
       {
       TR::RealRegister *ebpReal = self()->getRealVMThreadRegister();
 

@@ -210,6 +210,13 @@ J9::AliasBuilder::createAliasInfo()
       defaultMethodDefAliases().set(currentThreadSymRef->getReferenceNumber());
       }
 
+   TR::SymbolReference *currentCarrierThreadSymRef = symRefTab()->element(TR::SymbolReferenceTable::currentCarrierThreadSymbol);
+   if (currentCarrierThreadSymRef && !comp()->fej9()->isJ9VMThreadCurrentCarrierThreadImmutable())
+      {
+      // "CurrentCarrierThread" could be modified by any method calls
+      defaultMethodDefAliases().set(currentCarrierThreadSymRef->getReferenceNumber());
+      }
+
    defaultMethodDefAliasesWithoutImmutable().init(symRefTab()->getNumSymRefs(), comp()->trMemory(), heapAlloc, growable);
    defaultMethodDefAliasesWithoutUserField().init(symRefTab()->getNumSymRefs(), comp()->trMemory(), heapAlloc, growable);
 
