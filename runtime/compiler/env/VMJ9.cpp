@@ -9478,7 +9478,7 @@ TR_J9VMBase::isJ9VMThreadCurrentThreadImmutable()
 bool
 TR_J9VMBase::isJ9VMThreadCurrentCarrierThreadImmutable()
    {
-   return false;
+   return true;
    }
 
 // Native method bodies
