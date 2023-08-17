@@ -1415,12 +1415,12 @@ TR::Node *classArgNode = node->getChild((rm == TR::java_util_Arrays_copyOf_Objec
 bool classArgGlobal;
 TR::VPConstraint *classArgConstraint = getConstraint(classArgNode, classArgGlobal);
 
-TR_OpaqueClassBlock *classArg = classArgConstraint->getClass();
+TR_OpaqueClassBlock *classArg = (classArgConstraint != NULL) ? classArgConstraint->getClass() : NULL;
 
 const char *counter2Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
                                                         comp()->signature(),
                                                         "Arrays.copyOf-class",
-                                                        (classArgConstraint == NULL)
+                                                        (classArg == NULL)
                                                             ? "maybe-primitive"
                                                             : (TR::Compiler->cls.isPrimitiveValueTypeClass(classArg))
                                                                  ? "primitive" : "not-primitive",
