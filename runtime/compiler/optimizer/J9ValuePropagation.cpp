@@ -883,6 +883,16 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       TR::VPConstraint *arrayConstraint = getConstraint(arrayRefNode, arrayRefGlobal);
       TR_YesNoMaybe isCompTypePrimVT = isArrayCompTypePrimitiveValueType(arrayConstraint);
 
+const char *counterName = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
+                                                        comp()->signature(),
+                                                        isStoreFlattenableArrayElement ? "store" : "load",
+                                                        ((isCompTypePrimVT == TR_yes)
+                                                            ? "primitive"
+                                                            : (isCompTypePrimVT == TR_maybe) ? "maybe-primitive" : "not-primitive"),
+                                                        node->getByteCodeInfo().getCallerIndex(),
+                                                        node->getByteCodeInfo().getByteCodeIndex());
+TR::DebugCounter::incStaticDebugCounter(comp(), counterName);
+
       TR::Node *storeValueNode = NULL;
       TR::VPConstraint *storeValueConstraint = NULL;
       TR_YesNoMaybe isStoreValueVT = TR_maybe;
@@ -1344,6 +1354,80 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
    // This switch is used for transformations with AOT support
    switch (rm)
       {
+      case TR::java_lang_System_arraycopy:
+         {
+TR::Node *arrayArg1Node = node->getChild(0);
+TR::Node *arrayArg2Node = node->getChild(2);
+bool arrayArg1Global, arrayArg2Global;
+
+TR::VPConstraint *array1Constraint = getConstraint(arrayArg1Node, arrayArg1Global);
+TR::VPConstraint *array2Constraint = getConstraint(arrayArg2Node, arrayArg2Global);
+
+TR_YesNoMaybe isCompType1PrimVT = isArrayCompTypePrimitiveValueType(array1Constraint);
+TR_YesNoMaybe isCompType2PrimVT = isArrayCompTypePrimitiveValueType(array2Constraint);
+
+const char *counter1Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
+                                                        comp()->signature(),
+                                                        "system-array-copy-src",
+                                                        ((isCompType1PrimVT == TR_yes)
+                                                            ? "primitive"
+                                                            : (isCompType1PrimVT == TR_maybe) ? "maybe-primitive" : "not-primitive"),
+                                                        node->getByteCodeInfo().getCallerIndex(),
+                                                        node->getByteCodeInfo().getByteCodeIndex());
+TR::DebugCounter::incStaticDebugCounter(comp(), counter1Name);
+
+const char *counter2Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
+                                                        comp()->signature(),
+                                                        "system-array-copy-targ",
+                                                        ((isCompType2PrimVT == TR_yes)
+                                                            ? "primitive"
+                                                            : (isCompType2PrimVT == TR_maybe) ? "maybe-primitive" : "not-primitive"),
+                                                        node->getByteCodeInfo().getCallerIndex(),
+                                                        node->getByteCodeInfo().getByteCodeIndex());
+TR::DebugCounter::incStaticDebugCounter(comp(), counter2Name);
+
+         break;
+         }
+      case TR::java_util_Arrays_copyOfObject1:
+      case TR::java_util_Arrays_copyOfObject2:
+      case TR::java_util_Arrays_copyOfRangeObject1:
+      case TR::java_util_Arrays_copyOfRangeObject2:
+         {
+TR::Node *arrayArg1Node = node->getChild(0);
+bool arrayArg1Global;
+
+TR::VPConstraint *array1Constraint = getConstraint(arrayArg1Node, arrayArg1Global);
+TR_YesNoMaybe isCompType1PrimVT = isArrayCompTypePrimitiveValueType(array1Constraint);
+
+const char *counter1Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
+                                                        comp()->signature(),
+                                                        "Arrays.copyOf-src",
+                                                        ((isCompType1PrimVT == TR_yes)
+                                                            ? "primitive"
+                                                            : (isCompType1PrimVT == TR_maybe) ? "maybe-primitive" : "not-primitive"),
+                                                        node->getByteCodeInfo().getCallerIndex(),
+                                                        node->getByteCodeInfo().getByteCodeIndex());
+TR::DebugCounter::incStaticDebugCounter(comp(), counter1Name);
+
+if (rm == TR::java_util_Arrays_copyOfObject2 || TR::java_util_Arrays_copyOfRangeObject2)
+{
+TR::Node *classArgNode = node->getChild((rm == TR::java_util_Arrays_copyOfObject2) ? 1 : 3);
+bool classArgGlobal;
+TR::VPConstraint *classArgConstraint = getConstraint(classArgNode, classArgGlobal);
+
+const char *counter2Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
+                                                        comp()->signature(),
+                                                        "Arrays.copyOf-class",
+                                                        (classArgConstraint == NULL)
+                                                            ? "maybe-primitive"
+                                                            : (TR::Compiler->cls.isPrimitiveValueTypeClass(thisClass))
+                                                                 ? "primitive" : "not-primitive"),
+                                                        node->getByteCodeInfo().getCallerIndex(),
+                                                        node->getByteCodeInfo().getByteCodeIndex());
+TR::DebugCounter::incStaticDebugCounter(comp(), counter2Name);
+}
+         break;
+         }
       case TR::java_lang_Class_isInterface:
          {
          // Only constrain the call in the last run of vp to avoid adding the candidate twice if the call is inside a loop
