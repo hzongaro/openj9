@@ -1388,10 +1388,10 @@ TR::DebugCounter::incStaticDebugCounter(comp(), counter2Name);
 
          break;
          }
-      case TR::java_util_Arrays_copyOfObject1:
-      case TR::java_util_Arrays_copyOfObject2:
-      case TR::java_util_Arrays_copyOfRangeObject1:
-      case TR::java_util_Arrays_copyOfRangeObject2:
+      case TR::java_util_Arrays_copyOf_Object1:
+      case TR::java_util_Arrays_copyOf_Object2:
+      case TR::java_util_Arrays_copyOfRange_Object1:
+      case TR::java_util_Arrays_copyOfRange_Object2:
          {
 TR::Node *arrayArg1Node = node->getChild(0);
 bool arrayArg1Global;
@@ -1409,19 +1409,21 @@ const char *counter1Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-
                                                         node->getByteCodeInfo().getByteCodeIndex());
 TR::DebugCounter::incStaticDebugCounter(comp(), counter1Name);
 
-if (rm == TR::java_util_Arrays_copyOfObject2 || TR::java_util_Arrays_copyOfRangeObject2)
+if (rm == TR::java_util_Arrays_copyOf_Object2 || rm == TR::java_util_Arrays_copyOfRange_Object2)
 {
-TR::Node *classArgNode = node->getChild((rm == TR::java_util_Arrays_copyOfObject2) ? 1 : 3);
+TR::Node *classArgNode = node->getChild((rm == TR::java_util_Arrays_copyOf_Object2) ? 1 : 3);
 bool classArgGlobal;
 TR::VPConstraint *classArgConstraint = getConstraint(classArgNode, classArgGlobal);
+
+TR_OpaqueClassBlock *classArg = classArgConstraint->getClass();
 
 const char *counter2Name = TR::DebugCounter::debugCounterName(comp(), "vp-array-op/(%s)/%s/array-can-be-non-nullable=%s/bci=(%d,%d)",
                                                         comp()->signature(),
                                                         "Arrays.copyOf-class",
                                                         (classArgConstraint == NULL)
                                                             ? "maybe-primitive"
-                                                            : (TR::Compiler->cls.isPrimitiveValueTypeClass(thisClass))
-                                                                 ? "primitive" : "not-primitive"),
+                                                            : (TR::Compiler->cls.isPrimitiveValueTypeClass(classArg))
+                                                                 ? "primitive" : "not-primitive",
                                                         node->getByteCodeInfo().getCallerIndex(),
                                                         node->getByteCodeInfo().getByteCodeIndex());
 TR::DebugCounter::incStaticDebugCounter(comp(), counter2Name);
