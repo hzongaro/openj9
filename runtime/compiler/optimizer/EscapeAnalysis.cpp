@@ -8387,6 +8387,9 @@ static void printSymRefList(TR_ScratchList<TR::SymbolReference> *list, TR::Compi
 void Candidate::print()
    {
    traceMsg(comp(), "   Node = %p, contiguous = %d, local = %d\n", _node, isContiguousAllocation(), isLocalAllocation());
+   traceMsg(comp(), "   _class = %p; _size = %d; _kind = %s; _origKind = %s\n", _class, _size,
+               TR::ILOpCode((TR::ILOpCodes)_kind).getName(), TR::ILOpCode((TR::ILOpCodes)_origKind).getName());
+
    if (_flags.getValue() != 0)
       {
 
