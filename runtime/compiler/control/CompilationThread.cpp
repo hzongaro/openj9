@@ -9257,6 +9257,7 @@ TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrary *portLib, void * 
                      break;
                   }
                }
+options->enableTracing(OMR::generalStoreSinking);
             }
 
          // In JITServer, we would like to use JITClient's processor info for the compilation
