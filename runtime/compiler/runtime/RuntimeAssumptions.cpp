@@ -237,6 +237,8 @@ TR_PersistentCHTable::classGotExtended(
 #endif
    // should have an assume0(cl && subClass) here - but assume does not work rt-code
 
+   bool reportDetails = TR::Options::getCmdLineOptions()->getVerboseOption(TR_VerboseRuntimeAssumptions);
+
    TR_SubClass *sc = cl->addSubClass(subClass); // Updating the hierarchy
 
    if (!sc)
@@ -269,6 +271,12 @@ TR_PersistentCHTable::classGotExtended(
       }
 
       {
+TR_VerboseLog::CriticalSection vlogLock;
+bool foundEntryToCompensate = false;
+if (reportDetails)
+{
+TR_VerboseLog::writeLine(TR_Vlog_RA,"Class got extended - superClassId=%p subClassId=%p bucket %p", superClassId, subClassId);
+}
       OMR::CriticalSection classGotExtended(assumptionTableMutex);
       OMR::RuntimeAssumption ** headPtr = table->getBucketPtr(RuntimeAssumptionOnClassExtend,
                                          TR_RuntimeAssumptionTable::hashCode((uintptr_t) superClassId));
@@ -276,10 +284,15 @@ TR_PersistentCHTable::classGotExtended(
          {
          if (cursor->matches((uintptr_t) superClassId))
             {
+foundEntryToCompensate = true;
             cursor->compensate(fe, 0, 0);
             removeAssumptionFromRAT(cursor);
             }
          }
+if (reportDetails)
+{
+TR_VerboseLog::writeLine(TR_Vlog_RA," foundEntryToCompensate == %d\n", foundEntryToCompensate);
+}
       }
 
    return true;
