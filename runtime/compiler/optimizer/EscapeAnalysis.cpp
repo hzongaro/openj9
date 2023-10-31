@@ -5622,7 +5622,8 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                         TR::Node::recreate(node, TR::astorei);
                         node->setFlags(0);
 
-                        if (parent->getOpCode().isCheck() || parent->getOpCodeValue() == TR::compressedRefs)
+                        if ((parent != NULL)
+                            && (parent->getOpCode().isCheck() || parent->getOpCodeValue() == TR::compressedRefs))
                            {
                            if (trace())
                               traceMsg(comp(), " -> Eliminate %s [%p]\n", parent->getOpCode().getName(), parent);
