@@ -415,7 +415,7 @@ int32_t TR_EscapeAnalysis::perform()
 
          heapificationBlock->getExit()->insertBefore(TR::TreeTop::create(comp(), TR::Node::create(node, TR::Goto, 0, callBlock->getEntry())));
          tools.insertFakeEscapeForLoads(heapificationBlock, node, *nodeLookup->second.second);
-         traceMsg(comp(), "Created heapification block_%d\n", heapificationBlock->getNumber());
+         traceMsg(comp(), "Created potential heapification block_%d with call to <eaEscapeHelper>\n", heapificationBlock->getNumber());
 
          ((TR_EscapeAnalysis::PersistentData*)manager()->getOptData())->_peekableCalls->set(node->getGlobalIndex());
          _callsToProtect->erase(nodeLookup);
@@ -5058,12 +5058,13 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist& vi
                // The sniff could not be done. Remove this candidate.
                //
 
-              if (trace())
-                  traceMsg(comp(), "   Fail [%p] because child of call [%p]\n",
+               if (trace())
+                  {
+                  traceMsg(comp(), "   Mark candidate [%p] non-local child of call [%p]\n",
                           candidate->_node, node);
+                  }
 
-               rememoize(candidate);
-               _candidates.remove(candidate);
+               candidate->setLocalAllocation(false);
                }
             }
          //else
