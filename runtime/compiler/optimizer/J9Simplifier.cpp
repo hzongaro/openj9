@@ -1223,6 +1223,7 @@ J9::Simplifier::simplifyIndirectLoadPatterns(TR::Node *node)
                TR_ASSERT(convOpCode != TR::BadILOp, "Conversion between two different data types requires an opcode");
                replacement = TR::Node::create(convOpCode, 1, grandchild);
                // Note: be wary of collected refs.  We don't want to convert those accidentally to primitives.
+TR_ASSERT_FATAL_WITH_NODE(replacement, (convOpCode != TR::l2a), "Collapsed j9class->java/lang/Class->j9class with l2a\n");
                }
             return replaceNode(node, replacement, _curTree);
             }
