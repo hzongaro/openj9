@@ -23,17 +23,159 @@
 package java.lang.invoke;
 
 import java.lang.ref.WeakReference;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /*
  * ClassValue based Cache for mapping from a Class to its perClassCache.
  */
+final class RWLockedWeakHashMap extends WeakHashMap<CacheKey, WeakReference<MethodHandle>> {
+	private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+	private final Lock rl = rwl.readLock();
+	private final Lock wl = rwl.writeLock();
+
+	public int size() {
+		rl.lock();
+		try {
+			return super.size();
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public boolean isEmpty() {
+		rl.lock();
+		try {
+			return super.isEmpty();
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public WeakReference<MethodHandle> get(Object key) {
+		rl.lock();
+		try {
+			return super.get(key);
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public boolean containsKey(Object key) {
+		rl.lock();
+		try {
+			return super.containsKey(key);
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public WeakReference<MethodHandle> put(CacheKey key, WeakReference<MethodHandle> value) {
+		wl.lock();
+		try {
+			return super.put(key, value);
+		} finally {
+			wl.unlock();
+		}
+	}
+
+	public void putAll(Map<? extends CacheKey,? extends WeakReference<MethodHandle>> m) {
+		wl.lock();
+		try {
+			super.putAll(m);
+		} finally {
+			wl.unlock();
+		}
+	}
+
+	public WeakReference<MethodHandle> remove(Object key) {
+		wl.lock();
+		try {
+			return super.remove(key);
+		} finally {
+			wl.unlock();
+		}
+	}
+
+	public void clear() {
+		wl.lock();
+		try {
+			super.clear();
+		} finally {
+			wl.unlock();
+		}
+	}
+
+	public boolean containsValue(Object value) {
+		rl.lock();
+		try {
+			return super.containsValue(value);
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public Set<CacheKey> keySet() {
+		rl.lock();
+		try {
+			return super.keySet();
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public Collection<WeakReference<MethodHandle>> values() {
+		rl.lock();
+		try {
+			return super.values();
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public Set<Map.Entry<CacheKey,WeakReference<MethodHandle>>> entrySet() {
+		rl.lock();
+		try {
+			return super.entrySet();
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public void forEach(BiConsumer<? super CacheKey,? super WeakReference<MethodHandle>> action) {
+		rl.lock();
+		try {
+			super.forEach(action);
+		} finally {
+			rl.unlock();
+		}
+	}
+
+	public void replaceAll(BiFunction<? super CacheKey,? super WeakReference<MethodHandle>, ? extends WeakReference<MethodHandle>> function) {
+		wl.lock();
+		try {
+			super.replaceAll(function);
+		} finally {
+			wl.unlock();
+		}
+	}
+}
+
 final class Cache extends ClassValue<Map<CacheKey, WeakReference<MethodHandle>>> {
 	@Override
 	protected Map<CacheKey, WeakReference<MethodHandle>> computeValue(Class<?> arg0) {
-		return Collections.synchronizedMap(new WeakHashMap<CacheKey, WeakReference<MethodHandle>>());
+//		return Collections.synchronizedMap(new WeakHashMap<CacheKey, WeakReference<MethodHandle>>());
+		return new RWLockedWeakHashMap();
 	}	
 }
 
