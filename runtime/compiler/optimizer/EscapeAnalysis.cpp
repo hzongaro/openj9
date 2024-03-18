@@ -5620,12 +5620,24 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                         TR::Node::recreate(node, TR::astorei);
                         node->setFlags(0);
 
-                        if (parent->getOpCode().isCheck() || parent->getOpCodeValue() == TR::compressedRefs)
+                        if ((parent != NULL)
+                            && (parent->getOpCode().isCheck() || parent->getOpCodeValue() == TR::compressedRefs))
                            {
                            if (trace())
                               traceMsg(comp(), " -> Eliminate %s [%p]\n", parent->getOpCode().getName(), parent);
                            TR::Node::recreate(parent, TR::treetop);
                            parent->setFlags(0);
+
+                           int32_t numChildren = parent->getNumChildren();
+
+                           // If the parent node's operation has been transformed to a TR::treetop,
+                           // remove any children other than the astorei child that was created above
+                           for (int32_t childIdx = parent->getNumChildren()-1; childIdx > 0; childIdx--)
+                              {
+                              parent->getChild(childIdx)->recursivelyDecReferenceCount();
+                              }
+
+                           parent->setNumChildren(1);
                            }
                         }
                      }
