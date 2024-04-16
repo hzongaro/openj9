@@ -4117,7 +4117,11 @@ J9::CodeGenerator::fixUpProfiledInterfaceGuardTest()
          {
          TR_VirtualGuard *vg = comp->findVirtualGuardInfo(node);
          // Mainly we need to make sure that virtual guard which performs the TR_MethodTest and can be NOP'd are needed the range check.
-         if (vg != NULL
+
+         static char *skipVFTEntryBoundsCheck = feGetEnv("TR_SkipVFTEntryBoundsCheck");
+
+         if (!skipVFTEntryBoundsCheck
+             && vg != NULL
              && vg->getTestType() == TR_MethodTest
              && !self()->willGenerateNOPForVirtualGuard(node)
              && !node->vftEntryIsInBounds())
