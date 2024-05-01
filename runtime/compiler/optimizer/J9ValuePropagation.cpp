@@ -376,6 +376,15 @@ bool J9::ValuePropagation::transformIndexOfKnownString(
       }
    else if (targetIsConstChar)
       {
+      if (!is16Bit)
+         {
+         // The implementations of the 8-bit indexOf operations cast the character for
+         // which they are searching to a signed byte value, and the characters in the
+         // String themselves are stored in a signed byte array.  Make sure that folding
+         // at compile-time takes into account that operations are on signed bytes.
+         targetChar = (int32_t)(int8_t) targetChar;
+         }
+
       for (int32_t i = start; i < length; ++i)
          {
          int32_t ch;
@@ -397,6 +406,15 @@ bool J9::ValuePropagation::transformIndexOfKnownString(
             // getStringCharacter should handle both 8 bit and 16 bit strings
             ch = TR::Compiler->cls.getStringCharacter(comp(), string, i);
             }
+         if (!is16Bit)
+            {
+            // The implementations of the 8-bit indexOf operations cast the character for
+            // which they are searching to a signed byte value, and the characters in the
+            // String themselves are stored in a signed byte array.  Make sure that folding
+            // at compile-time takes into account that operations are on signed bytes.
+            ch = (int32_t)(int8_t) ch;
+            }
+
          if (ch == targetChar)
             {
             if (performTransformation(comp(), "%sReplacing indexOf call node [" POINTER_PRINTF_FORMAT "] on known string receiver with constant value of %d\n", OPT_DETAILS, indexOfNode, i))
