@@ -1768,8 +1768,11 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
          TR::Node *classChild = node->getLastChild();
          bool classChildGlobal;
          TR::VPConstraint *classChildConstraint = getConstraint(classChild, classChildGlobal);
-         if (classChildConstraint && classChildConstraint->isJavaLangClassObject() == TR_yes
-             && classChildConstraint->isNonNullObject()
+         bool isNonNullJavaLangClass = classChildConstraint
+                                       && classChildConstraint->isJavaLangClassObject() == TR_yes
+                                       && classChildConstraint->isNonNullObject();
+
+         if (isNonNullJavaLangClass
              && classChildConstraint->getClassType()
              && classChildConstraint->getClassType()->asFixedClass())
             {
@@ -1824,6 +1827,65 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                TR::DebugCounter::incStaticDebugCounter(comp(), TR::DebugCounter::debugCounterName(comp(), "constrainCall/(%s)", signature));
                return;
                }
+            }
+         else if (isNonNullJavaLangClass)
+            {
+            if (!performTransformation(comp(), "%sTransforming %s on node %p to load component type inline\n", OPT_DETAILS, signature, node))
+               break;
+
+            // Consider two cases:
+            //
+            // (i)  The operand is an instance of java.lang.Class indirectly loaded through a vft.  In that case,
+            //      we can work with the vft directly
+            // (ii) The operand is definitely a non-null instance of java.lang.Class.  In that case, load the
+            //      J9Class from the java.lang.Class by way of <classFromJavaLangClass>
+            //
+
+            TR::SymbolReference *symRef = classChild->getOpCode().hasSymbolReference() ? classChild->getSymbolReference() : NULL;
+            TR::SymbolReference *jlcFromClassSymRef = comp()->getSymRefTab()->findOrCreateJavaLangClassFromClassSymbolRef();
+            TR::Node *classOperand = NULL;
+
+            if ((symRef != NULL) && (symRef == jlcFromClassSymRef))
+               {
+               classOperand = classChild->getFirstChild();
+               }
+            else
+               {
+               classOperand = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classChild,
+                                 comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef());
+               }
+
+            TR::Node *loadComponentTypeNode = comp()->fej9()->loadArrayClassComponentType(classOperand);
+            TR::Node *jlcOfComponentTypeNode = NULL;
+
+            if ((classChildConstraint == NULL)
+                || (classChildConstraint->getClassType() == NULL)
+                || !comp()->fej9()->isClassArray(classChildConstraint->getClass()))
+               {
+               TR::Node *testIsArrayClassNode =
+                     TR::Node::create(node, TR::icmpne, 2,
+                        comp()->fej9()->testIsClassArrayType(classOperand),
+                        TR::Node::iconst(node, 0));
+               loadComponentTypeNode =
+                  TR::Node::create(TR::aselect, 3,
+                                   testIsArrayClassNode,
+                                   loadComponentTypeNode,
+                                   classOperand);
+               loadComponentTypeNode =
+                  TR::Node::createWithSymRef(node, TR::aloadi, 1, loadComponentTypeNode, jlcFromClassSymRef);
+               jlcOfComponentTypeNode =
+                  TR::Node::create(TR::aselect, 3,
+                                   testIsArrayClassNode,
+                                   loadComponentTypeNode,
+                                   TR::Node::aconst(node, 0));
+               }
+            else
+               {
+               jlcOfComponentTypeNode =
+                  TR::Node::createWithSymRef(node, TR::aloadi, 1, loadComponentTypeNode, jlcFromClassSymRef);
+               }
+
+            transformCallToNodeDelayedTransformations(_curTree, jlcOfComponentTypeNode, false);
             }
          break;
          }
