@@ -558,11 +558,8 @@ TR_J9InlinerPolicy::genCompressedRefs(TR::Node * address, bool genTT, int32_t is
 
 
 TR::Node *
-TR_J9InlinerPolicy::createUnsafeAddressWithOffset(TR::Node * unsafeCall)
+TR_J9InlinerPolicy::createUnsafeAddressWithOffset(TR::Node * unsafeCall, bool isOffsetMasked)
    {
-   static char *useAbsoluteAddressesForStatics = feGetEnv("TR_UseAbsoluteAddressesForStatics");
-   bool mustMaskOffsetFlagBits = (useAbsoluteAddressesForStatics == NULL);
-
    bool is64Bit = comp()->target().is64Bit();
 
    TR::ILOpCodes addrAddOp = is64Bit ? TR::aladd : TR::aiadd;
@@ -575,7 +572,7 @@ TR_J9InlinerPolicy::createUnsafeAddressWithOffset(TR::Node * unsafeCall)
       TR::Node::create(TR::l2i, 1, offsetNode);
       }
 
-   if (mustMaskOffsetFlagBits)
+   if (isOffsetMasked)
       {
       TR::ILOpCodes andOp = is64Bit ? TR::land : TR::iand;
       TR::Node *constNode = is64Bit ? TR::Node::lconst(unsafeCall, ~(J9_SUN_FIELD_OFFSET_MASK))
@@ -727,7 +724,7 @@ TR_J9InlinerPolicy::genClassCheckForUnsafeGetPut(TR::Node* offset, bool branchIf
 
 TR::TreeTop*
 TR_J9InlinerPolicy::genDirectAccessCodeForUnsafeGetPut(TR::Node* callNode,
-                                                   bool conversionNeeded, bool isUnsafeGet)
+                                                   bool conversionNeeded, bool isUnsafeGet, bool isOffsetMasked)
    {
    //Generate the code for the direct access
    TR::Node *directAccessNode = callNode->duplicateTree();
@@ -748,9 +745,13 @@ TR_J9InlinerPolicy::genDirectAccessCodeForUnsafeGetPut(TR::Node* callNode,
 
    TR_ASSERT(((firstChild->getOpCodeValue() == TR::aiadd) ||
            (firstChild->getOpCodeValue() == TR::aladd)), "Unexpected opcode in unsafe access\n");
-   TR::Node *grandChild = firstChild->getSecondChild();
-   firstChild->setAndIncChild(1, grandChild->getFirstChild());
-   grandChild->recursivelyDecReferenceCount();
+
+   if (isOffsetMasked)
+      {
+      TR::Node *grandChild = firstChild->getSecondChild();
+      firstChild->setAndIncChild(1, grandChild->getFirstChild());
+      grandChild->recursivelyDecReferenceCount();
+      }
 
    // If a conversion is needed, the 'callNode' was constructed earlier on in createUnsafe(get/put)WithOffset
    // While some of the children end up in the final trees, this constructed callNode does not.
@@ -1201,7 +1202,7 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
 
    bool onlyNeedsDirectAccess = ((useAbsoluteAddressesForStatics != NULL) && !conversionNeeded);
 
-   if (!onlyNeedsDirectAccess)
+//   if (!onlyNeedsDirectAccess)
       {
       // Since the block has to be split, we need to create temps for the arguments to the call
       for (int i = 0; i < unsafeCall->getNumChildren(); i++)
@@ -1236,7 +1237,7 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
       reportFinalFieldModification = TR::TransformUtil::generateReportFinalFieldModificationCallTree(comp(), unsafeCall->getArgument(1)->duplicateTree());
       }
 
-   TR::Node * unsafeAddress = createUnsafeAddressWithOffset(unsafeCall);
+   TR::Node * unsafeAddress = createUnsafeAddressWithOffset(unsafeCall, !onlyNeedsDirectAccess);
    if (tracer()->debugLevel())
       {
       debugTrace(tracer(), "\t After createUnsafeAddressWithOffset, unsafeAddress = %p : \n", unsafeAddress);
@@ -1285,7 +1286,7 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
       }
 
 
-   TR::TreeTop* directAccessTreeTop = genDirectAccessCodeForUnsafeGetPut(unsafeNode, false, false);
+   TR::TreeTop* directAccessTreeTop = genDirectAccessCodeForUnsafeGetPut(unsafeNode, false, false, !onlyNeedsDirectAccess);
 
    if (tracer()->debugLevel())
       {
@@ -1294,7 +1295,7 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
       }
 
    TR::TreeTop* arrayDirectAccessTreeTop = conversionNeeded
-      ? genDirectAccessCodeForUnsafeGetPut(unsafeNodeWithConversion, conversionNeeded, false)
+      ? genDirectAccessCodeForUnsafeGetPut(unsafeNodeWithConversion, conversionNeeded, false, !onlyNeedsDirectAccess)
       : NULL;
 
    if (tracer()->debugLevel() && conversionNeeded)
@@ -1305,6 +1306,7 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
 
    if (onlyNeedsDirectAccess)
       {
+      callNodeTreeTop->getNextTreeTop()->insertTreeTopsBeforeMe(directAccessTreeTop);
       createAnchorNodesForUnsafeGetPut(directAccessTreeTop, type, false);
 
       if (needNullCheck)
@@ -1547,7 +1549,7 @@ TR_J9InlinerPolicy::createUnsafeGetWithOffset(TR::ResolvedMethodSymbol *calleeSy
    TR::TreeTop *prevTreeTop = callNodeTreeTop->getPrevTreeTop();
    TR::SymbolReference *newSymbolReferenceForAddress = NULL;
 
-   if (!onlyNeedsDirectAccess)
+//   if (!onlyNeedsDirectAccess)
       {
       // Since the block has to be split, we need to create temps for the arguments to the call
       // so that the right values are picked up in the 2 blocks that are targets of the if block
@@ -1557,7 +1559,7 @@ TR_J9InlinerPolicy::createUnsafeGetWithOffset(TR::ResolvedMethodSymbol *calleeSy
                                  offset, newSymbolReferenceForAddress, true);
       }
 
-   unsafeAddress = createUnsafeAddressWithOffset(unsafeCall);
+   unsafeAddress = createUnsafeAddressWithOffset(unsafeCall, !onlyNeedsDirectAccess);
 
    for (int32_t j=0; j<unsafeCall->getNumChildren(); j++)
       unsafeCall->getChild(j)->recursivelyDecReferenceCount();
@@ -1625,16 +1627,33 @@ TR_J9InlinerPolicy::createUnsafeGetWithOffset(TR::ResolvedMethodSymbol *calleeSy
       }
 
    TR::TreeTop* directAccessTreeTop =
-      genDirectAccessCodeForUnsafeGetPut(callNodeTreeTop->getNode(), false, true);
+      genDirectAccessCodeForUnsafeGetPut(callNodeTreeTop->getNode(), false, true, !onlyNeedsDirectAccess);
    TR::TreeTop* arrayDirectAccessTreeTop = conversionNeeded
-      ? genDirectAccessCodeForUnsafeGetPut(callNodeWithConversion, conversionNeeded, true)
+      ? genDirectAccessCodeForUnsafeGetPut(callNodeWithConversion, conversionNeeded, true, !onlyNeedsDirectAccess)
       : NULL;
 
    if (onlyNeedsDirectAccess)
       {
+      callNodeTreeTop->getNextTreeTop()->insertTreeTopsBeforeMe(directAccessTreeTop);
+
       createAnchorNodesForUnsafeGetPut(directAccessTreeTop, type, true);
       if (arrayDirectAccessTreeTop)
          createAnchorNodesForUnsafeGetPut(arrayDirectAccessTreeTop, type, true);
+
+      if (needNullCheck)
+         {
+         TR::TreeTop *nullchkTree =
+            TR::TreeTop::create(comp(), callNodeTreeTop,
+                   TR::Node::createWithSymRef(TR::NULLCHK, 1, 1,
+                     TR::Node::create(TR::PassThrough, 1,
+                        TR::Node::createWithSymRef(unsafeAddress,
+                                        comp()->il.opCodeForDirectLoad(unsafeAddress->getDataType()),
+                                        0, newSymbolReferenceForAddress)),
+                                  comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol())
+                                  )
+                               );
+         nullchkTree->getNode()->getByteCodeInfo().setCallerIndex(comp()->getCurrentInlinedSiteIndex());
+         }
       }
    else
       {
