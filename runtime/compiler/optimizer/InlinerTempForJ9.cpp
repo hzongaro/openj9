@@ -2141,6 +2141,12 @@ TR_J9InlinerPolicy::inlineUnsafeCall(TR::ResolvedMethodSymbol *calleeSymbol, TR:
                callNode->setIsSafeForCGToFastPathUnsafeCall(true);
                return callNode;
             default:
+               static char *useAbsoluteAddressesForStatics = feGetEnv("TR_UseAbsoluteAddressesForStatics");
+               if (useAbsoluteAddressesForStatics != NULL)
+                  {
+                  callNode->setIsSafeForCGToFastPathUnsafeCall(true);
+                  return callNode;
+                  }
                return createUnsafeCASCallDiamond(callNodeTreeTop, callNode);
             }
       default:
