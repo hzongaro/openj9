@@ -1880,9 +1880,9 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                //    n91n   aloadi <javaLangClassFromClass>
                //    n90n     aselect
                //    n98n       ==> icmpne
-               //    n89n     aloadi <componentClass>
+               //    n89n       aloadi <componentClass>
+               //    n94n         ==> aloadi <vft> (or aloadi <classFromJavaLangClass>)
                //    n94n       ==> aloadi <vft> (or aloadi <classFromJavaLangClass>)
-               //    n94n     ==> aloadi <vft> (or aloadi <classFromJavaLangClass>)
                //    n88n   aconst NULL
                //
                // Note that the same condition testing whether the class is an array
@@ -1902,6 +1902,17 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                // was an array class, but the result of that aloadi is discarded if the
                // class was not an array class.
                //
+
+
+               // Assert that overlaying a J9Class instance with the layout of
+               // J9ArrayClass and loading the J9ArrayClass.componentType field will not
+               // access memory that is beyond the end of the J9Class.  This inline IL
+               // generated for Class.getComponentType() relies on that.
+               //
+               static_assert(sizeof(J9Class) >= offsetof(J9ArrayClass, componentType)
+                                                   + sizeof(J9ArrayClass::componentType),
+                             "The J9ArrayClass.componentType field must be within the size of J9Class");
+
                TR::Node *testIsArrayClassNode =
                      TR::Node::create(node, TR::icmpne, 2,
                         comp()->fej9()->testIsClassArrayType(classOperand),
