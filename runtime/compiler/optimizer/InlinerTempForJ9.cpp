@@ -1199,8 +1199,12 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
 
    static char *useAbsoluteAddressesForStatics = feGetEnv("TR_UseAbsoluteAddressesForStatics");
    bool conversionNeeded = (comp()->fe()->dataTypeForLoadOrStore(type) != type);
+   bool typeAllowsDirectAccess = type == TR::Int32 ||
+                                 type == TR::Int64 ||
+                                 type == TR::Float ||
+                                 type == TR::Double;
 
-   bool onlyNeedsDirectAccess = ((useAbsoluteAddressesForStatics != NULL) && !conversionNeeded);
+   bool onlyNeedsDirectAccess = ((useAbsoluteAddressesForStatics != NULL) && !conversionNeeded && typeAllowsDirectAccess);
 
 //   if (!onlyNeedsDirectAccess)
       {
@@ -1537,8 +1541,11 @@ TR_J9InlinerPolicy::createUnsafeGetWithOffset(TR::ResolvedMethodSymbol *calleeSy
 
    static char *useAbsoluteAddressesForStatics = feGetEnv("TR_UseAbsoluteAddressesForStatics");
    bool conversionNeeded = (comp()->fe()->dataTypeForLoadOrStore(type) != type);
-
-   bool onlyNeedsDirectAccess = ((useAbsoluteAddressesForStatics != NULL) && !conversionNeeded);
+   bool typeAllowsDirectAccess = type == TR::Int32 ||
+                                 type == TR::Int64 ||
+                                 type == TR::Float ||
+                                 type == TR::Double;
+   bool onlyNeedsDirectAccess = ((useAbsoluteAddressesForStatics != NULL) && !conversionNeeded && typeAllowsDirectAccess);
 
    // Preserve null check on the unsafe object
    TR::TransformUtil::separateNullCheck(comp(), callNodeTreeTop, tracer()->debugLevel());
