@@ -567,9 +567,9 @@ TR_J9InlinerPolicy::createUnsafeAddressWithOffset(TR::Node * unsafeCall, bool is
    TR::Node *baseAddrNode = unsafeCall->getChild(1);
    TR::Node *offsetNode = unsafeCall->getChild(2);
 
-   if (is64Bit)
+   if (!is64Bit)
       {
-      TR::Node::create(TR::l2i, 1, offsetNode);
+      offsetNode = TR::Node::create(TR::l2i, 1, offsetNode);
       }
 
    if (isOffsetMasked)
@@ -1311,7 +1311,13 @@ TR_J9InlinerPolicy::createUnsafePutWithOffset(TR::ResolvedMethodSymbol *calleeSy
    if (onlyNeedsDirectAccess)
       {
       callNodeTreeTop->getNextTreeTop()->insertTreeTopsBeforeMe(directAccessTreeTop);
-      createAnchorNodesForUnsafeGetPut(directAccessTreeTop, type, false);
+
+      callNodeTreeTop->getPrevTreeTop()->join(callNodeTreeTop->getNextTreeTop());
+      callNodeTreeTop->getNode()->removeAllChildren();
+
+      createAnchorNodesForUnsafeGetPut(directAccessTreeTop, type, true);
+
+      TR_ASSERT_FATAL(arrayDirectAccessTreeTop == NULL, "Cannot handle direct-only access if conversion is required\n");
 
       if (needNullCheck)
          {
@@ -1633,8 +1639,8 @@ TR_J9InlinerPolicy::createUnsafeGetWithOffset(TR::ResolvedMethodSymbol *calleeSy
       callNodeTreeTop->getNode()->removeAllChildren();
 
       createAnchorNodesForUnsafeGetPut(directAccessTreeTop, type, true);
-      if (arrayDirectAccessTreeTop)
-         createAnchorNodesForUnsafeGetPut(arrayDirectAccessTreeTop, type, true);
+
+      TR_ASSERT_FATAL(arrayDirectAccessTreeTop == NULL, "Cannot handle direct-only access if conversion is required\n");
 
       if (needNullCheck)
          {
