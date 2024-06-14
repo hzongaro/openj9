@@ -9074,6 +9074,7 @@ TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrary *portLib, void * 
 
             options->setOption(TR_TraceAll);
             options->setOption(TR_EnableParanoidOptCheck);
+            options->enableTracing(OMR::generalStoreSinking);
 
             // Tracing higher optimization level compilations may put us past the allocation limit and result in an
             // std::bad_alloc exception being thrown. To maximize our chances of getting a trace log we artificially
