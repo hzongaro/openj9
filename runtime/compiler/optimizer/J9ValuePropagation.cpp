@@ -1832,7 +1832,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                return;
                }
             }
-         else if (isNonNullJavaLangClass)
+         else if (isNonNullJavaLangClass && !comp()->getOption(TR_DisableGetComponentTypeTransformation))
             {
             if (!performTransformation(comp(), "%sTransforming %s on node %p to load component type inline\n", OPT_DETAILS, signature, node))
                break;

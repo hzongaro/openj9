@@ -7660,7 +7660,10 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
          TR::Node::recreate(callNode, TR::aloadi);
          callNode->setSymbolReference(comp->getSymRefTab()->findOrCreateVftSymbolRef());
          callNode = TR::Node::createWithSymRef(TR::aloadi, 1, 1, callNode, comp->getSymRefTab()->findOrCreateJavaLangClassFromClassSymbolRef());
-         callNode->setIsNonNull(true);
+         if (!comp->getOption(TR_DisableGetClassNonNull))
+            {
+            callNode->setIsNonNull(true);
+            }
          return callNode;
 
       case TR::java_lang_Class_getStackClass:
