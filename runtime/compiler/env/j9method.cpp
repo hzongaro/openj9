@@ -6573,7 +6573,7 @@ TR_ResolvedJ9Method::getResolvedInterfaceMethod(I_32 cpIndex, UDATA *pITableInde
 U_32
 TR_ResolvedJ9Method::getResolvedInterfaceMethodOffset(TR_OpaqueClassBlock * classObject, I_32 cpIndex)
    {
-   TR_ASSERT(cpIndex != -1, "cpIndex shouldn't be -1");
+   TR_ASSERT_FATAL(cpIndex != -1, "cpIndex shouldn't be -1");
    // the classObject is the fixed type of the this pointer.  The result of this method is going to be
    // used to call the interface function directly.
    UDATA vTableOffset = 0;
@@ -6662,7 +6662,7 @@ TR_ResolvedJ9Method::getResolvedStaticMethod(TR::Compilation * comp, I_32 cpInde
    {
    TR_ResolvedMethod *resolvedMethod = NULL;
 
-   TR_ASSERT(cpIndex != -1, "cpIndex shouldn't be -1");
+   TR_ASSERT_FATAL(cpIndex != -1, "cpIndex shouldn't be -1");
 
 #if !TURN_OFF_INLINING
    // See if the constant pool entry is already resolved or not
@@ -6733,7 +6733,7 @@ TR_ResolvedJ9Method::getResolvedSpecialMethod(TR::Compilation * comp, I_32 cpInd
    {
    TR_ResolvedMethod *resolvedMethod = NULL;
 
-   TR_ASSERT(cpIndex != -1, "cpIndex shouldn't be -1");
+   TR_ASSERT_FATAL(cpIndex != -1, "cpIndex shouldn't be -1");
 
 #if !TURN_OFF_INLINING
 
@@ -6816,7 +6816,7 @@ TR_ResolvedJ9Method::shouldCompileTimeResolveMethod(I_32 cpIndex)
 TR_ResolvedMethod *
 TR_ResolvedJ9Method::getResolvedPossiblyPrivateVirtualMethod(TR::Compilation * comp, I_32 cpIndex, bool ignoreRtResolve, bool * unresolvedInCP)
    {
-   TR_ASSERT(cpIndex != -1, "cpIndex shouldn't be -1");
+   TR_ASSERT_FATAL(cpIndex != -1, "cpIndex shouldn't be -1");
 #if TURN_OFF_INLINING
    return 0;
 #else
