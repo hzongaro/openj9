@@ -131,6 +131,7 @@ enum MessageType : uint16_t
    VM_getObjectClassInfoFromObjectReferenceLocation,
    VM_stackWalkerMaySkipFrames,
    VM_getStringUTF8Length,
+   VM_getStringUTF8UnabbreviatedLength,
    VM_classInitIsFinished,
    VM_getClassFromNewArrayType,
    VM_getArrayClassFromComponentClass,
