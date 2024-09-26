@@ -121,8 +121,27 @@ maxFramesOnStack(J9StackWalkState *walkState)
 	return maxFrames;
 }
 
+static int lookAtMe = 0;
+
 UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 {
+#define TRACK_STACK_SIZE 64
+typedef struct trackerStruct {
+   UDATA *sp;
+   UDATA argCount;
+   J9Method *literals;
+   J9Method *method;
+} trackerType;
+trackerType trackStackTrace[TRACK_STACK_SIZE];
+int trackIdx = 1;
+for (int i = 0; i < TRACK_STACK_SIZE; i++) {
+   trackStackTrace[i].sp = NULL;
+   trackStackTrace[i].method = 0;
+   trackStackTrace[i].argCount = (UDATA) -1;
+   trackStackTrace[i].literals = NULL;
+}
+trackStackTrace[0].argCount = trackIdx;
+
 	UDATA rc = J9_STACKWALK_RC_NONE;
 	UDATA walkRC = 0;
 	J9Method * nextLiterals;
@@ -146,9 +165,11 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 
 	if (J9_ARE_ANY_BITS_SET(walkState->flags, J9_STACKWALK_RESUME)) {
 		if (NULL != walkState->jitInfo) {
+trackStackTrace[0].literals = (J9Method *) 1;
 			goto resumeJitWalk;
 		}
 		walkState->flags &= ~J9_STACKWALK_RESUME;
+trackStackTrace[0].literals = (J9Method *) 2;
 		goto resumeInterpreterWalk;
 	}
 
@@ -256,6 +277,7 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 #endif
 
 	if ((walkState->flags & J9_STACKWALK_COUNT_SPECIFIED) && (walkState->maxFrames == 0)) {
+trackStackTrace[0].literals = (J9Method *) 3;
 		goto terminationPoint;
 	}
 
@@ -270,6 +292,7 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 	if (walkState->flags & J9_STACKWALK_CACHE_MASK) {
 		rc = allocateCache(walkState);
 		if (rc != J9_STACKWALK_RC_NONE) {
+trackStackTrace[0].literals = (J9Method *) 4;
 			goto terminationPoint;
 		}
 	}
@@ -292,12 +315,20 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 		rc = lswInitialize(walkState->walkThread->javaVM, walkState);
 		if (rc != SW_ERROR_NONE) {
 			rc = J9_STACKWALK_RC_NO_MEMORY;
+trackStackTrace[0].literals = (J9Method *) 5;
 			goto terminationPoint;
 		}
 	}
 #endif 
 
 	while(1) {
+trackStackTrace[trackIdx].method = walkState->method;
+trackStackTrace[trackIdx].argCount = walkState->argCount;
+trackStackTrace[trackIdx].literals = walkState->literals;
+trackIdx++;
+if (trackIdx == TRACK_STACK_SIZE) trackIdx = 1;
+trackStackTrace[0].argCount = trackIdx;
+
 		J9SFStackFrame * fixedStackFrame;
 
 		walkState->constantPool = NULL;
@@ -306,6 +337,8 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 		walkState->sp = walkState->walkSP - walkState->argCount;
 		walkState->outgoingArgCount = walkState->argCount;
 		walkState->bytecodePCOffset = -1;
+
+trackStackTrace[trackIdx].sp = walkState->sp;
 
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 		lswFrameNew(walkState->walkThread->javaVM, walkState, (UDATA)walkState->pc);
@@ -411,6 +444,12 @@ resumeJitWalk:
 	}
 
 endOfStack:
+
+if (lookAtMe) {
+   for (int i = 0; i < TRACK_STACK_SIZE; i++) {
+      printf("%p %p %lud %p\n", trackStackTrace[i].sp, trackStackTrace[i].method, trackStackTrace[i].argCount, trackStackTrace[i].literals);
+   }
+}
 
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 	swPrintf(walkState, 2, "<end of stack>\n");
