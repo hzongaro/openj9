@@ -122,6 +122,7 @@ maxFramesOnStack(J9StackWalkState *walkState)
 }
 
 static int lookAtMe = 0;
+static void *trackStackTracePtr = NULL;
 
 UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 {
@@ -134,6 +135,7 @@ typedef struct trackerStruct {
    J9Method *method;
 } trackerType;
 trackerType trackStackTrace[TRACK_STACK_SIZE];
+trackStackTracePtr = &trackStackTrace;
 int trackIdx = 1;
 for (int i = 0; i < TRACK_STACK_SIZE; i++) {
    trackStackTrace[i].sp = NULL;
@@ -449,8 +451,9 @@ resumeJitWalk:
 endOfStack:
 
 if (lookAtMe) {
+   printf("%p \n", trackStackTracePtr);
    for (int i = 0; i < TRACK_STACK_SIZE; i++) {
-      printf("%p %p %lud %p\n", trackStackTrace[i].sp, trackStackTrace[i].method, trackStackTrace[i].argCount, trackStackTrace[i].literals);
+      printf("%p %p %p %lud %p\n", trackStackTrace[i].sp, trackStackTrace[i].pc, trackStackTrace[i].method, trackStackTrace[i].argCount, trackStackTrace[i].literals);
    }
 }
 
