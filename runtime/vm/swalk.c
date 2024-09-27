@@ -128,6 +128,7 @@ UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 #define TRACK_STACK_SIZE 64
 typedef struct trackerStruct {
    UDATA *sp;
+   U_8 *pc;
    UDATA argCount;
    J9Method *literals;
    J9Method *method;
@@ -136,6 +137,7 @@ trackerType trackStackTrace[TRACK_STACK_SIZE];
 int trackIdx = 1;
 for (int i = 0; i < TRACK_STACK_SIZE; i++) {
    trackStackTrace[i].sp = NULL;
+   trackStackTrace[i].pc = NULL;
    trackStackTrace[i].method = 0;
    trackStackTrace[i].argCount = (UDATA) -1;
    trackStackTrace[i].literals = NULL;
@@ -339,6 +341,7 @@ trackStackTrace[0].argCount = trackIdx;
 		walkState->bytecodePCOffset = -1;
 
 trackStackTrace[trackIdx].sp = walkState->sp;
+trackStackTrace[trackIdx].pc = walkState->pc;
 
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 		lswFrameNew(walkState->walkThread->javaVM, walkState, (UDATA)walkState->pc);
