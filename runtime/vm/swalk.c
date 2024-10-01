@@ -123,6 +123,7 @@ maxFramesOnStack(J9StackWalkState *walkState)
 
 static int lookAtMe = 0;
 static void *trackStackTracePtr = NULL;
+static void *trackPC = NULL;
 
 UDATA  walkStackFrames(J9VMThread *currentThread, J9StackWalkState *walkState)
 {
@@ -135,7 +136,9 @@ typedef struct trackerStruct {
    J9Method *method;
 } trackerType;
 trackerType trackStackTrace[TRACK_STACK_SIZE];
+U_8 *pcValues[10];
 trackStackTracePtr = &trackStackTrace;
+trackPC = &pcValues;
 int trackIdx = 1;
 for (int i = 0; i < TRACK_STACK_SIZE; i++) {
    trackStackTrace[i].sp = NULL;
@@ -145,6 +148,9 @@ for (int i = 0; i < TRACK_STACK_SIZE; i++) {
    trackStackTrace[i].literals = NULL;
 }
 trackStackTrace[0].argCount = trackIdx;
+for (int i = 0; i < 10; i++) pcValues[i] = NULL;
+int pcIdx = 0;
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	UDATA rc = J9_STACKWALK_RC_NONE;
 	UDATA walkRC = 0;
@@ -166,6 +172,7 @@ trackStackTrace[0].argCount = trackIdx;
 			walkState->walkThread->pc, walkState->walkThread->literals,
 			walkState->walkThread->entryLocalStorage, walkState->walkThread->j2iFrame);
 #endif /* J9VM_INTERP_STACKWALK_TRACING */
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	if (J9_ARE_ANY_BITS_SET(walkState->flags, J9_STACKWALK_RESUME)) {
 		if (NULL != walkState->jitInfo) {
@@ -176,6 +183,7 @@ trackStackTrace[0].literals = (J9Method *) 1;
 trackStackTrace[0].literals = (J9Method *) 2;
 		goto resumeInterpreterWalk;
 	}
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	walkState->loopBreaker = 0;
 	if (NULL != currentThread) {
@@ -186,6 +194,7 @@ trackStackTrace[0].literals = (J9Method *) 2;
 			walkState->loopBreaker = maxFramesOnStack(walkState) + 1;
 		}
 	}
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	walkState->javaVM = walkState->walkThread->javaVM;
 	walkState->currentThread = currentThread;
@@ -195,6 +204,7 @@ trackStackTrace[0].literals = (J9Method *) 2;
 	walkState->arg0EA = walkState->walkThread->arg0EA;
 	walkState->pcAddress = &(walkState->walkThread->pc);
 	walkState->pc = walkState->walkThread->pc;
+pcValues[pcIdx++] = walkState->walkThread->pc;
 	walkState->nextPC = NULL;
 	walkState->walkSP = walkState->walkThread->sp;
 	walkState->literals = walkState->walkThread->literals;
@@ -264,6 +274,7 @@ trackStackTrace[0].literals = (J9Method *) 2;
 			}
 		}
 	}
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	swPrintf(walkState, 2, "Initial values: walkSP = %p, PC = %p, literals = %p, A0 = %p, j2iFrame = %p, ELS = %p, decomp = %p\n", walkState->walkSP, walkState->pc, walkState->literals, walkState->arg0EA,
 #ifdef J9VM_INTERP_NATIVE_SUPPORT
@@ -291,6 +302,7 @@ trackStackTrace[0].literals = (J9Method *) 3;
 #endif
 		goto terminationPoint;
 	} 
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 	walkState->dropToCurrentFrame = dropToCurrentFrame;
 	if (walkState->flags & J9_STACKWALK_CACHE_MASK) {
@@ -313,6 +325,7 @@ trackStackTrace[0].literals = (J9Method *) 4;
 		walkState->flags |= J9_STACKWALK_MAINTAIN_REGISTER_MAP;
 	}
 #endif
+pcValues[pcIdx++] = walkState->walkThread->pc;
 
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 	if (walkState->flags & J9_STACKWALK_LINEAR) {
@@ -325,6 +338,7 @@ trackStackTrace[0].literals = (J9Method *) 5;
 	}
 #endif 
 
+pcValues[pcIdx++] = walkState->walkThread->pc;
 	while(1) {
 trackStackTrace[trackIdx].method = walkState->method;
 trackStackTrace[trackIdx].argCount = walkState->argCount;
