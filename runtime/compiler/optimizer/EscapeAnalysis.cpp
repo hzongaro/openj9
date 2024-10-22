@@ -6492,23 +6492,23 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
          if (parent->getOpCode().isNullCheck())
             TR::Node::recreate(parent, TR::treetop);
          else if (parent->getOpCode().isSpineCheck() && (parent->getFirstChild() == node))
-       {
+            {
             TR::TreeTop *prev = _curTree->getPrevTreeTop();
 
             int32_t i = 1;
             while (i < parent->getNumChildren())
-          {
+               {
                TR::TreeTop *tt = TR::TreeTop::create(comp(), TR::Node::create(TR::treetop, 1, parent->getChild(i)));
                parent->getChild(i)->recursivelyDecReferenceCount();
                prev->join(tt);
                tt->join(_curTree);
                prev = tt;
                i++;
-          }
+               }
 
             TR::Node::recreate(parent, TR::treetop);
             parent->setNumChildren(1);
-       }
+            }
          else if (parent->getOpCodeValue() == TR::ArrayStoreCHK)
             {
             TR::Node::recreate(parent, TR::treetop);
@@ -6518,10 +6518,27 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
             // ArrayStoreException instead of ClassCastException.
             //
             TR::Node *typeNode  = TR::Node::copy(candidate->_node->getSecondChild()); // loadaddr of array type
+
+            TR_ASSERT_FATAL_WITH_NODE(typeNode, typeNode->getOpCodeValue() == TR::loadaddr, "Expected typeNode for array allocation candidate [%p] to be a loadaddr Node.\n", candidate->_node);
+            TR_ASSERT_FATAL_WITH_NODE(typeNode, !typeNode->getSymbolReference()->isUnresolved(), "Expected symbol reference for array allocation candidate [%p] to be already resolved\n", candidate->_node);
+
+            // Get the array class that corresponds to this array's component type class
+            // for the call to <jitCheckCastForArrayStore>.
+            // For value type support, non-nullable arrays are not currently stack allocated;
+            // when that changes, the non-nullable array class will need to be passed if a
+            // non-nullable array is being stack allocated.
+            //
+            TR_OpaqueClassBlock *componentClazz = (TR_OpaqueClassBlock*)typeNode->getSymbol()->castToStaticSymbol()->getStaticAddress();
+            TR_OpaqueClassBlock *arrayClazz = comp()->fej9()->getArrayClassFromComponentClass(componentClazz);
+
+            TR::Node *arrayClassAddrNode =
+               TR::Node::createWithSymRef(typeNode, TR::loadaddr, 0,
+                  comp()->getSymRefTab()->findOrCreateClassSymbol(comp()->getMethodSymbol(), -1, arrayClazz, false));
+
             typeNode->setReferenceCount(0);
             TR::Node *source    = node->getFirstChild();
             TR::Node *checkNode =
-               TR::Node::createWithSymRef(TR::checkcast, 2, 2, source, typeNode,
+               TR::Node::createWithSymRef(TR::checkcast, 2, 2, source, arrayClassAddrNode,
                                  getSymRefTab()->findOrCreateCheckCastForArrayStoreSymbolRef(0));
 
             TR::TreeTop *prev = _curTree->getPrevTreeTop();
