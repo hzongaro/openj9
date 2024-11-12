@@ -131,7 +131,7 @@ possible between them.
     build.  This ensures that the two changes put together would pass
     an OMR Acceptance build if one were launched.
     ```
-    Jenkins test sanity.functional,sanity.openjdk all jdk8,jdk11,jdk17,jdk21 depends eclipse/omr#{OMR PR number}
+    Jenkins test sanity.functional,sanity.openjdk all jdk8,jdk11,jdk17,jdk21 depends eclipse-omr/omr#{OMR PR number}
     ```
     Before proceeding with the coordinated merge, you must ensure that
     the build is successful and that it was performed relatively
@@ -140,7 +140,7 @@ possible between them.
     It is strongly recommended that you check that the tips of the
     `eclipse-openj9/openj9-omr` [`master`](https://github.com/eclipse-openj9/openj9-omr/tree/master),
     `eclipse-openj9/openj9-omr` [`openj9`](https://github.com/eclipse-openj9/openj9-omr/tree/openj9)
-    and `eclipse/omr` [`master`](https://github.com/eclipse/omr/tree/master)
+    and `eclipse-omr/omr` [`master`](https://github.com/eclipse-omr/omr/tree/master)
     branches are all the same before proceeding.  If they are different,
     be aware that you will be introducing other OMR changes that have
     not yet passed an OMR Acceptance build.  While not strictly
