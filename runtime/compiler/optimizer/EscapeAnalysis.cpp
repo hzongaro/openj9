@@ -421,7 +421,10 @@ int32_t TR_EscapeAnalysis::perform()
 
          heapificationBlock->getExit()->insertBefore(TR::TreeTop::create(comp(), TR::Node::create(node, TR::Goto, 0, callBlock->getEntry())));
          tools.insertFakeEscapeForLoads(heapificationBlock, node, *nodeLookup->second.second);
-         traceMsg(comp(), "Created heapification block_%d\n", heapificationBlock->getNumber());
+         if (trace())
+            {
+            traceMsg(comp(), "Created heapification block_%d\n", heapificationBlock->getNumber());
+            }
 
          ((TR_EscapeAnalysis::PersistentData*)manager()->getOptData())->_peekableCalls->set(node->getGlobalIndex());
          _callsToProtect->erase(nodeLookup);

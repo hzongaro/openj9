@@ -1992,7 +1992,11 @@ TR_J9ByteCodeIlGenerator::calculateElementAddressInContiguousArray(int32_t width
    int32_t shift = TR::TransformUtil::convertWidthToShift(width);
    if (shift)
       {
-      traceMsg(comp(), "shift > 0 (i.e., is true)\n");
+      if (trace())
+         {
+         traceMsg(comp(), "shift > 0 (i.e., is true)\n");
+         }
+
       loadConstant(TR::iconst, shift);
       // generate a TR::aladd instead if required
       if (comp()->target().is64Bit())
