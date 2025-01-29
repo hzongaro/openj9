@@ -246,6 +246,7 @@ class SymbolReferenceTable : public OMR::SymbolReferenceTableConnector
    TR::SymbolReference * findOrCreateArrayComponentTypeAsPrimitiveSymbolRef();
    TR::SymbolReference * findOrCreateMethodTypeCheckSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateIncompatibleReceiverSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
+   TR::SymbolReference * findOrCreateIdentityExceptionSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateIncompatibleClassChangeErrorSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateReportStaticMethodEnterSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
    TR::SymbolReference * findOrCreateReportMethodExitSymbolRef(TR::ResolvedMethodSymbol * owningMethodSymbol);
@@ -414,6 +415,8 @@ class SymbolReferenceTable : public OMR::SymbolReferenceTableConnector
     *     The <storeFlattenableArrayElementNonHelper> symbol reference.
     */
    TR::SymbolReference *findOrCreateStoreFlattenableArrayElementNonHelperSymbolRef();
+
+   TR::SymbolReference *findOrCreateIsIdentityObjectNonHelperSymbolRef();
 
    /**
     * \brief
