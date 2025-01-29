@@ -4108,7 +4108,9 @@ typedef struct J9JITConfig {
 	void *old_slow_jitThrowInstantiationException;
 	void *old_slow_jitThrowNullPointerException;
 	void *old_slow_jitThrowWrongMethodTypeException;
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 	void *old_slow_jitThrowIdentityException;
+#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 	void *old_fast_jitTypeCheckArrayStoreWithNullCheck;
 	void *old_slow_jitTypeCheckArrayStoreWithNullCheck;
 	void *old_fast_jitTypeCheckArrayStore;
