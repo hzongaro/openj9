@@ -638,9 +638,7 @@ writeConstants(OMRPortLibrary *OMRPORTLIB, IDATA fd)
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_slow_jitThrowInstantiationException", offsetof(J9JITConfig, old_slow_jitThrowInstantiationException)) |
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_slow_jitThrowNullPointerException", offsetof(J9JITConfig, old_slow_jitThrowNullPointerException)) |
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_slow_jitThrowWrongMethodTypeException", offsetof(J9JITConfig, old_slow_jitThrowWrongMethodTypeException)) |
-#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_slow_jitThrowIdentityException", offsetof(J9JITConfig, old_slow_jitThrowIdentityException)) |
-#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_fast_jitTypeCheckArrayStoreWithNullCheck", offsetof(J9JITConfig, old_fast_jitTypeCheckArrayStoreWithNullCheck)) |
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_slow_jitTypeCheckArrayStoreWithNullCheck", offsetof(J9JITConfig, old_slow_jitTypeCheckArrayStoreWithNullCheck)) |
 			writeConstant(OMRPORTLIB, fd, "J9TR_JitConfig_old_fast_jitTypeCheckArrayStore", offsetof(J9JITConfig, old_fast_jitTypeCheckArrayStore)) |

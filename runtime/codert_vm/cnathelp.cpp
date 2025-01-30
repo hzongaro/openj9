@@ -2731,15 +2731,19 @@ old_slow_jitThrowArrayIndexOutOfBounds(J9VMThread *currentThread)
 	return setCurrentExceptionFromJIT(currentThread, J9VMCONSTANTPOOL_JAVALANGARRAYINDEXOUTOFBOUNDSEXCEPTION, NULL);
 }
 
-#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 void* J9FASTCALL
 old_slow_jitThrowIdentityException(J9VMThread *currentThread)
 {
+	void *exception = NULL;
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 	OLD_JIT_HELPER_PROLOGUE(0);
 	buildJITResolveFrameForRuntimeCheck(currentThread);
-	return setCurrentExceptionFromJIT(currentThread, J9VMCONSTANTPOOL_JAVALANGIDENTITYEXCEPTION, NULL);
-}
+	exception = setCurrentExceptionFromJIT(currentThread, J9VMCONSTANTPOOL_JAVALANGIDENTITYEXCEPTION, NULL);
+#else /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
+	exception = (void *)-1;
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
+	return exception;
+}
 
 void* J9FASTCALL
 impl_jitReferenceArrayCopy(J9VMThread *currentThread, UDATA lengthInBytes)
@@ -4010,9 +4014,7 @@ initPureCFunctionTable(J9JavaVM *vm)
 	jitConfig->old_slow_jitThrowInstantiationException = (void*)old_slow_jitThrowInstantiationException;
 	jitConfig->old_slow_jitThrowNullPointerException = (void*)old_slow_jitThrowNullPointerException;
 	jitConfig->old_slow_jitThrowWrongMethodTypeException = (void*)old_slow_jitThrowWrongMethodTypeException;
-#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 	jitConfig->old_slow_jitThrowIdentityException = (void*)old_slow_jitThrowIdentityException;
-#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 	jitConfig->old_fast_jitTypeCheckArrayStoreWithNullCheck = (void*)old_fast_jitTypeCheckArrayStoreWithNullCheck;
 	jitConfig->old_slow_jitTypeCheckArrayStoreWithNullCheck = (void*)old_slow_jitTypeCheckArrayStoreWithNullCheck;
 	jitConfig->old_fast_jitTypeCheckArrayStore = (void*)old_fast_jitTypeCheckArrayStore;
