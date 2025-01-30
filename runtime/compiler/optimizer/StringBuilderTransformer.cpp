@@ -489,7 +489,7 @@ int32_t TR_StringBuilderTransformer::computeHeuristicStringBuilderInitCapacity(L
    // calculation has overflowed, so halt early.
    //
    for (TR_Pair<TR::Node*, TR::RecognizedMethod>* pair = iter.getFirst();
-        (pair != NULL) && (capacity < std::numeric_limits<int32_t>::max());
+        (pair != NULL) && (capacity <= std::numeric_limits<int32_t>::max());
         pair = iter.getNext())
       {
       TR::Node* argument = pair->getKey();
