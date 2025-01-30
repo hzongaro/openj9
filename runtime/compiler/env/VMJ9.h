@@ -1144,7 +1144,7 @@ public:
    /**
     * \brief Returns the number of UTF-8 encoded bytes needed to represent a Java String object.
     *        The number of bytes needed to UTF-8 encode the String is representable as
-    *        a \c uintptr_t, in general, but this method returns a length of type \c int32_t.
+    *        a \c uint64_t, in general, but this method returns a length of type \c int32_t.
     *        If the length might exceed the range of \c int32_t, use
     *        \ref getStringUTF8UnabbreviatedLength instead.
     *
@@ -1162,7 +1162,7 @@ public:
     * \return The number of UTF-8 encoded bytes needed to represent the String
     */
    virtual uint64_t  getStringUTF8UnabbreviatedLength(uintptr_t objectPointer);
-   virtual char     *getStringUTF8      (uintptr_t objectPointer, char *buffer, int32_t bufferSize);
+   virtual char     *getStringUTF8(uintptr_t objectPointer, char *buffer, uintptr_t bufferSize);
 
    virtual uint32_t getVarHandleHandleTableOffset(TR::Compilation *);
 

@@ -630,24 +630,6 @@ handleServerMessage(JITServer::ClientStream *client, TR_J9VM *fe, JITServer::Mes
          client->write(response, fe->stackWalkerMaySkipFrames(method, clazz));
          }
          break;
-      case MessageType::VM_getStringUTF8Length:
-         {
-         uintptr_t string = std::get<0>(client->getRecvData<uintptr_t>());
-            {
-            TR::VMAccessCriticalSection getStringUTF8Length(fe);
-            client->write(response, fe->getStringUTF8Length(string));
-            }
-         }
-         break;
-      case MessageType::VM_getStringUTF8UnabbreviatedLength:
-         {
-         uintptr_t string = std::get<0>(client->getRecvData<uintptr_t>());
-            {
-            TR::VMAccessCriticalSection getStringUTF8UnabbreviatedLength(fe);
-            client->write(response, fe->getStringUTF8UnabbreviatedLength(string));
-            }
-         }
-         break;
       case MessageType::VM_classInitIsFinished:
          {
          TR_OpaqueClassBlock *clazz = std::get<0>(client->getRecvData<TR_OpaqueClassBlock *>());
