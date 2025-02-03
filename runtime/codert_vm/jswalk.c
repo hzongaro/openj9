@@ -531,7 +531,9 @@ static void jitWalkFrame(J9StackWalkState *walkState, UDATA walkLocals, void *st
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 			Assert_VRB_stackMapNull();
 #else
-			Assert_Swalk_stackMapNull();
+			// Assert_Swalk_stackMapNull();
+			// Force crash
+			*((char *) 0) = '\0';
 #endif
 		}
 	}
