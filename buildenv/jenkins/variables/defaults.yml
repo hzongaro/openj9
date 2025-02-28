@@ -66,7 +66,7 @@ omr:
 adoptopenjdk:
   default:
     repoUrl: 'https://github.com/hzongaro/aqa-tests.git'
-    branch: 'master'
+    branch: 'enable-SC_Softmx_JitAot_Linux'
 #========================================#
 # Artifactory settings
 #========================================#
