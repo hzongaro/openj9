@@ -2538,8 +2538,11 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                         // collectValueNumbersOfIndirectAccessesToObject.
                         //
                         _vnTemp->set(_valueNumberInfo->getValueNumber(storeBase));
+                        bool addedNewValueNumbers;
+
                         while (*_vnTemp2 != *_vnTemp)
                            {
+                           addedNewValueNumbers = false;
                            *_vnTemp2 = *_vnTemp;
                            int32_t i;
                            for (i = _useDefInfo->getNumDefOnlyNodes()-1; i >= 0; --i)
@@ -2564,12 +2567,17 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                                           int32_t useNodeVN = _valueNumberInfo->getValueNumber(useNode);
                                           //traceMsg(comp(), "use node %p vn %d\n", useNode, useNodeVN);
 
-                                          _vnTemp->set(useNodeVN);
+                                          if (!_vnTemp->get(useNodeVN))
+                                             {
+                                             _vnTemp->set(useNodeVN);
+                                             addedNewValueNumbers = true;
+                                             }
                                           }
                                        }
                                     }
                                  }
                               }
+TR_ASSERT_FATAL(addedNewValueNumbers == (*_vnTemp2 != *_vnTemp), "addedNewValueNumbers == %d, but (*_vnTemp2 != *_vnTemp) == %d\n", addedNewValueNumbers, (*_vnTemp2 != *_vnTemp));
                            }
 
                         // Loop over the definitions for the base of the indirect load.
