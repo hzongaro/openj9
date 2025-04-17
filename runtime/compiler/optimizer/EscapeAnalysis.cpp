@@ -2047,6 +2047,7 @@ void TR_EscapeAnalysis::checkDefsAndUses()
       }
 
    _vnTemp = new (trStackMemory()) TR_BitVector( optimizer()->getValueNumberInfo()->getNumberOfNodes(), trMemory(), stackAlloc, notGrowable);
+   _vnTemp2 = new (trStackMemory()) TR_BitVector(optimizer()->getValueNumberInfo()->getNumberOfNodes(), trMemory(), stackAlloc, notGrowable);
 
    // Walk through all trees looking for stores of objects into fields or into
    // array elements.  If an indirect store happens into some field or element
@@ -2548,7 +2549,9 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                            addedNewValueNumbers = true;
                            }
 
-                        while (addedNewValueNumbers)
+TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp == *_vnTemp2, addedNewValueNumbers);
+//                         while (addedNewValueNumbers)
+                        while (*_vnTemp != *_vnTemp2)
                            {
                            addedNewValueNumbers = false;
                            int32_t i;
@@ -2584,6 +2587,7 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                                     }
                                  }
                               }
+TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp == *_vnTemp2, addedNewValueNumbers);
                            }
 
                         // Loop over the definitions for the base of the indirect load.

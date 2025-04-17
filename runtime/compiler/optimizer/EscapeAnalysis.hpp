@@ -786,6 +786,7 @@ class TR_EscapeAnalysis : public TR::Optimization
    bool                       _somethingChanged;
    TR_ScratchList<TR_DependentAllocations> _dependentAllocations;
    TR_BitVector *             _vnTemp;
+   TR_BitVector *             _vnTemp2;
 
    typedef TR::typed_allocator<TR::Node *, TR::Region &> NodeDequeAllocator;
    typedef std::deque<TR::Node *, NodeDequeAllocator> NodeDeque;
