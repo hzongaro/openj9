@@ -2553,6 +2553,7 @@ TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *
 //                         while (addedNewValueNumbers)
                         while (*_vnTemp != *_vnTemp2)
                            {
+*_vnTemp2 = *_vnTemp;
                            addedNewValueNumbers = false;
                            int32_t i;
                            for (i = _useDefInfo->getNumDefOnlyNodes()-1; i >= 0; --i)
