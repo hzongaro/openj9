@@ -2549,7 +2549,7 @@ bool TR_EscapeAnalysis::collectValueNumbersOfIndirectAccessesToObject(TR::Node *
                            addedNewValueNumbers = true;
                            }
 
-TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp == *_vnTemp2, addedNewValueNumbers);
+TR_ASSERT_FATAL((*_vnTemp != *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp != *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp != *_vnTemp2, addedNewValueNumbers);
 //                         while (addedNewValueNumbers)
                         while (*_vnTemp != *_vnTemp2)
                            {
@@ -2588,7 +2588,7 @@ TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *
                                     }
                                  }
                               }
-TR_ASSERT_FATAL((*_vnTemp == *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp == *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp == *_vnTemp2, addedNewValueNumbers);
+TR_ASSERT_FATAL((*_vnTemp != *_vnTemp2) == addedNewValueNumbers, "(*_vnTemp != *_vnTemp2) == %d and addedNewValueNumbers == %d differ\n", *_vnTemp != *_vnTemp2, addedNewValueNumbers);
                            }
 
                         // Loop over the definitions for the base of the indirect load.
