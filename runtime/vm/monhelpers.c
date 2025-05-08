@@ -29,10 +29,12 @@
 #include "vm_internal.h"
 #include "util_internal.h"
 #include "monhelp.h"
+#include <stdio.h>
 
 IDATA
 objectMonitorExit(J9VMThread* vmStruct, j9object_t object)
 {
+printf("In objectMonitorExit for thread %p and object %p\n", vmStruct, object);
 	IDATA rc = J9THREAD_ILLEGAL_MONITOR_STATE;
 	j9objectmonitor_t *lockEA = NULL;
 	j9objectmonitor_t lock = 0;
@@ -256,6 +258,7 @@ done:
 		vmStruct->ownedMonitorCount -= 1;
 	}
 #endif /* JAVA_SPEC_VERSION >= 19 */
+printf("Exiting objectMonitorExit for thread %p and object %p - rc == %d\n", vmStruct, object, rc);
 	return rc;
 }
 
@@ -303,12 +306,14 @@ objectMonitorInflate(J9VMThread* vmStruct, j9object_t object, UDATA lock)
 UDATA
 objectMonitorEnter(J9VMThread* vmStruct, j9object_t object)
 {
+printf("In objectMonitorEnter for thread %p and object %p\n", vmStruct, object);
 	UDATA rc = objectMonitorEnterNonBlocking(vmStruct, object);
 
 	if (J9_OBJECT_MONITOR_BLOCKING == rc) {
 		rc = objectMonitorEnterBlocking(vmStruct);
 	}
 
+printf("Leaving objectMonitorEnter for thread %p and object %p - rc == %d\n", vmStruct, object, rc);
 	return rc;
 }
 
