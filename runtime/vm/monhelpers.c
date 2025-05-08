@@ -258,7 +258,7 @@ done:
 		vmStruct->ownedMonitorCount -= 1;
 	}
 #endif /* JAVA_SPEC_VERSION >= 19 */
-printf("Exiting objectMonitorExit for thread %p and object %p - rc == %d\n", vmStruct, object, rc);
+printf("Exiting objectMonitorExit for thread %p and object %p - rc == %ld\n", vmStruct, object, rc);
 	return rc;
 }
 
@@ -313,7 +313,7 @@ printf("In objectMonitorEnter for thread %p and object %p\n", vmStruct, object);
 		rc = objectMonitorEnterBlocking(vmStruct);
 	}
 
-printf("Leaving objectMonitorEnter for thread %p and object %p - rc == %d\n", vmStruct, object, rc);
+printf("Leaving objectMonitorEnter for thread %p and object %p - rc == %ld\n", vmStruct, object, rc);
 	return rc;
 }
 
