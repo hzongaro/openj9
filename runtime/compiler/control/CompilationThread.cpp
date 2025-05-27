@@ -11460,7 +11460,7 @@ TR::CompilationInfoPerThreadBase::processException(
       {
       shouldProcessExceptionCommonTasks = false;
       _methodBeingCompiled->_compErrCode = compilationCHTableCommitFailure;
-      if (TR::Options::isAnyVerboseOptionSet(TR_VerbosePerformance, TR_VerboseCompileEnd, TR_VerboseCompFailure))
+      if (TR::Options::isAnyVerboseOptionSet(TR_VerbosePerformance, TR_VerboseCompileEnd, TR_VerboseCompFailure, TR_VerboseOptimizer))
          {
          uintptr_t translationTime = j9time_usec_clock() - getTimeWhenCompStarted(); //get the time it took to fail the compilation
          char compilationTypeString[15] = { 0 };
@@ -11481,13 +11481,23 @@ TR::CompilationInfoPerThreadBase::processException(
             "Class chain persistence failure",
             getCompThreadId()
             );
+
+         if (compiler->getOption(TR_CountOptTransformations) && compiler->getOption(TR_VerboseOptTransformations))
+            {
+            TR_VerboseLog::write(" transformations=%d", compiler->getVerboseOptTransformationCount());
+            }
+
+         if (TR::Options::getVerboseOption(TR_VerboseOptimizer))
+            {
+            TR_VerboseLog::write(" opts=%d.%d", compiler->getLastPerformedOptIndex(), compiler->getLastPerformedOptSubIndex());
+            }
          }
       Trc_JIT_compilationFailed(vmThread, compiler->signature(), -1);
       }
    catch (const TR::AssertionFailure &e)
       {
       shouldProcessExceptionCommonTasks = false;
-      if (TR::Options::isAnyVerboseOptionSet(TR_VerbosePerformance, TR_VerboseCompileEnd, TR_VerboseCompFailure))
+      if (TR::Options::isAnyVerboseOptionSet(TR_VerbosePerformance, TR_VerboseCompileEnd, TR_VerboseCompFailure, TR_VerboseOptimizer))
          {
          uintptr_t translationTime = j9time_usec_clock() - getTimeWhenCompStarted(); //get the time it took to fail the compilation
          char compilationTypeString[15] = { 0 };
@@ -11508,6 +11518,16 @@ TR::CompilationInfoPerThreadBase::processException(
             translationTime,
             getCompThreadId()
             );
+
+         if (compiler->getOption(TR_CountOptTransformations) && compiler->getOption(TR_VerboseOptTransformations))
+            {
+            TR_VerboseLog::write(" transformations=%d", compiler->getVerboseOptTransformationCount());
+            }
+
+         if (TR::Options::getVerboseOption(TR_VerboseOptimizer))
+            {
+            TR_VerboseLog::write(" opts=%d.%d", compiler->getLastPerformedOptIndex(), compiler->getLastPerformedOptSubIndex());
+            }
          }
          Trc_JIT_compilationFailed(vmThread, compiler->signature(), -1);
       }
@@ -11653,6 +11673,17 @@ TR::CompilationInfoPerThreadBase::processExceptionCommonTasks(
             static_cast<unsigned long long>(scratchSegmentProvider.regionBytesAllocated())/1024,
             static_cast<unsigned long long>(scratchSegmentProvider.systemBytesAllocated())/1024);
          }
+
+      if (compiler->getOption(TR_CountOptTransformations) && compiler->getOption(TR_VerboseOptTransformations))
+         {
+         TR_VerboseLog::write(" transformations=%d", compiler->getVerboseOptTransformationCount());
+         }
+
+      if (TR::Options::getVerboseOption(TR_VerboseOptimizer))
+         {
+         TR_VerboseLog::write(" opts=%d.%d", compiler->getLastPerformedOptIndex(), compiler->getLastPerformedOptSubIndex());
+         }
+
       TR_VerboseLog::writeLine(" compThreadID=%d", compiler->getCompThreadID());
       }
 
