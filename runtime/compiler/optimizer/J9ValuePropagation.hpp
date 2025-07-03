@@ -53,7 +53,31 @@ class ValuePropagation : public OMR::ValuePropagation
    virtual bool transformDirectLoad(TR::Node *node);
    virtual bool isUnreliableSignatureType(
       TR_OpaqueClassBlock *klass, TR_OpaqueClassBlock *&erased);
+
+   /**
+    * Performs any Value Propagation transformations that must be delayed
+    * until after the full analysis performed by the optimization has been
+    * completed.  This includes transformations that might create new trees
+    * with no value number information or other similar rewriting of trees.
+    *
+    * Due to the additional impact that it has on the control flow graph,
+    * inlining opportunities must be further isolated in the
+    * \ref doDelayedInliningTransformations() method.
+    */
    virtual void doDelayedTransformations();
+
+   /**
+    * Performs any inlining opportunities that were discovered during
+    * the analysis performed by Value Propagation.  This method is
+    * called during the processing performed by
+    * \ref doDelayedTransformations().
+    *
+    * Due to the impact that inlining can have on control flow, the
+    * point at which inlining happens must be placed with care relative
+    * to some of the other transformations that might take place during
+    * \ref doDelayedTransformations().
+    */
+   virtual void doDelayedInliningTransformations();
    void transformCallToNodeWithHCRGuard(TR::TreeTop *callTree, TR::Node *result);
    void transformCallToIconstInPlaceOrInDelayedTransformations(TR::TreeTop *callTree, int32_t result, bool isGlobal, bool inPlace = true, bool requiresGuard = false);
    void transformCallToNodeDelayedTransformations(TR::TreeTop *callTree, TR::Node *result, bool requiresGuard = false);
