@@ -3545,6 +3545,50 @@ J9::ValuePropagation::doDelayedTransformations()
 
    _valueTypesHelperCallsToBeFolded.deleteAll();
 
+   OMR::ValuePropagation::doDelayedTransformations();
+   }
+
+
+void
+J9::ValuePropagation::doDelayedInliningTransformations()
+   {
+   if (!_multiLeafCallsToInline.isEmpty())
+      {
+      ListIterator<TR::TreeTop> iter(&_multiLeafCallsToInline);
+      TR_InlineCall multiLeafInlineCall(optimizer(),this);
+      TR::TreeTop *multiLeafCall;
+      for (multiLeafCall = iter.getCurrent(); multiLeafCall != NULL; multiLeafCall = iter.getNext())
+         {
+         TR::Node *vcallNode = multiLeafCall->getNode()->getFirstChild();
+         //maybe the call node was removed.
+         if (vcallNode->getReferenceCount() < 1)
+            continue;
+
+         if (!multiLeafInlineCall.inlineCall(multiLeafCall))
+            performTransformation(comp(),"%s WARNING: Inlining of %p failed\n", OPT_DETAILS,
+                  multiLeafCall->getNode());
+         }
+      _multiLeafCallsToInline.deleteAll();
+      }
+
+   // process calls to unsafe methods for Hybrid.
+   if (_unsafeCallsToInline.getFirst() != NULL)
+      {
+      TR_InlineCall unsafeInlineCall(optimizer(),this);
+      for (CallInfo *uci = _unsafeCallsToInline.getFirst(); uci; uci = uci->getNext())
+         {
+         if(uci->_block->nodeIsRemoved())
+            continue;
+
+         if (!unsafeInlineCall.inlineCall(uci->_tt))
+            {
+            performTransformation(comp(),"%s WARNING: Inlining of %p failed\n", OPT_DETAILS,uci->_tt->getNode());
+            }
+         }
+
+      _unsafeCallsToInline.setFirst(0);
+      }
+
    for (CallInfo* ci = _refinedMethodHandleINLMethodsToInline.getFirst(); ci; ci = ci->getNext())
       {
       if(ci->_block->nodeIsRemoved())
@@ -3563,12 +3607,11 @@ J9::ValuePropagation::doDelayedTransformations()
             traceMsg(comp(), "Failed to inline refined MH INL call\n");
          }
       }
+
    _refinedMethodHandleINLMethodsToInline.setFirst(0);
 
-   OMR::ValuePropagation::doDelayedTransformations();
+   OMR::ValuePropagation::doDelayedInliningTransformations();
    }
-
-
 
 void
 J9::ValuePropagation::getParmValues()
