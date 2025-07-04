@@ -432,8 +432,10 @@ define({RESTORE_CR},{
 
 ifdef({ASM_J9VM_ENV_DATA64},{
 
-define({SAVE_R13},{staddr r13,JIT_GPR_SAVE_SLOT(13)})
-define({RESTORE_R13},{laddr r13,JIT_GPR_SAVE_SLOT(13)})
+dnl define({SAVE_R13},{staddr r13,JIT_GPR_SAVE_SLOT(13)})
+dnl define({RESTORE_R13},{laddr r13,JIT_GPR_SAVE_SLOT(13)})
+define({SAVE_R13})
+define({RESTORE_R13})
 define({SAVE_R15})
 define({RESTORE_R15})
 
