@@ -9709,6 +9709,17 @@ TR_J9VMBase::isJ9VMThreadCurrentThreadImmutable()
 #endif /* JAVA_SPEC_VERSION >= 19 */
    }
 
+bool
+TR_J9VMBase::isLiveMonitorMapCorrectnessRequired()
+   {
+#if JAVA_SPEC_VERSION >= 24
+   return true;
+#else
+   return false;
+#endif /* JAVA_SPEC_VERSION >= 24 */
+   }
+
+
 // Native method bodies
 //
 #if defined(TR_HOST_X86)

@@ -1724,6 +1724,53 @@ TR_J9ByteCodeIlGenerator::genDLTransfer(TR::Block *firstBlock)
       outmostPair = ip;
       }
 
+   // With support for unmounting virtual threads at the point of a monitorenter
+   // bytecode in Java 24 and later, the JVM requires live monitor maps produced
+   // by the JIT to list monitors that might be live correctly.  In that case,
+   // isLiveMonitorMapCorrectnessRequired() will return true.
+   //
+   // With dynamic loop transfer, the JIT might not be able to determine statically
+   // whether some monitorenter bytecodes will necessarily have been executed, and
+   // hence, will be unable to report correctly which object was the operand of
+   // each such monitorenter.
+   //
+   // Scan bytecodes leading up to the point where DLT might occur looking for any
+   // monitorenter bytecodes.  If it's possible that a monitorenter was executed
+   // prior to dynamic loop transfer from the JVM into the JIT-compiled code,
+   // fail the compilation.
+   //
+   if (fej9()->isLiveMonitorMapCorrectnessRequired() && _methodSymbol->mayContainMonitors())
+      {
+      bool mightHaveMonitorEnterBeforeDLT = false;
+
+      // Which bytecode index might the interpreter have reached in running the
+      // method prior to performing the dynamic loop transfer?  If the transfer
+      // will occur into a loop, have to consider bytecodes through to the
+      // extent of the outermost loop.
+      //
+      int32_t lastBCIndexToTest = (outmostPair != NULL) ? outmostPair->_fromIndex : dltBCIndex;
+
+      if (comp()->getOption(TR_DisableLiveMonitorMetadata))
+         {
+         mightHaveMonitorEnterBeforeDLT = true;
+         }
+
+      for (TR_J9ByteCode bc = first();
+           !mightHaveMonitorEnterBeforeDLT && bc != J9BCunknown && _bcIndex < lastBCIndexToTest;
+           bc = next())
+         {
+         if (bc == J9BCmonitorenter)
+            {
+            mightHaveMonitorEnterBeforeDLT = true;
+            }
+         }
+
+      if (mightHaveMonitorEnterBeforeDLT)
+         {
+         comp()->failCompilation<TR::ILGenFailure>("DLT into synchronized block with live monitor map correctness required");
+         }
+      }
+
    // if we are not within loops or we start the only loop, we can jump to the particular bytecode directly
    if (nestedCnt>1 || (innermostPair!=NULL && dltBCIndex!=innermostPair->_toIndex))
       {
