@@ -9713,7 +9713,8 @@ bool
 TR_J9VMBase::isLiveMonitorMapCorrectnessRequired()
    {
 #if JAVA_SPEC_VERSION >= 24
-   return true;
+   J9JavaVM *javaVM = getJ9JITConfig()->javaVM;
+   return J9_ARE_ANY_BITS_SET(javaVM->extendedRuntimeFlags3, J9_EXTENDED_RUNTIME3_YIELD_PINNED_CONTINUATION);
 #else
    return false;
 #endif /* JAVA_SPEC_VERSION >= 24 */
