@@ -3252,6 +3252,13 @@ bool J9::Options::feLatePostProcess(void * base, TR::OptionSet * optionSet)
    JITServerParseLocalSyncCompiles(javaVM->vmArgsArray, javaVM, compInfo, self()->getOption(TR_FullSpeedDebug));
 #endif /* defined(J9VM_OPT_JITSERVER) */
 
+   // If the JVM requires the JIT to produce correct live monitor maps
+   // the TR_DisableLiveMonitorMetadata option must not be true
+   if (vm->isLiveMonitorMapCorrectnessRequired())
+      {
+      self()->setOption(TR_DisableLiveMonitorMetadata, false);
+      }
+
    // Determine whether or not to inline monitor enter/exit
    //
    if (self()->getOption(TR_DisableLiveMonitorMetadata))

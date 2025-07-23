@@ -1750,10 +1750,7 @@ TR_J9ByteCodeIlGenerator::genDLTransfer(TR::Block *firstBlock)
       //
       int32_t lastBCIndexToTest = (outmostPair != NULL) ? outmostPair->_fromIndex : dltBCIndex;
 
-      if (comp()->getOption(TR_DisableLiveMonitorMetadata))
-         {
-         mightHaveMonitorEnterBeforeDLT = true;
-         }
+      TR_ASSERT_FATAL(!comp()->getOption(TR_DisableLiveMonitorMetadata), "Live monitor metadata must not be disabled if the JVM requires it to be correct.\n");
 
       for (TR_J9ByteCode bc = first();
            !mightHaveMonitorEnterBeforeDLT && bc != J9BCunknown && _bcIndex < lastBCIndexToTest;
