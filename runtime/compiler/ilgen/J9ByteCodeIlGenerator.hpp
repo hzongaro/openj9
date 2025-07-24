@@ -411,6 +411,7 @@ private:
    bool pushRequiredConst(TR::KnownObjectTable::Index *koi);
    void markRequiredKnownObjectIndex(TR::Node *node, TR::KnownObjectTable::Index koi);
    void assertFoldedAllRequiredConsts();
+   bool hasMonentOnPathFromEntry(TR::CFGNode *currBlock, TR_BitVector &hasMonent, TR_BitVector &visited);
 
    // data
    //
