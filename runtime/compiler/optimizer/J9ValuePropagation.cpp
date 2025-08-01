@@ -40,6 +40,7 @@
 #include "env/TypeLayout.hpp"
 #include "il/Block.hpp"
 #include "infra/Cfg.hpp"
+#include "infra/Checklist.hpp"
 #include "compile/VirtualGuard.hpp"
 #include "env/CompilerEnv.hpp"
 #include "optimizer/TransformUtil.hpp"
@@ -3326,8 +3327,9 @@ J9::ValuePropagation::getArrayLengthLimits(TR::VPConstraint *constraint, int32_t
       }
    }
 
+#define SEENIT(node, loc) {TR_ASSERT_FATAL(!delayedTransformNodesProcessed.contains(node), "Seen node second time at " loc "\n"); delayedTransformNodesProcessed.add(node);}
 void
-J9::ValuePropagation::doDelayedTransformations()
+J9::ValuePropagation::doDelayedTransformations(TR::NodeChecklist &delayedTransformNodesProcessed)
    {
    ListIterator<TreeNodeResultPair> callsToBeFoldedToNode(&_callsToBeFoldedToNode);
    for (TreeNodeResultPair *it = callsToBeFoldedToNode.getFirst();
@@ -3337,6 +3339,8 @@ J9::ValuePropagation::doDelayedTransformations()
       TR::TreeTop *callTree = it->_tree;
       TR::Node *result = it->_result;
       TR::Node * callNode = callTree->getNode()->getFirstChild();
+SEENIT(callTree->getNode(), "(A)");
+SEENIT(callNode, "(AA)");
       traceMsg(comp(), "Doing delayed call transformation on call node n%dn\n", callNode->getGlobalIndex());
 
       if (!performTransformation(comp(), "%sTransforming call node %p on tree %p to node %p\n", OPT_DETAILS, callNode, callTree, result))
@@ -3362,6 +3366,7 @@ J9::ValuePropagation::doDelayedTransformations()
       for (copyMemoryPair = copyMemoryIt.getFirst();
          copyMemoryPair; copyMemoryPair = copyMemoryIt.getNext())
          {
+SEENIT(copyMemoryPair->_node, "(B)");
          if (performTransformation(comp(), "O^O Call arraycopy instead of Unsafe.copyMemory: %p\n", copyMemoryPair->_node))
             TR::TransformUtil::transformUnsafeCopyMemorytoArrayCopyForOffHeap(self()->comp(), copyMemoryPair->_treetop, copyMemoryPair->_node);
          }
@@ -3378,6 +3383,7 @@ J9::ValuePropagation::doDelayedTransformations()
       {
       TR::TreeTop *callTree = callToTransform->_tree;
       TR::Node *callNode = callToTransform->_callNode;
+SEENIT(callNode, "(C)");
 
       const bool isLoad = callToTransform->isArrayElementLoadHelperCallTransform();
       const bool isStore = callToTransform->isArrayElementStoreHelperCallTransform();
@@ -3552,6 +3558,8 @@ J9::ValuePropagation::doDelayedTransformations()
 
       TR_InlineCall newInlineCall(optimizer(), this);
 
+SEENIT(ci->_tt->getNode(), "(D)");
+if (ci->_tt->getNode()->getNumChildren() == 1) SEENIT(ci->_tt->getNode()->getFirstChild(), "(DD)");
       // Refined MethodHandle INL method inlining at warm have been intentionally set up to not be
       // affected by other VP inlining control mechanisms such as TR_DisableInliningDuringVPAtWarm
       // or getMaxSzForVPInliningWarm().They will instead be governed by the existing size limits
@@ -3565,8 +3573,10 @@ J9::ValuePropagation::doDelayedTransformations()
       }
    _refinedMethodHandleINLMethodsToInline.setFirst(0);
 
-   OMR::ValuePropagation::doDelayedTransformations();
+   OMR::ValuePropagation::doDelayedTransformations(delayedTransformNodesProcessed);
    }
+
+#undef SEENIT
 
 
 
