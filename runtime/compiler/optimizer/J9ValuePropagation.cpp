@@ -3327,7 +3327,7 @@ J9::ValuePropagation::getArrayLengthLimits(TR::VPConstraint *constraint, int32_t
       }
    }
 
-#define SEENIT(node, loc) {TR_ASSERT_FATAL(!delayedTransformNodesProcessed.contains(node), "Seen node second time at " loc "\n"); delayedTransformNodesProcessed.add(node);}
+#define SEENIT(node, loc) {TR_ASSERT_FATAL_WITH_NODE((node), !delayedTransformNodesProcessed.contains(node), "Seen node second time at " loc "\n"); delayedTransformNodesProcessed.add(node);}
 void
 J9::ValuePropagation::doDelayedTransformations(TR::NodeChecklist &delayedTransformNodesProcessed)
    {
@@ -3339,8 +3339,10 @@ J9::ValuePropagation::doDelayedTransformations(TR::NodeChecklist &delayedTransfo
       TR::TreeTop *callTree = it->_tree;
       TR::Node *result = it->_result;
       TR::Node * callNode = callTree->getNode()->getFirstChild();
-SEENIT(callTree->getNode(), "(A)");
-SEENIT(callNode, "(AA)");
+// SEENIT(callTree->getNode(), "(A)");
+// SEENIT(callNode, "(AA)");
+delayedTransformNodesProcessed.add(callTree->getNode());
+delayedTransformNodesProcessed.add(callNode);
       traceMsg(comp(), "Doing delayed call transformation on call node n%dn\n", callNode->getGlobalIndex());
 
       if (!performTransformation(comp(), "%sTransforming call node %p on tree %p to node %p\n", OPT_DETAILS, callNode, callTree, result))
