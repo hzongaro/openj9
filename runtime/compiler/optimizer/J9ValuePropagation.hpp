@@ -287,8 +287,8 @@ class ValuePropagation : public OMR::ValuePropagation
     *    Handles refined MethodHandle.invokeBasic and MethodHandle.linkTo* VM INL calls so that
     *    they can be inlined during delayed VP transformations. This helper does the following:
     *       1. Creates and populates TR_PrexArgInfo for the callee
-    *       2. Adds the corresponding OMR::ValuePropagation::CallInfo to
-    *          _refinedMethodHandleINLMethodsToInline
+    *       2. Adds the corresponding TR::DelayedMethodHandleINLInliningVPTransformation to
+    *          _lateDelayedTransformations
     *
     * \param node
     *    The refined call node
@@ -403,7 +403,6 @@ class ValuePropagation : public OMR::ValuePropagation
    TR::VP_BCDSign **_bcdSignConstraints;
    List<TreeNodeResultPair> _callsToBeFoldedToNode;
    List<TR_TreeTopNodePair> _offHeapCopyMemory;
-   TR_LinkHead<CallInfo> _refinedMethodHandleINLMethodsToInline;
 
    struct ValueTypesHelperCallTransform;
    struct ObjectComparisonHelperCallTransform;
@@ -636,6 +635,48 @@ class ValuePropagation : public OMR::ValuePropagation
    };
 
 
+}
+
+namespace TR {
+
+class DelayedMethodHandleINLInliningVPTransformation : public TR::DelayedInliningVPTransformation
+   {
+   private:
+   TR::TreeTop *_tt;
+   TR_PrexArgInfo *_argInfo;
+
+   public:
+   DelayedMethodHandleINLInliningVPTransformation(OMR::ValuePropagation *vp,
+                                                  TR::TreeTop *tt,
+                                                  TR::Block *block,
+                                                  TR_PrexArgInfo *argInfo
+                                                  ) : DelayedInliningVPTransformation(vp, tt, block),
+                                                      _argInfo(argInfo) {}
+
+   void apply();
+   };
+
+class DelayedUnsafeInliningVPTransformation : public TR::DelayedInliningVPTransformation
+   {
+   public:
+   DelayedUnsafeInliningVPTransformation(OMR::ValuePropagation *vp,
+                                         TR::TreeTop *tt,
+                                         TR::Block *block
+                                         ) : DelayedInliningVPTransformation(vp, tt, block) {}
+
+   void apply();
+   };
+
+class DelayedMultileafInliningVPTransformation : public TR::DelayedInliningVPTransformation
+   {
+   public:
+   DelayedMultileafInliningVPTransformation(OMR::ValuePropagation *vp,
+                                            TR::TreeTop *tt,
+                                            TR::Block *block
+                                            ) : DelayedInliningVPTransformation(vp, tt, block) {}
+
+   void apply();
+   };
 }
 
 #endif

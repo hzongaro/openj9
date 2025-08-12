@@ -800,7 +800,12 @@ J9::ValuePropagation::processRefinedMethodHandleINLCall(TR::Node *node)
    // Add the refined method CallInfo into the linked list _refinedMethodHandleINLMethodsToInline. Since the call
    // refinement replaces the call node in-place with a different method call, we do not have to do a lastTimeThrough()
    // check to deal with cases where the refined INL calls were inside loops
-   _refinedMethodHandleINLMethodsToInline.add(new (trStackMemory()) OMR::ValuePropagation::CallInfo(this, NULL, argInfo));
+
+#if defined(USE_PARTIAL_ORDERING)
+   addDelayedTransformation(new (trStackMemory()) TR::DelayedMethodHandleINLInliningVPTransformation(this, _curTree, _curBlock, argInfo));
+#else
+   _lateDelayedTransformations.add(new (trStackMemory()) TR::DelayedMethodHandleINLInliningVPTransformation(this, _curTree, _curBlock, argInfo));
+#endif
    }
 
 void
@@ -3545,30 +3550,29 @@ J9::ValuePropagation::doDelayedTransformations()
 
    _valueTypesHelperCallsToBeFolded.deleteAll();
 
-   for (CallInfo* ci = _refinedMethodHandleINLMethodsToInline.getFirst(); ci; ci = ci->getNext())
-      {
-      if(ci->_block->nodeIsRemoved())
-         continue;
-
-      TR_InlineCall newInlineCall(optimizer(), this);
-
-      // Refined MethodHandle INL method inlining at warm have been intentionally set up to not be
-      // affected by other VP inlining control mechanisms such as TR_DisableInliningDuringVPAtWarm
-      // or getMaxSzForVPInliningWarm().They will instead be governed by the existing size limits
-      // based on the opt level set in TR_InlineCall::inlineCall. This can be changed using the
-      // env var TR_DumbInlineThreshold.
-      if (!newInlineCall.inlineCall(ci->_tt, ci->_thisType, true, ci->_argInfo, /* initialMaxSize */ 0))
-         {
-         if (trace())
-            traceMsg(comp(), "Failed to inline refined MH INL call\n");
-         }
-      }
-   _refinedMethodHandleINLMethodsToInline.setFirst(0);
-
    OMR::ValuePropagation::doDelayedTransformations();
    }
 
 
+void
+TR::DelayedMethodHandleINLInliningVPTransformation::apply()
+   {
+   if(_block->nodeIsRemoved())
+      return;
+
+   TR_InlineCall newInlineCall(optimizer(), optimization());
+
+   // Refined MethodHandle INL method inlining at warm have been intentionally set up to not be
+   // affected by other VP inlining control mechanisms such as TR_DisableInliningDuringVPAtWarm
+   // or getMaxSzForVPInliningWarm().They will instead be governed by the existing size limits
+   // based on the opt level set in TR_InlineCall::inlineCall. This can be changed using the
+   // env var TR_DumbInlineThreshold.
+   if (!newInlineCall.inlineCall(_tt, NULL, true, _argInfo, /* initialMaxSize */ 0))
+      {
+      if (trace())
+         traceMsg(comp(), "Failed to inline refined MH INL call for node n%dn [%p]\n", _tt->getNode()->getGlobalIndex(), _tt->getNode());
+      }
+   }
 
 void
 J9::ValuePropagation::getParmValues()
@@ -4522,4 +4526,41 @@ J9::ValuePropagation::createTypeHintConstraint(TR_ResolvedMethod *owningMethod, 
       }
 
    return constraint;
+   }
+
+void
+TR::DelayedUnsafeInliningVPTransformation::apply()
+   {
+   if(_block->nodeIsRemoved())
+      {
+      return;
+      }
+
+   TR_InlineCall unsafeInlineCall(optimizer(), optimization());
+
+   if (!unsafeInlineCall.inlineCall(_tt))
+      {
+      performTransformation(comp(),"%s WARNING: Inlining of %p failed\n", OPT_DETAILS, _tt->getNode());
+      }
+   }
+
+void
+TR::DelayedMultileafInliningVPTransformation::apply()
+   {
+   TR::TreeTop *multileafCallTT = _tt;
+   TR::Node *vcallNode = multileafCallTT->getNode()->getFirstChild();
+
+   //maybe the call node was removed.
+   if (vcallNode->getReferenceCount() < 1)
+      {
+      return;
+      }
+
+   TR_InlineCall multiLeafInlineCall(optimizer(), optimization());
+
+   if (!multiLeafInlineCall.inlineCall(multileafCallTT))
+      {
+      performTransformation(comp(),"%s WARNING: Inlining of %p failed\n", OPT_DETAILS,
+            multileafCallTT->getNode());
+      }
    }
