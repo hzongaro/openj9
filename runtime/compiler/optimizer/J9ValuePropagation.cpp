@@ -3545,6 +3545,8 @@ J9::ValuePropagation::doDelayedTransformations()
 
    _valueTypesHelperCallsToBeFolded.deleteAll();
 
+   OMR::ValuePropagation::doDelayedTransformations();
+
    for (CallInfo* ci = _refinedMethodHandleINLMethodsToInline.getFirst(); ci; ci = ci->getNext())
       {
       if(ci->_block->nodeIsRemoved())
@@ -3564,8 +3566,6 @@ J9::ValuePropagation::doDelayedTransformations()
          }
       }
    _refinedMethodHandleINLMethodsToInline.setFirst(0);
-
-   OMR::ValuePropagation::doDelayedTransformations();
    }
 
 
