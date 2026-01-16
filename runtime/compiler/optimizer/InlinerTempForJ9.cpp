@@ -2808,8 +2808,9 @@ TR_J9InlinerPolicy::isInlineableJNI(TR_ResolvedMethod *method,TR::Node *callNode
    TR::RecognizedMethod recognizedMethod = method->getRecognizedMethod();
    // Reflection's JNI
    //
-   if (!comp->getOption(TR_DisableInliningOfNatives) &&
-         recognizedMethod == TR::sun_reflect_Reflection_getClassAccessFlags)
+   if (!comp->getOption(TR_DisableInliningOfNatives)
+         && method->isNative()
+         && recognizedMethod == TR::sun_reflect_Reflection_getClassAccessFlags)
       //return false;
       return true;
 
