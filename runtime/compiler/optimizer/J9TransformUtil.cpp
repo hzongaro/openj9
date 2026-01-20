@@ -176,70 +176,89 @@ static bool isFieldOfJavaObject(TR::SymbolReference *symRef, TR::Compilation *co
    return false;
    }
 
-static bool isNullValueAtAddress(TR::Compilation *comp, TR::DataType loadType, uintptr_t fieldAddress, TR::Symbol *field)
+static bool hasDefaultInitialValue(TR_StaticFinalData data, TR::DataType loadType)
+   {
+   switch (loadType)
+      {
+      case TR::Int8:
+         return (data.dataInt8Bit == 0);
+         break;
+      case TR::Int16:
+         return (data.dataInt16Bit == 0);
+         break;
+      case TR::Int32:
+         return (data.dataInt32Bit == 0);
+         break;
+      case TR::Int64:
+         return (data.dataInt64Bit == 0);
+         break;
+      case TR::Float:
+         return (data.dataFloat == 0.0 && !std::signbit(data.dataFloat));
+         break;
+      case TR::Double:
+         return (data.dataDouble == 0.0 && !std::signbit(data.dataDouble));
+         break;
+      case TR::Address:
+         return (data.dataAddress == 0);
+         break;
+      default:
+         TR_ASSERT(0, "Unexpected type %s", loadType.toString());
+      }
+
+      return false;
+   }
+
+static bool hasDefaultInitialValueAtAddress(TR::Compilation *comp, TR::DataType loadType, uintptr_t fieldAddress, TR::Symbol *field)
    {
    TR_J9VMBase *fej9 = comp->fej9();
+   TR_StaticFinalData data;
 
    switch (loadType)
       {
       case TR::Int8:
          {
-         int8_t value = *(int8_t*)fieldAddress;
-         if (value == 0)
-            return true;
-         }
+         data.dataInt8Bit = *(int8_t*)fieldAddress;
          break;
+         }
       case TR::Int16:
          {
-         int16_t value = *(int16_t*)fieldAddress;
-         if (value == 0)
-            return true;
-         }
+         data.dataInt16Bit = *(int16_t*)fieldAddress;
          break;
+         }
       case TR::Int32:
          {
-         int32_t value = *(int32_t*)fieldAddress;
-         if (value == 0)
-            return true;
-         }
+         data.dataInt32Bit = *(int32_t*)fieldAddress;
          break;
+         }
       case TR::Int64:
          {
-         int64_t value = *(int64_t*)fieldAddress;
-         if (value == 0)
-            return true;
-         }
+         data.dataInt64Bit = *(int64_t*)fieldAddress;
          break;
+         }
       case TR::Float:
          {
-         float value = *(float*)fieldAddress;
-         // This will not fold -0.0 but will fold NaN
-         if (value == 0.0)
-            return true;
-         }
+         data.dataFloat = *(float*)fieldAddress;
          break;
-     case TR::Double:
-        {
-        double value = *(double*)fieldAddress;
-        // This will not fold -0.0 but will fold NaN
-        if (value == 0.0)
-           return true;
-        }
-        break;
-     case TR::Address:
-        {
-        TR_ASSERT_FATAL(field->isCollectedReference(), "Expecting a collectable reference\n");
-        uintptr_t value = fej9->getReferenceFieldAtAddress((uintptr_t)fieldAddress);
-        if (value == 0)
-           return true;
-        }
-        break;
-     default:
-        TR_ASSERT_FATAL(false, "Unknown type of field being dereferenced\n");
-        break;
-     }
+         }
+      case TR::Double:
+         {
+         data.dataDouble = *(double*)fieldAddress;
+         break;
+         }
+      case TR::Address:
+         {
+         TR_ASSERT_FATAL(field->isCollectedReference(), "Expecting a collectable reference\n");
+         data.dataAddress = fej9->getReferenceFieldAtAddress((uintptr_t)fieldAddress);
+         break;
+         }
+      default:
+         {
+         TR_ASSERT_FATAL(false, "Unknown type of field being dereferenced\n");
+         break;
+         }
+      }
 
-   return false;
+   return hasDefaultInitialValue(data, loadType);
    }
 
 bool J9::TransformUtil::avoidFoldingInstanceField(
@@ -268,7 +287,7 @@ bool J9::TransformUtil::avoidFoldingInstanceField(
       uintptr_t fieldAddress = object + fieldOffset;
       TR::DataType loadType = field->getDataType();
 
-      if (isNullValueAtAddress(comp, loadType, fieldAddress, field))
+      if (hasDefaultInitialValueAtAddress(comp, loadType, fieldAddress, field))
          return true;
       }
 
@@ -633,7 +652,7 @@ static void *dereferenceStructPointerChain(void *baseStruct, TR::Node *baseNode,
                      width = TR::Compiler->om.sizeofReferenceField();
 
                   if ((fieldAddress % width) != 0 ||
-                      isNullValueAtAddress(comp, type, fieldAddress, symRef->getSymbol()))
+                      hasDefaultInitialValueAtAddress(comp, type, fieldAddress, symRef->getSymbol()))
                      return NULL;
                   }
                }
@@ -751,7 +770,7 @@ static void *dereferenceStructPointer(TR::KnownObjectTable::Index baseKnownObjec
                // Do the null check part of avoidFoldingConstantField
                // We do not have to worry about the case of address; the returned knot index will
                // be UNKNOWN in that case
-               if (isNullValueAtAddress(comp, loadType, (uintptr_t) valuePtr, field))
+               if (hasDefaultInitialValueAtAddress(comp, loadType, (uintptr_t) valuePtr, field))
                   return NULL;
 
                return valuePtr;
@@ -902,6 +921,24 @@ static bool changeIndirectLoadIntoConst(TR::Node *node, TR::ILOpCodes opCode, TR
    return false;
    }
 
+bool
+isReliableStaticField(TR::Compilation *comp, TR::Node *node)
+   {
+   if (node->getOpCode().hasSymbolReference())
+      {
+      TR::Symbol *sym = node->getSymbol();
+      TR::SymbolReference *symRef = node->getSymbolReference();
+
+      if (sym->isStaticField()
+          && (sym->isFinal() || symRef->getOwningMethod(comp)->isStable(symRef->getCPIndex(), comp)))
+         {
+         return true;
+         }
+      }
+
+   return false;
+   }
+
 /** \brief
  *     Entry point for folding allowlist'd static final fields.
  *     These typically belong to fundamental system/bootstrap classes.
@@ -916,18 +953,18 @@ static bool changeIndirectLoadIntoConst(TR::Node *node, TR::ILOpCodes opCode, TR
  *    True if the field is folded.
 */
 bool
-J9::TransformUtil::foldReliableStaticFinalField(TR::Compilation *comp, TR::Node *node)
+J9::TransformUtil::foldReliableStaticField(TR::Compilation *comp, TR::Node *node)
    {
-   TR_ASSERT(node->isLoadOfStaticFinalField(),
-             "Expecting load of static final field on %s %p",
+   TR_ASSERT(isReliableStaticField(comp, node),
+             "Expecting load of static final or @Stable field on %s %p",
              node->getOpCode().getName(), node);
 
    if (!node->getOpCode().isLoadVarDirect())
       return false;
 
-   if (J9::TransformUtil::canFoldStaticFinalField(comp, node) == TR_yes)
+   if (J9::TransformUtil::canFoldReliableStaticField(comp, node) == TR_yes)
       {
-      return J9::TransformUtil::foldStaticFinalFieldImpl(comp, node);
+      return J9::TransformUtil::foldReliableStaticFieldImpl(comp, node);
       }
 
    return false;
@@ -936,16 +973,16 @@ J9::TransformUtil::foldReliableStaticFinalField(TR::Compilation *comp, TR::Node 
 bool
 J9::TransformUtil::foldStaticFinalFieldAssumingProtection(TR::Compilation *comp, TR::Node *node)
    {
-   TR_ASSERT(node->isLoadOfStaticFinalField(),
-             "Expecting load of static final field on %s %p",
+   TR_ASSERT(isReliableStaticField(comp, node),
+             "Expecting load of static final or @Stable field on %s %p",
              node->getOpCode().getName(), node);
 
    if (!node->getOpCode().isLoadVarDirect())
       return false;
 
-   if (J9::TransformUtil::canFoldStaticFinalField(comp, node) != TR_no)
+   if (J9::TransformUtil::canFoldReliableStaticField(comp, node) != TR_no)
       {
-      return J9::TransformUtil::foldStaticFinalFieldImpl(comp, node);
+      return J9::TransformUtil::foldReliableStaticFieldImpl(comp, node);
       }
 
    return false;
@@ -1050,18 +1087,19 @@ classHasFinalPutstaticOutsideClinit(TR::Compilation *comp, TR_OpaqueClassBlock *
    }
 
 TR_YesNoMaybe
-J9::TransformUtil::canFoldStaticFinalField(TR::Compilation *comp, TR::Node* node)
+J9::TransformUtil::canFoldReliableStaticField(TR::Compilation *comp, TR::Node* node)
    {
-   TR_ASSERT(node->getOpCode().isLoadVarDirect() && node->isLoadOfStaticFinalField(), "Expecting direct load of static final field on %s %p", node->getOpCode().getName(), node);
+   TR_ASSERT(node->getOpCode().isLoadVarDirect() && node->isStaticField(), "Expecting direct load of static field on %s %p", node->getOpCode().getName(), node);
    TR::SymbolReference *symRef = node->getSymbolReference();
    TR::Symbol           *sym    = node->getSymbol();
 
+   TR_ResolvedMethod *owningMethod = symRef->getOwningMethod(comp);
+
    if (symRef->isUnresolved()
        || !sym->isStaticField()
-       || !sym->isFinal())
+       || (!sym->isFinal() && !owningMethod->isStable(symRef->getCPIndex(), comp)))
       return TR_no;
 
-   TR_ResolvedMethod *owningMethod = symRef->getOwningMethod(comp);
    TR::Symbol::RecognizedField recField = sym->getRecognizedField();
 
    // In AOT without SVM, getDeclaringClassFromFieldOrStatic() returns null.
@@ -1080,12 +1118,12 @@ J9::TransformUtil::canFoldStaticFinalField(TR::Compilation *comp, TR::Node* node
          comp->fej9()->getSystemClassFromClassName("java/lang/String", 16, true);
       }
 
-   return TR::TransformUtil::canFoldStaticFinalField(
+   return TR::TransformUtil::canFoldReliableStaticField(
       comp, declaringClass, recField, owningMethod, symRef->getCPIndex());
    }
 
 TR_YesNoMaybe
-J9::TransformUtil::canFoldStaticFinalField(
+J9::TransformUtil::canFoldReliableStaticField(
    TR::Compilation *comp,
    TR_OpaqueClassBlock *declaringClass,
    TR::Symbol::RecognizedField recField,
@@ -1139,7 +1177,7 @@ J9::TransformUtil::canFoldStaticFinalField(
    // Static initializer can produce different values in different runs
    // so for AOT we cannot allow this transformation. However for String
    // we will embed some bits in the aotMethodHeader for this method.
-   // The string compression enabled bit is set in staticFinalFieldValue().
+   // The string compression enabled bit is set in staticReliableFieldValue().
    if (comp->compileRelocatableCode())
       {
       if (recField == TR::Symbol::Java_lang_String_enableCompression)
@@ -1197,62 +1235,6 @@ J9::TransformUtil::canFoldStaticFinalField(
          declaringClass, className, classNameLen, true, comp))
       return TR_yes;
 
-   // Determine whether this class contains putstatic instructions outside of
-   // <clinit> that store to its static final fields. If it does, it can be
-   // considered to have an illegal modification, preventing all future folding
-   // of its static final fields.
-   bool putstaticScanDone = false;
-   if (putstaticIsToSpec)
-      {
-      // The problem can't occur. Such putstatic instructions would simply
-      // fail, so no scan is needed.
-      putstaticScanDone = true;
-      }
-   else
-      {
-      // Use the persistent class info to avoid repeated scanning.
-      TR_PersistentCHTable *cht = comp->getPersistentInfo()->getPersistentCHTable();
-      if (cht != NULL)
-         {
-         TR_PersistentClassInfo *classInfo =
-            cht->findClassInfoAfterLocking(declaringClass, comp);
-
-         if (classInfo != NULL)
-            {
-            putstaticScanDone = true;
-            if (!classInfo->alreadyScannedForFinalPutstatic())
-               {
-               if (classHasFinalPutstaticOutsideClinit(comp, declaringClass))
-                  {
-                  // There are no assumptions to invalidate when setting this
-                  // flag here. Any earlier attempts to fold static final fields
-                  // in this class have failed to scan, and therefore they have
-                  // refused to do even guarded folding.
-                  //
-                  // There could be a concurrent scan in another compilation
-                  // thread, but if so, it will also find the bad putstatic and
-                  // refuse to fold.
-                  //
-                  TR::Compiler->cls.setClassHasIllegalStaticFinalFieldModification(
-                     declaringClass, comp);
-                  }
-
-               TR::ClassTableCriticalSection chtCS(comp->fe());
-               classInfo->setAlreadyScannedForFinalPutstatic();
-               }
-            }
-         }
-      }
-
-   // If this class needs a scan that we failed to perform, then don't fold at
-   // all. Without the scan, we can't trust its static final fields. We could
-   // still do guarded folding, but if we did, there would be a possibility of
-   // successfully scanning later on and finding a bad putstatic. Then when
-   // setting the illegal write flag, there would be assumptions to invalidate.
-   if (!putstaticScanDone)
-      return TR_no;
-
-   // Reject fields belonging to classes in which illegal static final stores
    // have been observed, and classes with old versions that have been found to
    // contain a bad putstatic (even if no illegal store has occurred yet).
    if (TR::Compiler->cls.classHasIllegalStaticFinalFieldModification(declaringClass))
@@ -1480,7 +1462,7 @@ bool J9::TransformUtil::attemptStaticFinalFieldFoldingImpl(TR::Optimization* opt
    bool trace = opt->trace();
 
    // first attempt folding reliable fields
-   if (J9::TransformUtil::foldReliableStaticFinalField(comp, node))
+   if (J9::TransformUtil::foldReliableStaticField(comp, node))
       {
       logprintf(trace, log, "SFFF fold reliable at node %p\n", node);
       return true;
@@ -1502,7 +1484,7 @@ bool J9::TransformUtil::attemptStaticFinalFieldFoldingImpl(TR::Optimization* opt
    TR_OpaqueClassBlock* declaringClass =
       symRef->getOwningMethod(comp)->getDeclaringClassFromFieldOrStatic(comp, cpIndex);
 
-   if (J9::TransformUtil::canFoldStaticFinalField(comp, node) != TR_maybe
+   if (J9::TransformUtil::canFoldReliableStaticField(comp, node) != TR_maybe
        || !declaringClass)
       {
       return false;
@@ -1572,9 +1554,9 @@ static void prepareNodeToBeLoadConst(TR::Node *node)
    }
 
 bool
-J9::TransformUtil::foldStaticFinalFieldImpl(TR::Compilation *comp, TR::Node *node)
+J9::TransformUtil::foldReliableStaticFieldImpl(TR::Compilation *comp, TR::Node *node)
    {
-   TR_ASSERT(node->getOpCode().isLoadVarDirect() && node->isLoadOfStaticFinalField(), "Expecting direct load of static final field on %s %p", node->getOpCode().getName(), node);
+   TR_ASSERT(node->getOpCode().isLoadVarDirect() && isReliableStaticField(comp, node), "Expecting direct load of static final field on %s %p", node->getOpCode().getName(), node);
    TR::SymbolReference *symRef = node->getSymbolReference();
    TR::Symbol           *sym    = node->getSymbol();
 
@@ -1610,7 +1592,7 @@ J9::TransformUtil::foldStaticFinalFieldImpl(TR::Compilation *comp, TR::Node *nod
    void *staticAddr = staticSym->getStaticAddress();
    TR::Symbol::RecognizedField recField = sym->getRecognizedField();
    TR::AnyConst value = TR::AnyConst::makeAddress(0);
-   bool gotValue = TR::TransformUtil::staticFinalFieldValue(
+   bool gotValue = TR::TransformUtil::staticReliableFieldValue(
       comp, owningMethod, cpIndex, staticAddr, loadType, recField, &value);
 
    if (!gotValue)
@@ -1694,7 +1676,7 @@ J9::TransformUtil::foldStaticFinalFieldImpl(TR::Compilation *comp, TR::Node *nod
    }
 
 bool
-J9::TransformUtil::staticFinalFieldValue(
+J9::TransformUtil::staticReliableFieldValue(
    TR::Compilation *comp,
    TR_ResolvedMethod *owningMethod,
    int32_t cpIndex,
@@ -1704,7 +1686,7 @@ J9::TransformUtil::staticFinalFieldValue(
    TR::AnyConst *outValue)
    {
    // This can be relaxed in the future, but we'll need to get the defining
-   // class some other way. For now, canFoldStaticFinalField() requires a valid
+   // class some other way. For now, canFoldReliableStaticField() requires a valid
    // CP index, so there will be one here as well.
    TR_ASSERT_FATAL(cpIndex >= 0, "missing CP index");
 
@@ -1728,6 +1710,12 @@ J9::TransformUtil::staticFinalFieldValue(
          "java/lang/String.enableCompression and javaVM->strCompEnabled must be in sync");
       if (fieldValue)
          aotMethodHeaderEntry->flags |= TR_AOTMethodHeader_StringCompressionEnabled;
+      }
+
+   if (owningMethod->isStable(cpIndex, comp)
+       && hasDefaultInitialValue(data, loadType))
+      {
+      return false;
       }
 
    switch (loadType)
@@ -1813,9 +1801,9 @@ J9::TransformUtil::transformDirectLoad(TR::Compilation *comp, TR::Node *node)
    {
    TR_ASSERT(node->getOpCode().isLoadVarDirect(), "Expecting direct load; found %s %p", node->getOpCode().getName(), node);
 
-   if (node->isLoadOfStaticFinalField())
+   if (isReliableStaticField(comp, node))
       {
-      return J9::TransformUtil::foldReliableStaticFinalField(comp, node);
+      return J9::TransformUtil::foldReliableStaticField(comp, node);
       }
 
    return false;
@@ -2533,7 +2521,7 @@ J9::TransformUtil::insertNewFirstBlockForCompilation(TR::Compilation *comp)
    }
 
 TR::Node * J9::TransformUtil::calculateElementAddress(TR::Compilation *comp, TR::Node *array, TR::Node *index, TR::DataType type)
-{
+   {
    TR::Node * offset = TR::TransformUtil::calculateOffsetFromIndexInContiguousArray(comp, index, type);
    offset->setIsNonNegative(true);
    // Calculate element address
@@ -2551,7 +2539,7 @@ TR::Node * J9::TransformUtil::calculateElementAddress(TR::Compilation *comp, TR:
 
    addrCalc->setIsInternalPointer(true);
    return addrCalc;
-}
+   }
 
 TR::Node * J9::TransformUtil::calculateOffsetFromIndexInContiguousArray(TR::Compilation *comp, TR::Node * index, TR::DataType type)
    {
@@ -2566,7 +2554,7 @@ TR::Node * J9::TransformUtil::calculateOffsetFromIndexInContiguousArray(TR::Comp
    }
 
 TR::Node * J9::TransformUtil::calculateElementAddressWithElementStride(TR::Compilation *comp, TR::Node *array, TR::Node *index, int32_t elementStride)
-{
+   {
    TR::Node * offset = TR::TransformUtil::calculateOffsetFromIndexInContiguousArrayWithElementStride(comp, index, elementStride);
    offset->setIsNonNegative(true);
 
@@ -2579,7 +2567,7 @@ TR::Node * J9::TransformUtil::calculateElementAddressWithElementStride(TR::Compi
 
    addrCalc->setIsInternalPointer(true);
    return addrCalc;
-}
+   }
 
 static int32_t checkNonNegativePowerOfTwo(int32_t value)
    {

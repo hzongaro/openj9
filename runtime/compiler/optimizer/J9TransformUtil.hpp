@@ -111,11 +111,11 @@ public:
 
    /**
     * \brief
-    *    Fold direct load of a reliable static final field. A reliable static final field
+    *    Fold direct load of a reliable static field. A reliable static final field
     *    is a field on which modification after initialization is not expected because it's
     *    initial value critical to VM functionality and performance.
     *
-    *    See J9::TransformUtil::canFoldStaticFinalField for the list of reliable static final
+    *    See J9::TransformUtil::canFoldReliableStaticField for the list of reliable static final
     *    field.
     *
     * \parm comp
@@ -128,7 +128,7 @@ public:
     *    True if the field has been folded
     */
 
-   static bool foldReliableStaticFinalField(TR::Compilation *, TR::Node *node);
+   static bool foldReliableStaticField(TR::Compilation *, TR::Node *node);
    /**
     * \brief
     *    Fold direct load of a static final field assuming there is protection for the folding.
@@ -193,17 +193,17 @@ public:
     *    TR_maybe  If we don't have any prior knowledge about this field, it can be folded
     *              with guard
     */
-   static TR_YesNoMaybe canFoldStaticFinalField(TR::Compilation *comp, TR::Node *node);
+   static TR_YesNoMaybe canFoldReliableStaticField(TR::Compilation *comp, TR::Node *node);
 
    /**
     * \brief
-    *    Determine whether a static final field can be folded without a node.
+    *    Determine whether a static field can be folded without a node.
     *
     *    The caller must have already checked that the field in question is
     *    both static and final.
     *
     *    If a node is available, prefer
-    *    canFoldStaticFinalField(TR::Compilation*, TR::Node*).
+    *    canFoldReliableStaticField(TR::Compilation*, TR::Node*).
     *
     * \param comp the compilation object
     * \param declaringClass the class that declares the field
@@ -213,7 +213,7 @@ public:
     * \return TR_yes if the field is reliable, TR_maybe if it can be folded
     *         with OSR protection, or TR_no if it should not be folded.
     */
-   static TR_YesNoMaybe canFoldStaticFinalField(
+   static TR_YesNoMaybe canFoldReliableStaticField(
       TR::Compilation *comp,
       TR_OpaqueClassBlock *declaringClass,
       TR::Symbol::RecognizedField recField,
@@ -347,7 +347,7 @@ public:
     * \brief
     *    Get the value of a static final field.
     *
-    *    canFoldStaticFinalField() must have already run for the given field in
+    *    canFoldReliableStaticField() must have already run for the given field in
     *    the current compilation, and it must have produced a result of TR_yes
     *    or TR_maybe.
     *
@@ -360,7 +360,7 @@ public:
     * \param[out] outValue the resulting value
     * \return true for success, or (rarely) false for failure
     */
-   static bool staticFinalFieldValue(
+   static bool staticReliableFieldValue(
       TR::Compilation *comp,
       TR_ResolvedMethod *owningMethod,
       int32_t cpIndex,
@@ -413,7 +413,7 @@ protected:
     * \return
     *    True if the field is folded
     */
-   static bool foldStaticFinalFieldImpl(TR::Compilation *, TR::Node *node);
+   static bool foldReliableStaticFieldImpl(TR::Compilation *, TR::Node *node);
 
    /** \brief
     *     Try to fold static final field with protection

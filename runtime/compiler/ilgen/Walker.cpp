@@ -5512,12 +5512,13 @@ TR_J9ByteCodeIlGenerator::loadStatic(int32_t cpIndex)
 
    static char *disableFinalFieldFoldingInILGen = feGetEnv("TR_DisableFinalFieldFoldingInILGen");
    static char *disableStaticFinalFieldFoldingInILGen = feGetEnv("TR_DisableStaticFinalFieldFoldingInILGen");
-   if (!disableFinalFieldFoldingInILGen &&
-       !disableStaticFinalFieldFoldingInILGen &&
-       symbol->isFinal() &&
-       TR::TransformUtil::canFoldStaticFinalField(comp(), load) == TR_yes)
+   static char *disableStaticStableFieldFoldingInILGen = feGetEnv("TR_DisableStaticFinalFieldFoldingInILGen");
+
+   if ((!disableFinalFieldFoldingInILGen && !disableStaticFinalFieldFoldingInILGen && symbol->isFinal()
+          || (!disableStaticStableFieldFoldingInILGen && _methodSymbol->getResolvedMethod()->isStable(cpIndex, comp())))
+       && TR::TransformUtil::canFoldReliableStaticField(comp(), load) == TR_yes)
       {
-      TR::TransformUtil::foldReliableStaticFinalField(comp(), load);
+      TR::TransformUtil::foldReliableStaticField(comp(), load);
       }
    }
 

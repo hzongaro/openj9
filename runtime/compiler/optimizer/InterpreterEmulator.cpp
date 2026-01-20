@@ -804,7 +804,7 @@ InterpreterEmulator::maintainStackForGetStatic()
          owningMethod->getDeclaringClassFromFieldOrStatic(comp(), cpIndex);
 
       canFold =
-         TR::TransformUtil::canFoldStaticFinalField(
+         TR::TransformUtil::canFoldReliableStaticField(
             comp(), declaringClass, recField, owningMethod, cpIndex);
       }
 
@@ -812,7 +812,7 @@ InterpreterEmulator::maintainStackForGetStatic()
    if (canFold == TR_yes && type == TR::Address)
       {
       TR::AnyConst value = TR::AnyConst::makeAddress(0);
-      bool gotValue = TR::TransformUtil::staticFinalFieldValue(
+      bool gotValue = TR::TransformUtil::staticReliableFieldValue(
          comp(), owningMethod, cpIndex, dataAddress, TR::Address, recField, &value);
 
       if (gotValue && value.isKnownObject())
