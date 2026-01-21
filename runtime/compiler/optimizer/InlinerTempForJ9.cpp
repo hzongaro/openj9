@@ -2411,9 +2411,11 @@ TR_J9InlinerPolicy::createUnsafeFence(TR::TreeTop *callNodeTreeTop, TR::Node *ca
 TR::Node *
 TR_J9InlinerPolicy::inlineGetClassAccessFlags(TR::ResolvedMethodSymbol *calleeSymbol, TR::ResolvedMethodSymbol *callerSymbol, TR::TreeTop * callNodeTreeTop, TR::Node * callNode)
    {
-   if (
-         comp()->getOption(TR_DisableInliningOfNatives) ||
-         calleeSymbol->castToMethodSymbol()->getRecognizedMethod() != TR::sun_reflect_Reflection_getClassAccessFlags)
+   TR::RecognizedMethod recognizedMethod = calleeSymbol->castToMethodSymbol()->getRecognizedMethod();
+
+   if (comp()->getOption(TR_DisableInliningOfNatives)
+       || (recognizedMethod != TR::sun_reflect_Reflection_getClassAccessFlags
+           && recognizedMethod != TR::java_lang_Class_getClassFileAccessFlags))
       return 0;
 
    TR::Block * block = callNodeTreeTop->getEnclosingBlock();
@@ -2424,7 +2426,7 @@ TR_J9InlinerPolicy::inlineGetClassAccessFlags(TR::ResolvedMethodSymbol *calleeSy
 
    TR::Node *j9cNode;
 
-   if(callNode->isPreparedForDirectJNI())
+   if (callNode->isPreparedForDirectJNI() && recognizedMethod != TR::java_lang_Class_getClassFileAccessFlags)
       j9cNode = callNode->getSecondChild();
    else
       j9cNode = callNode->getFirstChild();
@@ -2806,11 +2808,12 @@ TR_J9InlinerPolicy::isInlineableJNI(TR_ResolvedMethod *method,TR::Node *callNode
    {
    TR::Compilation *comp = this->comp();
    TR::RecognizedMethod recognizedMethod = method->getRecognizedMethod();
-   // Reflection's JNI
+   // Reflection's JNI.  (In JDK 26 and later, it's implemented by java.lang.Access.getClassFileAccessFlags)
    //
    if (!comp->getOption(TR_DisableInliningOfNatives)
          && method->isNative()
-         && recognizedMethod == TR::sun_reflect_Reflection_getClassAccessFlags)
+         && (recognizedMethod == TR::sun_reflect_Reflection_getClassAccessFlags
+             || recognizedMethod == TR::java_lang_Class_getClassFileAccessFlags))
       //return false;
       return true;
 

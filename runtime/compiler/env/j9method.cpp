@@ -2129,20 +2129,21 @@ void TR_ResolvedJ9Method::construct()
 
    static X ClassMethods[] =
       {
-      {x(TR::java_lang_Class_newInstancePrototype, "newInstancePrototype", "(Ljava/lang/Class;)Ljava/lang/Object;")},
-      //{x(TR::java_lang_Class_newInstanceImpl,      "newInstanceImpl",      "()Ljava/lang/Object;")},
-      {x(TR::java_lang_Class_newInstance,          "newInstance",          "()Ljava/lang/Object;")},
-      {x(TR::java_lang_Class_isArray,              "isArray",              "()Z")},
-      {x(TR::java_lang_Class_isPrimitive,          "isPrimitive",          "()Z")},
-      {x(TR::java_lang_Class_isValue,              "isValue",              "()Z")},
-      {x(TR::java_lang_Class_isIdentity,           "isIdentity",           "()Z")},
-      {x(TR::java_lang_Class_getComponentType,     "getComponentType",     "()Ljava/lang/Class;")},
-      {x(TR::java_lang_Class_getModifiersImpl,     "getModifiersImpl",     "()I")},
-      {x(TR::java_lang_Class_isAssignableFrom,     "isAssignableFrom",     "(Ljava/lang/Class;)Z")},
-      {x(TR::java_lang_Class_isInstance,           "isInstance",           "(Ljava/lang/Object;)Z")},
-      {x(TR::java_lang_Class_isInterface,          "isInterface",          "()Z")},
-      {x(TR::java_lang_Class_cast,                 "cast",                 "(Ljava/lang/Object;)Ljava/lang/Object;")},
-      {x(TR::java_lang_Class_getStackClass,        "getStackClass",        "(I)Ljava/lang/Class;")},
+      {x(TR::java_lang_Class_newInstancePrototype,    "newInstancePrototype",    "(Ljava/lang/Class;)Ljava/lang/Object;")},
+      //{x(TR::java_lang_Class_newInstanceImpl,       "newInstanceImpl",         "()Ljava/lang/Object;")},
+      {x(TR::java_lang_Class_newInstance,             "newInstance",             "()Ljava/lang/Object;")},
+      {x(TR::java_lang_Class_isArray,                 "isArray",                 "()Z")},
+      {x(TR::java_lang_Class_isPrimitive,             "isPrimitive",             "()Z")},
+      {x(TR::java_lang_Class_isValue,                 "isValue",                 "()Z")},
+      {x(TR::java_lang_Class_isIdentity,              "isIdentity",              "()Z")},
+      {x(TR::java_lang_Class_getClassFileAccessFlags, "getClassFileAccessFlags", "()I")},
+      {x(TR::java_lang_Class_getComponentType,        "getComponentType",        "()Ljava/lang/Class;")},
+      {x(TR::java_lang_Class_getModifiersImpl,        "getModifiersImpl",        "()I")},
+      {x(TR::java_lang_Class_isAssignableFrom,        "isAssignableFrom",        "(Ljava/lang/Class;)Z")},
+      {x(TR::java_lang_Class_isInstance,              "isInstance",              "(Ljava/lang/Object;)Z")},
+      {x(TR::java_lang_Class_isInterface,             "isInterface",             "()Z")},
+      {x(TR::java_lang_Class_cast,                    "cast",                    "(Ljava/lang/Object;)Ljava/lang/Object;")},
+      {x(TR::java_lang_Class_getStackClass,           "getStackClass",           "(I)Ljava/lang/Class;")},
       {  TR::unknownMethod}
       };
 

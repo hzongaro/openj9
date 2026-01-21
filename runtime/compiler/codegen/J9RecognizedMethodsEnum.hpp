@@ -60,6 +60,7 @@
    java_lang_Class_isPrimitive,
    java_lang_Class_isValue,
    java_lang_Class_isIdentity,
+   java_lang_Class_getClassFileAccessFlags,
    java_lang_Class_getComponentType,
    java_lang_Class_getModifiersImpl,
    java_lang_Class_getStackClass,
