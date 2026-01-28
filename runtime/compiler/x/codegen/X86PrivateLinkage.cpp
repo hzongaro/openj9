@@ -1662,6 +1662,9 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    {
    TR::StackMemoryRegion stackMemoryRegion(*comp()->trMemory());
 
+TR::LabelSymbol *indirectdispatchlabel = generateLabelSymbol(cg());
+addInstructionComments(generateLabelInstruction(TR::InstOpCode::label, callNode, indirectdispatchlabel, cg()), "At start of J9::X86::PrivateLinkage::buildIndirectDispatch");
+
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
 
    TR::X86CallSite site(callNode, this);
@@ -1922,6 +1925,9 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
       associatePreservedRegisters(site.getPostConditionsUnderConstruction(), returnRegister);
 
    cg()->setImplicitExceptionPoint(site.getImplicitExceptionPoint());
+
+TR::LabelSymbol *endindirectdispatchlabel = generateLabelSymbol(cg());
+addInstructionComments(generateLabelInstruction(TR::InstOpCode::label, callNode, endindirectdispatchlabel, cg()), "At end of J9::X86::PrivateLinkage::buildIndirectDispatch");
 
    return returnRegister;
    }
