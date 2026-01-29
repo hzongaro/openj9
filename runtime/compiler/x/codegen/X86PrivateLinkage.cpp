@@ -1663,7 +1663,7 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    TR::StackMemoryRegion stackMemoryRegion(*comp()->trMemory());
 
 TR::LabelSymbol *indirectdispatchlabel = generateLabelSymbol(cg());
-cg()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, callNode, indirectdispatchlabel, cg()), "At start of J9::X86::PrivateLinkage::buildIndirectDispatch");
+comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, callNode, indirectdispatchlabel, cg()), "At start of J9::X86::PrivateLinkage::buildIndirectDispatch");
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
 
