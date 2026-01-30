@@ -2054,6 +2054,7 @@ TR::Register *J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(
       reference = node->getNullCheckReference();
 
    TR::ILOpCode &opCode = firstChild->getOpCode();
+   bool childislcalli = opCode.getOpCodeValue() == TR::lcalli;
 
    // Skip the NULLCHK for TR::loadaddr nodes.
    //
@@ -2341,12 +2342,24 @@ TR::Register *J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(
    //
    if (needLateEvaluation)
       {
+if (childislcalli)
+{
+TR::LabelSymbol *needLateEvalLabel = generateLabelSymbol(cg);
+cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), needLateEvalLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needLateEvaluation - before calling evaluate for first child");
+}
       cg->evaluate(node->getFirstChild());
       }
    else if (needExplicitCheck)
       {
+TR::LabelSymbol *needExplicitChkLabel = generateLabelSymbol(cg);
+cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), needExplicitChkLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needExplicitCheckLabel - before decrementing reference count for reference");
       cg->decReferenceCount(reference);
       }
+else
+{
+TR::LabelSymbol *neitherLabel = generateLabelSymbol(cg);
+cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), neitherLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve !needLateEvaluation && !needExplicitCheckLabel");
+}
 
    if (comp->useCompressedPointers())
       cg->decReferenceCount(node->getFirstChild());
