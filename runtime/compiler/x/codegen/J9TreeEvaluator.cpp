@@ -2344,21 +2344,18 @@ TR::Register *J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(
       {
 if (childislcalli)
 {
-TR::LabelSymbol *needLateEvalLabel = generateLabelSymbol(cg);
-cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), needLateEvalLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needLateEvaluation - before calling evaluate for first child");
+generateCommentInstruction(node->getFirstChild(), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needLateEvaluation - before calling evaluate for first child", cg);
 }
       cg->evaluate(node->getFirstChild());
       }
    else if (needExplicitCheck)
       {
-TR::LabelSymbol *needExplicitChkLabel = generateLabelSymbol(cg);
-cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), needExplicitChkLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needExplicitCheckLabel - before decrementing reference count for reference");
+generateCommentInstruction(reference, "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve needExplicitCheckLabel - before decrementing reference count for reference", cg);
       cg->decReferenceCount(reference);
       }
 else
 {
-TR::LabelSymbol *neitherLabel = generateLabelSymbol(cg);
-cg->comp()->findOrCreateDebug()->addInstructionComment(generateLabelInstruction(TR::InstOpCode::label, node->getFirstChild(), neitherLabel, cg), "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve !needLateEvaluation && !needExplicitCheckLabel");
+generateCommentInstruction(node, "In J9::X86::TreeEvaluator::evaluateNULLCHKWithPossibleResolve !needLateEvaluation && !needExplicitCheckLabel", cg);
 }
 
    if (comp->useCompressedPointers())
