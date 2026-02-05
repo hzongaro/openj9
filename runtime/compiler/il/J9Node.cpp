@@ -269,6 +269,8 @@ J9::Node::processJNICall(TR::TreeTop *callNodeTreeTop, TR::ResolvedMethodSymbol 
 TR::Node *
 J9::Node::processJNICall(TR::TreeTop *callNodeTreeTop, TR::ResolvedMethodSymbol *owningSymbol, TR::Compilation *comp)
    {
+comp->log()->printf("In J9::Node::processJNICall for n%dn [%p]\n", self()->getGlobalIndex(), self());
+
    if (!comp->cg()->getSupportsDirectJNICalls() || comp->getOption(TR_DisableDirectToJNI) || (comp->compileRelocatableCode() && !comp->cg()->supportsDirectJNICallsForAOT()))
       return self();
 
@@ -452,6 +454,7 @@ J9::Node::processJNICall(TR::TreeTop *callNodeTreeTop, TR::ResolvedMethodSymbol 
       }
    }
 
+comp->log()->printf("In J9::Node::processJNICall - calling setPreparedForDirectJNI\n", self()->getGlobalIndex(), self());
    self()->setPreparedForDirectJNI();
 
    if (methodSymbol->isStatic())
