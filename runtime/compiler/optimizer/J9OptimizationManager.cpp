@@ -54,7 +54,7 @@ J9::OptimizationManager::OptimizationManager(TR::Optimizer *o, OptimizationFacto
             _flags.set(requiresStructure | requiresLocalsValueNumbering);
             break;
         case OMR::escapeAnalysis:
-            _flags.set(requiresStructure | checkStructure | dumpStructure | requiresLocalsUseDefInfo
+            _flags.set(requiresStructure | dumpStructure | requiresLocalsUseDefInfo
                 | requiresLocalsValueNumbering | cannotOmitTrivialDefs);
             break;
         case OMR::globalLiveVariablesForGC:
@@ -77,7 +77,7 @@ J9::OptimizationManager::OptimizationManager(TR::Optimizer *o, OptimizationFacto
             _flags.set(checkTheCFG);
             break;
         case OMR::idiomRecognition:
-            _flags.set(requiresStructure | checkStructure | dumpStructure | requiresLocalsUseDefInfo
+            _flags.set(requiresStructure | dumpStructure | requiresLocalsUseDefInfo
                 | requiresLocalsValueNumbering);
             if (self()->comp()->getMethodHotness() >= warm)
                 _flags.set(requiresLocalsUseDefInfo | doesNotRequireLoadsAsDefs);
@@ -102,7 +102,7 @@ J9::OptimizationManager::OptimizationManager(TR::Optimizer *o, OptimizationFacto
             _flags.set(doesNotRequireAliasSets | supportsIlGenOptLevel);
             break;
         case OMR::samplingJProfiling:
-            _flags.set(requiresStructure | checkStructure | dumpStructure);
+            _flags.set(requiresStructure | dumpStructure);
             break;
         case OMR::SPMDKernelParallelization:
             _flags.set(requiresLocalsUseDefInfo | doesNotRequireLoadsAsDefs | requiresLocalsValueNumbering);
