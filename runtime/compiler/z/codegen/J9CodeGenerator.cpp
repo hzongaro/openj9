@@ -273,6 +273,8 @@ void J9::Z::CodeGenerator::initialize()
     }
 
     cg->setIgnoreDecimalOverflowException(false);
+
+    cg->setHasDoubleWordAlignedStack();
 }
 
 bool J9::Z::CodeGenerator::callUsesHelperImplementation(TR::Symbol *sym)

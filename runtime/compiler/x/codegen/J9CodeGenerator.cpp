@@ -194,6 +194,8 @@ void J9::X86::CodeGenerator::initialize()
     }
 
     comp->setReturnInfo(returnInfo);
+
+    cg->setHasDoubleWordAlignedStack();
 }
 
 TR::Recompilation *J9::X86::CodeGenerator::allocateRecompilationInfo()

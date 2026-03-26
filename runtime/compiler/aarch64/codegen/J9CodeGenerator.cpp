@@ -117,6 +117,8 @@ void J9::ARM64::CodeGenerator::initialize()
         cg->setSupportsInlineStringCodingCountPositives();
     }
 #endif /* JAVA_SPEC_VERSION >= 19 */
+
+    cg->setHasDoubleWordAlignedStack();
 }
 
 TR::Linkage *J9::ARM64::CodeGenerator::createLinkage(TR_LinkageConventions lc)

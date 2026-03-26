@@ -181,6 +181,8 @@ void J9::Power::CodeGenerator::initialize()
 
     if (comp->fej9()->hasFixedFrameC_CallingConvention())
         cg->setHasFixedFrameC_CallingConvention();
+
+    cg->setHasDoubleWordAlignedStack();
 }
 
 bool J9::Power::CodeGenerator::canEmitDataForExternallyRelocatableInstructions()
