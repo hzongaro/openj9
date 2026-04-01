@@ -2041,6 +2041,10 @@ void TR_ResolvedJ9Method::construct()
         { x(TR::java_lang_StrictMath_fma_D, "fma", "(DDD)D") }, { x(TR::java_lang_StrictMath_fma_F, "fma", "(FFF)F") },
         { TR::unknownMethod } };
 
+    static X FdLibmKernalRemMethods[] = { { x(TR::java_lang_FdLibm_KernelRemPio2_kernel_rem_pio2, "__kernel_rem_pio2",
+                                              "([D[DIII[I)I") },
+        { TR::unknownMethod } };
+
     static X ObjectMethods[] = {
         { TR::java_lang_Object_init, 6, "<init>", (int16_t)-1, "*" },
         { x(TR::java_lang_Object_getClass, "getClass", "()Ljava/lang/Class;") },
@@ -4054,6 +4058,7 @@ void TR_ResolvedJ9Method::construct()
         { "com/ibm/dataaccess/DecimalData", DataAccessDecimalDataMethods },
         { "sun/nio/cs/ext/IBM1388$Encoder", IBM1388EncoderMethods },
         { "java/util/HashMap$HashIterator", HashMapHashIteratorMethods },
+        { "java/lang/FdLibm$KernelRemPio2", FdLibmKernalRemMethods },
         { 0 }
     };
 

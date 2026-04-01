@@ -294,6 +294,8 @@ FirstJ9Method = LastOMRMethod + 1,
     java_lang_Long_reverseBytes, java_lang_Long_rotateLeft, java_lang_Long_rotateRight, java_lang_Long_compress,
     java_lang_Long_expand, java_lang_Short_reverseBytes, java_lang_Long_stringSize, java_lang_Long_toString,
 
+    java_lang_FdLibm_KernelRemPio2_kernel_rem_pio2,
+
     java_math_BigDecimal_add, java_math_BigDecimal_clone, java_math_BigDecimal_subtract, java_math_BigDecimal_multiply,
     java_math_BigDecimal_valueOf, java_math_BigDecimal_valueOf_J, java_math_BigDecimal_setScale,
     java_math_BigDecimal_longString1, java_math_BigDecimal_longAdd, java_math_BigDecimal_slAdd,

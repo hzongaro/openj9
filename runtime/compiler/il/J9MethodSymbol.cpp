@@ -573,7 +573,7 @@ static TR::RecognizedMethod canSkipZeroInitializationOnNewarrays[] = { TR::java_
     // TR::java_lang_StringBuffer_ensureCapacityImpl,
     // TR::java_util_Arrays_copyOf,
     TR::java_io_Writer_write_lStringII, TR::java_io_Writer_write_I, TR::java_util_regex_Matcher_init,
-    TR::java_util_regex_Matcher_usePattern, TR::unknownMethod };
+    TR::java_util_regex_Matcher_usePattern, TR::java_lang_FdLibm_KernelRemPio2_kernel_rem_pio2, TR::unknownMethod };
 
 bool J9::MethodSymbol::safeToSkipZeroInitializationOnNewarrays()
 {
