@@ -134,8 +134,6 @@ TR_EscapeAnalysis::TR_EscapeAnalysis(TR::OptimizationManager *manager)
     _aNewArrayNoZeroInitSymRef = comp()->getSymRefTab()->findOrCreateANewArrayNoZeroInitSymbolRef(0);
     _maxPassNumber = 0;
 
-    _dememoizationSymRef = NULL;
-
     _createStackAllocations = true;
     _createLocalObjects = cg()->supportsStackAllocations();
     _desynchronizeCalls = true;
@@ -1449,23 +1447,35 @@ void TR_EscapeAnalysis::findCandidates()
             continue;
         }
 
-        // TODO-VALUETYPE:  If java.lang.Integer is ever made into a value type class, will
-        //                  need to do TR::newvalue for dememoization instead
-        //
         TR::SymbolReference *dememoizedMethodSymRef = NULL;
         TR::TreeTop *dememoizedConstructorCall = NULL;
         if (!comp()->fej9()->callTargetsNeedRelocations() && node->getOpCodeValue() == TR::acall
-            && node->getSymbol()->getMethodSymbol()->getRecognizedMethod() == TR::java_lang_Integer_valueOf
             && !node->isTheVirtualCallNodeForAGuardedInlinedCall()
             && manager()->numPassesCompleted() < _maxPassNumber) {
+            TR::RecognizedMethod recognizedMethod = node->getSymbol()->getMethodSymbol()->getRecognizedMethod();
+
+            const char *className = NULL;
+            const char *constructorName = "<init>";
+            const char *constructorSig = NULL;
+
+            if (recognizedMethod == TR::java_lang_Integer_valueOf) {
+                className = "java/lang/Integer";
+                constructorSig = "(I)V";
+            } else if (recognizedMethod == TR::java_lang_Long_valueOf) {
+                className = "java/lang/Long";
+                constructorSig = "(J)V";
+            } else {
+                // The only calls that are candidates for stack allocation are Integer.valueOf and Long.valueOf;
+                // for all other calls, advance to the next TR::TreeTop
+                continue;
+            }
+
             // Dememoization: Let's look for a constructor call we could use instead
             //
-            _dememoizationSymRef = node->getSymbolReference();
-
             logprintf(trace(), log, "Attempt dememoize on %p\n", node);
             TR_OpaqueMethodBlock *constructor = comp()->getOption(TR_DisableDememoization)
                 ? NULL
-                : comp()->fej9()->getMethodFromName("java/lang/Integer", "<init>", "(I)V");
+                : comp()->fej9()->getMethodFromName(className, constructorName, constructorSig);
             if (constructor && performTransformation(comp(), "%sTry dememoizing %p\n", OPT_DETAILS, node)) {
                 // Replace this call with a allocation+constructor and hope for the best.
                 //
@@ -1483,8 +1493,8 @@ void TR_EscapeAnalysis::findCandidates()
                 node->setAndIncChild(0,
                     TR::Node::createWithSymRef(node, TR::loadaddr, 0,
                         comp()->getSymRefTab()->findOrCreateClassSymbol(comp()->getMethodSymbol(), -1,
-                            comp()->fej9()->getClassFromSignature("java/lang/Integer", 17, comp()->getCurrentMethod(),
-                                true))));
+                            comp()->fej9()->getClassFromSignature(className, strlen(className),
+                                comp()->getCurrentMethod(), true))));
                 TR::Node::recreate(node, TR::New);
                 if (!_dememoizedAllocs.find(node))
                     _dememoizedAllocs.add(node);
@@ -4193,7 +4203,9 @@ void TR_EscapeAnalysis::checkEscapeViaCall(TR::Node *node, TR::NodeChecklist &vi
     }
 
     for (candidate = _candidates.getFirst(); candidate; candidate = candidate->getNext()) {
-        if (methodSymbol && methodSymbol->getRecognizedMethod() == TR::java_lang_Integer_init
+        if (methodSymbol
+            && ((methodSymbol->getRecognizedMethod() == TR::java_lang_Integer_init)
+                || (methodSymbol->getRecognizedMethod() == TR::java_lang_Long_init))
             && candidate->_dememoizedConstructorCall
             && candidate->_dememoizedConstructorCall->getNode()->getFirstChild() == node) {
             logprintf(trace(), log, "Ignoring escapes via call [%p] that will either be inlined or rememoized\n", node);
@@ -6595,7 +6607,6 @@ void TR_EscapeAnalysis::heapifyForColdBlocks(Candidate *candidate)
                     FieldInfo &field = candidate->_fields->element(j);
                     fieldSize = field._size;
 
-                    // TODO-VALUETYPE:  Need to handle dememoized Integer.valueOf if Integer becomes a value type
                     if (field._symRef && field._symRef->getSymbol()->isAuto() && (candidate->_origKind == TR::New)) {
                         autoSymRefForValue = field._symRef;
                         break;
@@ -6613,7 +6624,7 @@ void TR_EscapeAnalysis::heapifyForColdBlocks(Candidate *candidate)
 
             heapAllocation->getFirstChild()->setAndIncChild(0, stackFieldLoad);
             TR::Node::recreate(heapAllocation->getFirstChild(), TR::acall);
-            heapAllocation->getFirstChild()->setSymbolReference(_dememoizationSymRef);
+            heapAllocation->getFirstChild()->setSymbolReference(candidate->_dememoizedMethodSymRef);
         }
 
         TR::TreeTop *heapAllocationTree = TR::TreeTop::create(comp(), heapAllocation, NULL, NULL);
@@ -7300,6 +7311,10 @@ bool TR_EscapeAnalysis::inlineCallSites()
     bool inlinedSomething = false;
     while (!_inlineCallSites.isEmpty()) {
         TR::TreeTop *treeTop = _inlineCallSites.popHead();
+
+        logprintf(trace(), log, "Considering call site n%dn [%p]\n", treeTop->getNode()->getGlobalIndex(),
+            treeTop->getNode());
+
         TR::ResolvedMethodSymbol *methodSym
             = treeTop->getNode()->getFirstChild()->getSymbol()->getResolvedMethodSymbol();
         TR_ResolvedMethod *method = methodSym->getResolvedMethod();
@@ -7331,9 +7346,6 @@ bool TR_EscapeAnalysis::inlineCallSites()
             }
         }
 
-        logprintf(trace(), log, "\nInlining method %s into treetop at [%p], total inlined size = %d\n",
-            method->signature(trMemory()), treeTop->getNode(), getOptData()->_totalInlinedBytecodeSize + size);
-
         // Now inline the call
         //
 
@@ -7341,7 +7353,11 @@ bool TR_EscapeAnalysis::inlineCallSites()
             = (treeTop->getNode()->getFirstChild()->getSymbol()->castToMethodSymbol()->getRecognizedMethod()
                   == TR::java_lang_Integer_init)
             || (treeTop->getNode()->getFirstChild()->getSymbol()->castToMethodSymbol()->getRecognizedMethod()
-                == TR::java_lang_Integer_valueOf);
+                == TR::java_lang_Integer_valueOf)
+            || (treeTop->getNode()->getFirstChild()->getSymbol()->castToMethodSymbol()->getRecognizedMethod()
+                == TR::java_lang_Long_init)
+            || (treeTop->getNode()->getFirstChild()->getSymbol()->castToMethodSymbol()->getRecognizedMethod()
+                == TR::java_lang_Long_valueOf);
         if (performTransformation(comp(), "%sAttempting to inline call [%p]%s\n", OPT_DETAILS, treeTop->getNode(),
                 toInlineFully ? " fully" : "")) {
             TR_InlineCall newInlineCall(optimizer(), this);
@@ -7352,6 +7368,8 @@ bool TR_EscapeAnalysis::inlineCallSites()
                 getOptData()->_totalInlinedBytecodeSize += size;
                 inlinedSomething = true;
                 logprints(trace(), log, "inlined succeeded\n");
+            } else {
+                logprints(trace(), log, "inline failed\n");
             }
         }
     }
@@ -7396,6 +7414,7 @@ void TR_EscapeAnalysis::scanForExtraCallsToInline()
                 if (!callNode->isTheVirtualCallNodeForAGuardedInlinedCall()) {
                     switch (callNode->getSymbol()->getResolvedMethodSymbol()->getRecognizedMethod()) {
                         case TR::java_lang_Integer_valueOf:
+                        case TR::java_lang_Long_valueOf:
                             callTreeToInline = tt;
                             reason = "dememoization did not eliminate it";
                             break;
@@ -7423,6 +7442,9 @@ bool TR_EscapeAnalysis::alwaysWorthInlining(TR::Node *callNode)
     if (callee)
         switch (callee->getRecognizedMethod()) {
             case TR::java_lang_Integer_valueOf:
+            case TR::java_lang_Long_valueOf:
+            case TR::java_lang_Integer_init:
+            case TR::java_lang_Long_init:
                 return true;
             default:
                 break;
@@ -7557,6 +7579,10 @@ void Candidate::print()
 
 #undef PRINT_FLAG_IF
 #undef PRINT_FLAG
+    }
+    if (_dememoizedConstructorCall) {
+        log->printf("   _dememoizedConstructerCall n%dn; _dememoizedMethodSymRef #%d\n",
+            _dememoizedConstructorCall->getNode()->getGlobalIndex(), _dememoizedMethodSymRef->getReferenceNumber());
     }
     log->prints("   Value numbers = {");
     for (uint32_t j = 0; j < _valueNumbers->size(); j++)

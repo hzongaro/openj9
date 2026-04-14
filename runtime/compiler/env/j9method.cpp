@@ -3217,6 +3217,7 @@ void TR_ResolvedJ9Method::construct()
         { x(TR::java_lang_Long_rotateRight, "rotateRight", "(JI)J") },
         { x(TR::java_lang_Long_compress, "compress", "(JJ)J") },
         { x(TR::java_lang_Long_expand, "expand", "(JJ)J") },
+        { x(TR::java_lang_Long_valueOf, "valueOf", "(J)Ljava/lang/Long;") },
         { TR::java_lang_Long_init, 6, "<init>", (int16_t)-1, "*" },
         { x(TR::java_lang_Long_stringSize, "stringSize", "(J)I") },
         { x(TR::java_lang_Long_toString, "toString", "(J)Ljava/lang/String;") },

@@ -850,7 +850,6 @@ protected:
     TR_LinkHead<TR_CallSitesFixedMapper> _fixedVirtualCallSites;
 
     List<TR::Node> _dememoizedAllocs;
-    TR::SymbolReference *_dememoizationSymRef;
 
     TR::Block *_curBlock;
     TR::TreeTop *_curTree;
