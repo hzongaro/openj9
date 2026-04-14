@@ -4130,6 +4130,7 @@ TR::Node *TR_J9ByteCodeIlGenerator::genInvokeInner(TR::SymbolReference *symRef, 
 
             break;
         case TR::java_lang_Integer_valueOf:
+        case TR::java_lang_Long_valueOf:
             // TODO: It's gross that ilgen knows what a dememoization opportunity is.  This should be refactored.
             _methodSymbol->setHasDememoizationOpportunities(true);
             break;
