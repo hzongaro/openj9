@@ -216,12 +216,14 @@ bool TR_J9InlinerPolicy::inlineRecognizedMethod(TR::RecognizedMethod method)
     {
         switch (method) {
             case TR::java_lang_Integer_valueOf:
+            case TR::java_lang_Long_valueOf:
                 comp()->getMethodSymbol()->setHasNews(true);
                 return true;
             default:
                 break;
         }
-    } else if (method == TR::java_lang_Integer_valueOf)
+    } else if ((method == TR::java_lang_Integer_valueOf)
+        || (method == TR::java_lang_Long_valueOf))
         return false;
 
     if (willBeInlinedInCodeGen(method))
