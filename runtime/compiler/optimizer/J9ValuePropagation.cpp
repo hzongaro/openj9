@@ -1564,8 +1564,7 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             }
             break;
         }
-        case TR::java_lang_Class_isValue:
-        case TR::java_lang_Class_isIdentity: {
+        case TR::java_lang_Class_isValue: {
             TR::Node *classChild = node->getLastChild();
             bool classChildGlobal;
             TR::VPConstraint *classChildConstraint = getConstraint(classChild, classChildGlobal);
@@ -1579,9 +1578,7 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                 && classChildConstraint->getClassType()->asFixedClass()) {
                 TR_OpaqueClassBlock *thisClass = classChildConstraint->getClass();
 
-                const int queryResult
-                    = ((rm == TR::java_lang_Class_isValue) && TR::Compiler->cls.isValueTypeClass(thisClass))
-                    || ((rm == TR::java_lang_Class_isIdentity) && TR::Compiler->cls.classHasIdentity(thisClass));
+                const int queryResult = TR::Compiler->cls.isValueTypeClass(thisClass);
                 transformCallToIconstInPlaceOrInDelayedTransformations(_curTree, queryResult, classChildGlobal, true,
                     false);
                 TR::DebugCounter::incStaticDebugCounter(comp(),
@@ -1609,23 +1606,7 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                         comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef());
                 }
 
-                TR::Node *testFlagsNode = NULL;
-                TR::ILOpCodes testFlagsCompareOp;
-
-                switch (rm) {
-                    case TR::java_lang_Class_isValue: {
-                        testFlagsNode = comp()->fej9()->testIsClassValueType(classOperand);
-                        break;
-                    }
-                    case TR::java_lang_Class_isIdentity: {
-                        testFlagsNode = comp()->fej9()->testIsClassIdentityType(classOperand);
-                        break;
-                    }
-                    default: {
-                        TR_ASSERT_FATAL(false, "%s:  How did we get here?\n", __FUNCTION__);
-                        break;
-                    }
-                }
+                TR::Node *testFlagsNode = comp()->fej9()->testIsClassValueType(classOperand);
 
                 // The testIsClass*Type methods will produce IL whose result is zero if the specified
                 // flags(s) are not set, and non-zero if any of the specified flag(s) are set;
