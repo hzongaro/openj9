@@ -5815,8 +5815,12 @@ TR_InlinerFailureReason TR_J9InlinerPolicy::checkIfTargetInlineable(TR_CallTarge
     // see the comments below
     if (comp->target().cpu.isX86()) {
         if (rm == TR::java_lang_StringCoding_countPositives) {
+            static const bool nonIntrinsicStringCodingCountPositives
+                = (feGetEnv("TR_NonIntrinsicStringCodingCountPositives") != NULL);
+
             // countPositives can only be accelerated if target is 64 bit and arrays are contiguous, so inline it if not
-            if (!comp->target().is64Bit() || TR::Compiler->om.canGenerateArraylets()) {
+            if (nonIntrinsicStringCodingCountPositives || !comp->target().is64Bit()
+                || TR::Compiler->om.canGenerateArraylets()) {
                 return InlineableTarget;
             }
             // If target is 64 bit, arrays are contiguous, and caller is not hasNegatives,
@@ -5834,8 +5838,12 @@ TR_InlinerFailureReason TR_J9InlinerPolicy::checkIfTargetInlineable(TR_CallTarge
 #if JAVA_SPEC_VERSION >= 19
             return InlineableTarget;
 #else
+            static const bool nonIntrinsicStringCodingHasNegatives
+                = (feGetEnv("TR_NonIntrinsicStringCodingHasNegatives") != NULL);
+
             // hasNegatives can only be accelerated if target is 64 bit and arrays are contiguous, so inline it if not
-            if (!comp->target().is64Bit() || TR::Compiler->om.canGenerateArraylets()) {
+            if (nonIntrinsicStringCodingHasNegatives || !comp->target().is64Bit()
+                || TR::Compiler->om.canGenerateArraylets()) {
                 return InlineableTarget;
             } else {
                 return DontInline_Callee;
