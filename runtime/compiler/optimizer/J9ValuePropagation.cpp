@@ -826,10 +826,21 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             }
 
             if (transformObjectCmp) {
+                flags16_t flagsForTransform(0);
+
+                flagsForTransform.set(ValueTypesHelperCallTransform::InsertDebugCounter);
+                flagsForTransform.set(ValueTypesHelperCallTransform::InlineVTCompare);
+
+                if (lhs != NULL && !lhs->isNonNullObject()) {
+                    flagsForTransform.set(ValueTypesHelperCallTransform::RequiresLeftOpNullValueTest);
+                }
+
+                if (rhs != NULL && !rhs->isNonNullObject()) {
+                    flagsForTransform.set(ValueTypesHelperCallTransform::RequiresRightOpNullValueTest);
+                }
+
                 _valueTypesHelperCallsToBeFolded.add(new (trStackMemory()) ObjectComparisonHelperCallTransform(_curTree,
-                    node,
-                    ValueTypesHelperCallTransform::InsertDebugCounter | ValueTypesHelperCallTransform::InlineVTCompare,
-                    lhsClass));
+                    node, flagsForTransform, lhsClass));
 
                 logprintf(trace(), log,
                     "%s: Add delayed transformation for callNode n%dn: lhsNode n%dn rhsNode n%dn fieldCount %d "
@@ -1067,7 +1078,7 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
             || canTransformUnflattenedArrayElementLoadStoreUseTypeHint
             || canTransformIdentityArrayElementLoadStoreUseTypeHint) {
             ArrayOperationHelperCallTransform *callToTransform = NULL;
-            flags8_t flagsForTransform(0);
+            flags16_t flagsForTransform(0);
 
             // Determine whether the arraylength is known and whether a BNDCHK is required
             //
@@ -2854,23 +2865,154 @@ TR_YesNoMaybe J9::ValuePropagation::isArrayNullRestricted(TR::VPConstraint *arra
     return ret;
 }
 
-void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *containingClass, TR::Node *callNode)
+void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *containingClass, TR::TreeTop *callTree,
+    TR::Node *callNode, flags16_t flags)
 {
+    TR::CFG *cfg = comp()->getFlowGraph();
     OMR::Logger *log = comp()->log();
+
+    // Was node already transformed?
+    if (!callNode->getOpCode().isCall()) {
+        return;
+    }
+
     const bool isObjectEqualityCompare = comp()->getSymRefTab()->isNonHelper(callNode->getSymbolReference(),
         TR::SymbolReferenceTable::objectEqualityComparisonSymbol);
+    const bool isObjectInequalityCompare = comp()->getSymRefTab()->isNonHelper(callNode->getSymbolReference(),
+        TR::SymbolReferenceTable::objectInequalityComparisonSymbol);
+
+    // Was node already transformed?
+    if (!isObjectEqualityCompare && ! isObjectInequalityCompare) {
+        return;
+    }
 
     const TR::TypeLayout *fieldTypeLayout = comp()->typeLayout(containingClass);
     size_t fieldCount = fieldTypeLayout->count();
 
-    TR::Node *lhsNode = callNode->getChild(0);
-    TR::Node *rhsNode = callNode->getChild(1);
+    const bool requiresLeftOpNullTest = flags.testAny(ValueTypesHelperCallTransform::RequiresLeftOpNullValueTest);
+    const bool requiresRightOpNullTest = flags.testAny(ValueTypesHelperCallTransform::RequiresRightOpNullValueTest);
+
+    // Should we test whether the operands addresses are equal to short-circuit the comparison?  If there are fields
+    // that would have to be dereferenced, short-circuiting would avoid that dereferencing if they both point to
+    // the same object.
+    //
+    // In the case of a value type with no fields, if neither value can be null, the two values must be equal, so
+    // no reference comparison is needed.  However, if either could be null, then if the addresses are equal, the
+    // values are equal; otherwise, if either address is null, they are not equal; otherwise, they are equal.
+    //
+    const bool requiresReferenceComparisonTest = (fieldCount > 0) || requiresLeftOpNullTest || requiresRightOpNullTest;
+
+    TR::SymbolReference *comparisonResultSymRef = NULL;
+
+    const bool requiresControlFlow = requiresLeftOpNullTest || requiresRightOpNullTest || requiresReferenceComparisonTest;
+    TR::Block *origBlock = NULL;
+    TR::Block *fieldComparisonBlock = NULL;
+    TR::Block *joinBlock = NULL;
+    TR::Node *callNodeToTransform = callNode;
+
+    TR::Node *lhsNode;
+    TR::Node *rhsNode;
+
+    if (requiresControlFlow) {
+        TR::TreeTop *prevTT = callTree;
+        while (prevTT->getNode()->getOpCodeValue() != TR::BBStart) {
+           prevTT = prevTT->getPrevTreeTop();
+        }
+        origBlock = prevTT->getNode()->getBlock();
+
+        J9::TransformUtil::createTempsForCall(this, callTree);
+
+        lhsNode = callNode->getChild(0);
+        rhsNode = callNode->getChild(1);
+
+        comparisonResultSymRef = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(), TR::Int32);
+
+        // Copy the original call and anchor it with a store to the temporary that holds the result
+        callNodeToTransform = callNode->duplicateTree();
+        TR::Node *storeCallResult = TR::Node::createWithSymRef(callNodeToTransform, comp()->il.opCodeForDirectStore(TR::Int32), 1,
+                                        callNodeToTransform, comparisonResultSymRef);
+        TR::TreeTop *storeCallResultTT = TR::TreeTop::create(comp(), storeCallResult, callTree->getPrevTreeTop());
+
+        // Replace the original call with a load of the temporary that holds the result
+        TR::Node::recreateWithoutProperties(callNode, comp()->il.opCodeForDirectLoad(TR::Int32), 0, comparisonResultSymRef);
+
+        fieldComparisonBlock = origBlock->split(storeCallResultTT, cfg, true /* fixupCommoning */);
+        joinBlock = origBlock->split(callTree, cfg, true /* fixupCommoning */);
+
+        fieldComparisonBlock->append(TR::TreeTop::create(comp(), TR::Node::create(callNode, TR::Goto, 0, joinBlock->getEntry())));
+    } else {
+        lhsNode = callNode->getChild(0);
+        rhsNode = callNode->getChild(1);
+    }
+
+    bool appendedIf = false;
+    TR::Block *appendPoint = origBlock;
+
+    if (requiresReferenceComparisonTest) {
+        TR::Node *equalResultNode = TR::Node::createStore(callNode, comparisonResultSymRef, TR::Node::iconst(callNode, isObjectEqualityCompare ? 1 : 0));
+        TR::Block *equalResultBlock = TR::Block::createEmptyBlock(equalResultNode, comp(), origBlock->getFrequency());
+        equalResultBlock->append(TR::TreeTop::create(comp(), equalResultNode));
+        equalResultBlock->append(TR::TreeTop::create(comp(), TR::Node::create(callNode, TR::Goto, 0, joinBlock->getEntry())));
+
+        TR::Node *referenceCompareTest = TR::Node::createif(TR::ifacmpeq, lhsNode, rhsNode, equalResultBlock->getEntry());
+        referenceCompareTest->copyByteCodeInfo(callNode);
+        origBlock->append(TR::TreeTop::create(comp(), referenceCompareTest));
+        appendedIf = true;
+
+        cfg->addEdge(equalResultBlock, joinBlock);
+        cfg->addEdge(origBlock, equalResultBlock);
+
+        joinBlock->getEntry()->getPrevTreeTop()->join(equalResultBlock->getEntry());
+        equalResultBlock->getExit()->join(joinBlock->getEntry());
+    }
+
+    if (requiresRightOpNullTest || requiresLeftOpNullTest) {
+        TR::Node *unequalResultNode = TR::Node::createStore(callNode, comparisonResultSymRef, TR::Node::iconst(callNode, isObjectEqualityCompare ? 0 : 1));
+        TR::Block *unequalResultBlock = TR::Block::createEmptyBlock(unequalResultNode, comp(), origBlock->getFrequency());
+        unequalResultBlock->append(TR::TreeTop::create(comp(), unequalResultNode));
+        unequalResultBlock->append(TR::TreeTop::create(comp(), TR::Node::create(callNode, TR::Goto, 0, joinBlock->getEntry())));
+
+        cfg->addEdge(unequalResultBlock, joinBlock);
+
+        joinBlock->getEntry()->getPrevTreeTop()->join(unequalResultBlock->getEntry());
+        unequalResultBlock->getExit()->join(joinBlock->getEntry());
+
+        if (requiresLeftOpNullTest) {
+            TR::Node *leftOpNullTest = TR::Node::createif(TR::ifacmpeq, lhsNode, TR::Node::aconst(lhsNode, 0), unequalResultBlock->getEntry());
+            leftOpNullTest->copyByteCodeInfo(callNode);
+            TR::TreeTop *leftOpNullTestTT = TR::TreeTop::create(comp(), leftOpNullTest);
+            appendPoint->append(leftOpNullTestTT);
+
+            if (appendedIf) {
+                appendPoint = appendPoint->split(leftOpNullTestTT, cfg, false /* fixupCommoning */);
+            } else {
+                appendedIf = true;
+            }
+
+            cfg->addEdge(appendPoint, joinBlock);
+        }
+
+        if (requiresRightOpNullTest) {
+            TR::Node *rightOpNullTest = TR::Node::createif(TR::ifacmpeq, rhsNode, TR::Node::aconst(rhsNode, 0), unequalResultBlock->getEntry());
+            rightOpNullTest->copyByteCodeInfo(callNode);
+            TR::TreeTop *rightOpNullTestTT = TR::TreeTop::create(comp(), rightOpNullTest);
+            appendPoint->append(rightOpNullTestTT);
+
+            if (appendedIf) {
+                appendPoint = appendPoint->split(rightOpNullTestTT, cfg, false /* fixupCommoning */);
+            } else {
+                appendedIf = true;
+            }
+
+            cfg->addEdge(appendPoint, joinBlock);
+        }
+    }
 
     // If there are no fields, the values are always considered to be equal.
     if (fieldCount == 0) {
-        TR::Node::recreateWithoutProperties(callNode, TR::iconst);
-        callNode->setConstValue(isObjectEqualityCompare ? 1 : 0);
-        logprintf(trace(), log, "%s Changing n%dn from %s to iconst %d\n", __FUNCTION__, callNode->getGlobalIndex(),
+        TR::Node::recreateWithoutProperties(callNodeToTransform, TR::iconst);
+        callNodeToTransform->setConstValue(isObjectEqualityCompare ? 1 : 0);
+        logprintf(trace(), log, "%s Changing n%dn from %s to iconst %d\n", __FUNCTION__, callNodeToTransform->getGlobalIndex(),
             isObjectEqualityCompare ? "<objectEqualityComparison>" : "<objectInequalityComparison>",
             isObjectEqualityCompare ? 1 : 0);
     } else if (fieldCount == 1) {
@@ -2906,7 +3048,7 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
 
         if (trace()) {
             log->printf("%s Changing n%dn from %s to %s fieldEntry[0] fieldName %s fieldSig %s type %d offset %d\n",
-                __FUNCTION__, callNode->getGlobalIndex(),
+                __FUNCTION__, callNodeToTransform->getGlobalIndex(),
                 isObjectEqualityCompare ? "<objectEqualityComparison>" : "<objectInequalityComparison>",
                 comp()->getDebug()->getName(cmpOpCode), fieldEntry._fieldname, fieldEntry._typeSignature,
                 dataType.getDataType(), fieldEntry._offset);
@@ -2917,7 +3059,7 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         TR::Node *loadLhsFieldNode = TR::Node::createWithSymRef(loadOpCode, 1, 1, lhsNode, loadFieldSymRef);
         TR::Node *loadRhsFieldNode = TR::Node::createWithSymRef(loadOpCode, 1, 1, rhsNode, loadFieldSymRef);
 
-        TR::Node::recreateWithoutProperties(callNode, cmpOpCode, 2, loadLhsFieldNode, loadRhsFieldNode);
+        TR::Node::recreateWithoutProperties(callNodeToTransform, cmpOpCode, 2, loadLhsFieldNode, loadRhsFieldNode);
     } else {
         /* Before transformation:
          * n40n   treetop
@@ -2948,7 +3090,7 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
             totalFieldSize += TR::DataType::getSize(fieldEntry._datatype);
         }
 
-        TR::Node *totalFieldSizeNode = TR::Node::lconst(callNode, totalFieldSize);
+        TR::Node *totalFieldSizeNode = TR::Node::lconst(callNodeToTransform, totalFieldSize);
 
         TR::Node *lhsOffsetNode = NULL;
         TR::Node *rhsOffsetNode = NULL;
@@ -2956,12 +3098,12 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
 
         // Skip the object header
         if (comp()->target().is64Bit()) {
-            offsetNode = TR::Node::create(callNode, TR::lconst, 0, 0);
+            offsetNode = TR::Node::create(callNodeToTransform, TR::lconst, 0, 0);
             offsetNode->setLongInt(TR::Compiler->om.objectHeaderSizeInBytes());
             lhsOffsetNode = TR::Node::create(TR::aladd, 2, lhsNode, offsetNode);
             rhsOffsetNode = TR::Node::create(TR::aladd, 2, rhsNode, offsetNode);
         } else {
-            offsetNode = TR::Node::create(callNode, TR::iconst, 0, TR::Compiler->om.objectHeaderSizeInBytes());
+            offsetNode = TR::Node::create(callNodeToTransform, TR::iconst, 0, TR::Compiler->om.objectHeaderSizeInBytes());
             lhsOffsetNode = TR::Node::create(TR::aiadd, 2, lhsNode, offsetNode);
             rhsOffsetNode = TR::Node::create(TR::aiadd, 2, rhsNode, offsetNode);
         }
@@ -2984,11 +3126,11 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         //
         TR::Node *arraycmpNode = TR::Node::createWithSymRef(TR::arraycmp, 3, 3, lhsOffsetNode, rhsOffsetNode,
             totalFieldSizeNode, comp()->getSymRefTab()->findOrCreateArrayCmpSymbol());
-        TR::Node::recreateWithoutProperties(callNode, isObjectEqualityCompare ? TR::icmpeq : TR::icmpne, 2,
-            arraycmpNode, TR::Node::iconst(callNode, 0));
+        TR::Node::recreateWithoutProperties(callNodeToTransform, isObjectEqualityCompare ? TR::icmpeq : TR::icmpne, 2,
+            arraycmpNode, TR::Node::iconst(callNodeToTransform, 0));
 
         logprintf(trace(), log, "%s Changing n%dn from %s to arraycmp: totalSize %d\n", __FUNCTION__,
-            callNode->getGlobalIndex(),
+            callNodeToTransform->getGlobalIndex(),
             isObjectEqualityCompare ? "<objectEqualityComparison>" : "<objectInequalityComparison>", totalFieldSize);
     }
 
@@ -3108,7 +3250,8 @@ void J9::ValuePropagation::doDelayedTransformations()
                 ObjectComparisonHelperCallTransform *objCmpOpCallToTransform
                     = callToTransform->castToObjectComparisonHelperCallTransform();
 
-                transformVTObjectEqNeCompare(objCmpOpCallToTransform->_containingClass, callNode);
+                transformVTObjectEqNeCompare(objCmpOpCallToTransform->_containingClass, callTree, callNode,
+                    objCmpOpCallToTransform->_flags);
             }
             continue;
         }
