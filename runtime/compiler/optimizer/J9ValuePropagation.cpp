@@ -2944,13 +2944,13 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         //                                  |
         // n93n  BBStart <block_8> (*)      |
         // n92n  ifacmpeq -------------->+  |
-        // n96n    ==>aload              |  |
+        // n91n    aload <lhsTemp>       |  |
         // n90n    aconst NULL           |  |
         // n89n  BBEnd </block_8>        |  |
         //                               |  |
         // n88n  BBStart <block_7> (*)   |  |
         // n87n  ifacmpeq -------------->+  |
-        // n95n    ==>aload              |  |
+        // n86n    aload <rhsTemp>       |  |
         // n85n    aconst NULL           |  |
         // n84n  BBEnd </block_7>        |  |
         //                               |  |
@@ -2989,9 +2989,6 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         }
         origBlock = prevTT->getNode()->getBlock();
 
-        lhsNode = callNode->getChild(0);
-        rhsNode = callNode->getChild(1);
-
         // Temporary to contain the result of the comparison operation
         //
         TR::SymbolReference *comparisonResultSymRef
@@ -3007,6 +3004,13 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         TR::TreeTop *storeCallResultTT = TR::TreeTop::create(comp(), storeCallResult);
 
         storeResultInsertionPointTT->insertBefore(storeCallResultTT);
+
+        // Create temporaries to hold the operand values to avoid commoning across blocks
+        //
+        J9::TransformUtil::createTempsForCall(this, storeCallResultTT);
+
+        lhsNode = callNodeToTransform->getChild(0);
+        rhsNode = callNodeToTransform->getChild(1);
 
         // Replace the original call with a load of the temporary that holds the result
         //
@@ -3033,7 +3037,8 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         //
         if (requiresReferenceComparisonTest) {
             // ifacmpeq lhs,rhs
-            TR::Node *referenceCompareTest = TR::Node::createif(TR::ifacmpeq, lhsNode, rhsNode);
+            TR::Node *referenceCompareTest
+                = TR::Node::createif(TR::ifacmpeq, lhsNode->duplicateTree(false), rhsNode->duplicateTree(false));
             referenceCompareTest->copyByteCodeInfo(callNode);
             referenceCompareTestTT = TR::TreeTop::create(comp(), referenceCompareTest);
             testInsertionPointTT->insertBefore(referenceCompareTestTT);
@@ -3058,7 +3063,8 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         //
         if (requiresRightOpNullTest || requiresLeftOpNullTest) {
             if (requiresLeftOpNullTest) {
-                TR::Node *leftOpNullTest = TR::Node::createif(TR::ifacmpeq, lhsNode, TR::Node::aconst(lhsNode, 0));
+                TR::Node *leftOpNullTest
+                    = TR::Node::createif(TR::ifacmpeq, lhsNode->duplicateTree(false), TR::Node::aconst(lhsNode, 0));
                 leftOpNullTest->copyByteCodeInfo(callNode);
                 leftOpNullTestTT = TR::TreeTop::create(comp(), leftOpNullTest);
                 testInsertionPointTT->insertBefore(leftOpNullTestTT);
@@ -3069,7 +3075,8 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
             }
 
             if (requiresRightOpNullTest) {
-                TR::Node *rightOpNullTest = TR::Node::createif(TR::ifacmpeq, rhsNode, TR::Node::aconst(rhsNode, 0));
+                TR::Node *rightOpNullTest
+                    = TR::Node::createif(TR::ifacmpeq, rhsNode->duplicateTree(false), TR::Node::aconst(rhsNode, 0));
                 rightOpNullTest->copyByteCodeInfo(callNode);
                 rightOpNullTestTT = TR::TreeTop::create(comp(), rightOpNullTest);
                 testInsertionPointTT->insertBefore(rightOpNullTestTT);
@@ -3102,6 +3109,11 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
 
         // joinBlock will contain the final load of the result of the comparison.
         // All stores of the result will have joinBlock as their successor.
+        //
+        // Newly generated IL will not contain any commoning, so there is only a need to fix-up commoning
+        // at the point where the "joinBlock" is created, in case any nodes that existed before this
+        // entire transformation began were commoned between trees that followed the original callTree
+        // after the original callTree.
         //
         TR::Block *joinBlock = origBlock->split(callTree, cfg, true /* fixupCommoning */);
         TR::Block *unequalResultBlock = NULL;
@@ -3139,11 +3151,9 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
         }
 
         // Each block that performs a test will fall through to the next test block which is in turn
-        // marked as an extension of the previous block, so no need to fix up commoning when they are split
         //
         TR::Block *inlineFieldCompareBlock
             = origBlock->split(storeCallResultTT, cfg, false /* fixupCommoning */, false /* copyExceptionSuccessors */);
-        inlineFieldCompareBlock->setIsExtensionOfPreviousBlock(true);
 
         // If this is the last result store block in order of TreeTops, it will fallthrough
         // to the joinBlock.  If it's not last, it will end in an unconditional branch to the
@@ -3164,7 +3174,6 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
                 TR::Block *rightOpNullTestBlock = origBlock->split(rightOpNullTestTT, cfg, false /* fixupCommoning */,
                     false /* copyExceptionSuccessors */);
                 cfg->addEdge(rightOpNullTestBlock, unequalResultBlock);
-                rightOpNullTestBlock->setIsExtensionOfPreviousBlock(true);
             } else {
                 cfg->addEdge(origBlock, unequalResultBlock);
             }
@@ -3180,7 +3189,6 @@ void J9::ValuePropagation::transformVTObjectEqNeCompare(TR_OpaqueClassBlock *con
                 TR::Block *leftOpNullTestBlock = origBlock->split(leftOpNullTestTT, cfg, false /* fixupCommoning */,
                     false /* copyExceptionSuccessors */);
                 cfg->addEdge(leftOpNullTestBlock, unequalResultBlock);
-                leftOpNullTestBlock->setIsExtensionOfPreviousBlock(true);
             } else {
                 cfg->addEdge(origBlock, unequalResultBlock);
             }
