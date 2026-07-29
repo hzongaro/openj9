@@ -1632,23 +1632,27 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
     // This method is used to create an if diamond around a call to any of the unsafe compare and swap methods
     // Codegens have a fast path for the compare and swaps, but cannot deal with the case where the offset value passed
     // in to a the CAS is low tagged (A low tagged offset value means the object being passed in is a java/lang/Class
-    // object, and we want a static field)
+    // object, and we want a static field) or is an instance of a value type class (a value object)
 
-    // Regarding which type checks/diamonds get generated, there are three possible cases:
+    // Regarding which type checks/diamonds get generated, there are three basic cases to consider:
+    //
     // 1.) Only the low tagged check is generated. This will occur either when gencon GC policy is being used, or under
     //     balanced GC policy with offheap allocation enabled if the object being operated on is known NOT to be an
     //     array at compile time.
     // 2.) No type checks are generated. This will occur under balanced GC policy with offheap allocation enabled if the
-    // object
-    //     being operated on is known to be an array at compile time (since if the object is an array, it can't also be
-    //     a java/lang/Class object).
+    //     object being operated on is known to be an array at compile time (since if the object is an array, it can't
+    //     also be a java/lang/Class object).
     // 3.) Both the array and low tagged checks are generated. This will occur under balanced GC policy with offheap
-    // allocation
-    //     enabled if the type of the object being operated on is unknown at compile time.
+    //     allocation enabled if the type of the object being operated on is unknown at compile time.
     //
     // In addition to type checks, a NULL check on the object address is needed to ensure that we do not try to load
     // dataAddr from a NULL reference. This is only a concern when offheap is enabled AND there is a possibility that
     // the object is an array. so the NULL check will only be generated in cases (2) and (3).
+    //
+    // Finally, if it's possible for the compare operand of the compare-and-swap to be a value object, a runtime test
+    // is generated to test whether the operand actually is a value object, along with an optional test of whether the
+    // compare operand is a null reference.  Any required test for a value object will preceed tests for tagging and
+    // array objects.
 
     // This method assumes the offset node is of type long, and is the second child of the unsafe call.
     TR_InlinerDelimiter delimiter(tracer(), "createUnsafeCASCallDiamond");
@@ -1687,23 +1691,105 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
     bool arrayBlockNeeded = TR::Compiler->om.isOffHeapAllocationEnabled() && comp()->target().is64Bit()
         && (arrayTestNeeded || objTypeSig[0] == '[');
 
+    TR::Node *compareValueNode = NULL;
+    bool runtimeCompareValueTypeTestNeeded;
+    bool compareValueIsKnownNonNull = false;
+
+    // If the "compare" parameter is a value type instance at run time, the compiler will fall back to use the JVM's
+    // implementation.  The setting of runtimeCompareValueTypeTestNeeded indicates whether IL is needed to perform a
+    // run time test of whether that parameter actually is a value type instance
+    //
+    if (TR::Compiler->om.areValueTypesEnabled()) {
+        switch (callNode->getSymbolReference()->getSymbol()->getMethodSymbol()->getRecognizedMethod()) {
+            case TR::jdk_internal_misc_Unsafe_compareAndExchangeObject:
+            case TR::jdk_internal_misc_Unsafe_compareAndExchangeReference:
+            case TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z:
+            case TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInArray:
+            case TR::com_ibm_jit_JITHelpers_compareAndSwapObjectInObject: {
+                compareValueNode = callNode->getChild(3);
+                compareValueIsKnownNonNull = compareValueNode->isNonNull();
+
+                int compareValueArgSigLength;
+                const char *compareValueArgSig = compareValueNode->getOpCode().hasSymbolReference()
+                    ? compareValueNode->getSymbolReference()->getTypeSignature(compareValueArgSigLength)
+                    : NULL;
+
+                if (compareValueNode->isNull()) {
+                    // If the "compare" parameter is known to be null, there's no need to generate
+                    // a run time test of whether it's a value object
+                    //
+                    runtimeCompareValueTypeTestNeeded = false;
+                } else if (compareValueArgSig == NULL) {
+                    // If no signature information is available for the "compare" parameter,
+                    // assume that a run time test of whether it's a value object is needed
+                    //
+                    runtimeCompareValueTypeTestNeeded = true;
+                } else {
+                    bool isCompareValueParam = compareValueNode->getSymbolReference()->getSymbol()->isParm();
+
+                    TR_OpaqueClassBlock *compareValueClass = comp()->fe()->getClassFromSignature(compareValueArgSig,
+                        compareValueArgSigLength, compareValueNode->getSymbolReference()->getOwningMethod(comp()));
+
+                    // If the "compareValue" argument satisfies any of the calling conditions, it might be
+                    // a value type instance at run time:
+                    //
+                    //   - It is a parameter of the calling method, it might share its slot with a variable of an
+                    //     incompatible type
+                    //   - Its signature is java/lang/Object
+                    //   - Its class is not concrete (that is, it is abstract or an interface)
+                    //   - Its class is not explicitly an identity class
+                    //   - Its class is not an array class
+                    //
+                    runtimeCompareValueTypeTestNeeded = (compareValueClass == NULL) || isCompareValueParam
+                        || (compareValueClass == comp()->getObjectClassPointer())
+                        || !TR::Compiler->cls.isConcreteClass(comp(), compareValueClass)
+                        || !TR::Compiler->cls.classHasIdentity(compareValueClass) || (compareValueArgSig[0] != '[');
+                }
+                break;
+            }
+            default: {
+                runtimeCompareValueTypeTestNeeded = false;
+                break;
+            }
+        }
+    } else {
+        runtimeCompareValueTypeTestNeeded = false;
+    }
+
     createTempsForUnsafeCall(callNodeTreeTop, callNode);
 
     TR::Node *offsetNode = callNode->getChild(2);
 
-    TR::TreeTop *compareTree = NULL;
-    TR::TreeTop *lowTagAccessTreeTop = NULL;
+    if (runtimeCompareValueTypeTestNeeded) {
+        compareValueNode = callNode->getChild(3);
+    }
 
-    // generate low tagged test/access block in cases (1) and (3)
-    if (arrayTestNeeded || !arrayBlockNeeded) {
-        // create lowtag test treetop
-        compareTree = genClassCheckForUnsafeGetPut(offsetNode->duplicateTree(), /* branchIfLowTagged */ false);
+    TR::TreeTop *compareTree = NULL;
+    TR::TreeTop *fallbackUnsafeCallTT = NULL;
+
+    // Keep track of where to insert the test of whether the "compare" parameter is a value object
+    //
+    TR::TreeTop *compareValueVTInsertionPointTT = NULL;
+
+    // A fall-back call to the out-of-line version of the compareAndSwap operation is sometimes
+    // needed, but not in all cases.  Keep track of whether that fall-back call has been
+    // generated.
+    //
+    bool insertedFallbackIL = false;
+
+    // generate low tagged test and fallback non-inline call block in cases (1) and (3)
+    if (arrayTestNeeded || !arrayBlockNeeded || runtimeCompareValueTypeTestNeeded) {
+        if (arrayTestNeeded || !arrayBlockNeeded) {
+            // create lowtag test treetop
+            compareTree = genClassCheckForUnsafeGetPut(offsetNode->duplicateTree(), /* branchIfLowTagged */ false);
+            compareValueVTInsertionPointTT = compareTree;
+        }
 
         // create lowtag access treetop
-        lowTagAccessTreeTop = TR::TreeTop::create(comp(), callNodeTreeTop->getNode()->duplicateTree());
-        lowTagAccessTreeTop->getNode()->getFirstChild()->setVisitCount(_inliner->getVisitCount());
+        fallbackUnsafeCallTT = TR::TreeTop::create(comp(), callNodeTreeTop->getNode()->duplicateTree());
+        fallbackUnsafeCallTT->getNode()->getFirstChild()->setVisitCount(_inliner->getVisitCount());
 
-        debugTrace(tracer(), "lowTagAccessTreeTop = %p", lowTagAccessTreeTop->getNode());
+        debugTrace(tracer(), "fallbackUnsafeCallTT = %p", fallbackUnsafeCallTT->getNode());
     }
 
     TR::TreeTop *isNullTreeTop = NULL;
@@ -1774,7 +1860,7 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
     }
 #endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
 
-    // default access tree (non-array, non-lowtagged)
+    // default access tree (non-array, non-lowtagged, non-value-type)
     TR::TreeTop *defaultAccessTreeTop = TR::TreeTop::create(comp(), callNodeTreeTop->getNode()->duplicateTree());
     defaultAccessTreeTop->getNode()->getFirstChild()->setIsSafeForCGToFastPathUnsafeCall(true);
     defaultAccessTreeTop->getNode()->getFirstChild()->setVisitCount(_inliner->getVisitCount());
@@ -1794,7 +1880,14 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
             newSymbolReference->getReferenceNumber());
     }
 
+    debugTrace(tracer(), "createUnsafeCASCallDiamond - arrayTestNeeded == %d; arrayBlockNeeded == %d\n",
+        arrayTestNeeded, arrayBlockNeeded);
+
     TR::Block *callBlock = callNodeTreeTop->getEnclosingBlock();
+    TR::Block *splitBlockBeforeCall = NULL;
+    TR::Block *joinBlock = NULL;
+
+    TR::CFG *cfg = comp()->getFlowGraph();
 
     if (arrayTestNeeded) // in case (3), we generate the null test diamond, then the array test diamond, and then the
                          // low tagged test diamond
@@ -1803,12 +1896,11 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
 
         // add null test and array test
         callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, isNullTreeTop, defaultAccessTreeTop,
-            nonNullAccessTreeTop, comp()->getFlowGraph(), false, false);
-        TR::Block *joinBlock
-            = nonNullAccessTreeTop->getEnclosingBlock()->createConditionalBlocksBeforeTree(nonNullAccessTreeTop,
-                isArrayTreeTop, arrayAccessTreeTop, compareTree, comp()->getFlowGraph(), false, false);
+            nonNullAccessTreeTop, cfg, false, false);
+        joinBlock = nonNullAccessTreeTop->getEnclosingBlock()->createConditionalBlocksBeforeTree(nonNullAccessTreeTop,
+            isArrayTreeTop, arrayAccessTreeTop, compareTree, cfg, false, false);
 
-        TR::CFG *cfg = comp()->getFlowGraph();
+        compareValueVTInsertionPointTT = isNullTreeTop;
 
         // add lowtag test
         TR::Block *isLowTaggedBlock = compareTree->getEnclosingBlock();
@@ -1824,19 +1916,121 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
         // add fallthrough path (lowtag access)
         TR::Block *lowTagAccessBlock = TR::Block::createEmptyBlock(compareTree->getNode(), comp(),
             isLowTaggedBlock->getFrequency(), isLowTaggedBlock);
-        lowTagAccessBlock->append(lowTagAccessTreeTop);
+        lowTagAccessBlock->append(fallbackUnsafeCallTT);
+        insertedFallbackIL = true;
         isLowTaggedBlock->getExit()->insertTreeTopsAfterMe(lowTagAccessBlock->getEntry(), lowTagAccessBlock->getExit());
         cfg->addNode(lowTagAccessBlock);
         cfg->addEdge(TR::CFGEdge::createEdge(isLowTaggedBlock, lowTagAccessBlock, trMemory()));
         cfg->addEdge(TR::CFGEdge::createEdge(lowTagAccessBlock, joinBlock, trMemory()));
+        debugTrace(tracer(),
+            "At end of arrayTestNeeded, blocks created are isNullTreeTop block_%d, defaultAccessTreeTop block_%d, "
+            "nonNullAccessTreeTop block_%d, callBlock block_%d, joinBlock block_%d, isArrayTreeTop block_%d, "
+            "arrayAccessTreeTop block_%d, compareTree/isLowTaggedBlock block_%d\n",
+            isNullTreeTop->getEnclosingBlock()->getNumber(), defaultAccessTreeTop->getEnclosingBlock()->getNumber(),
+            nonNullAccessTreeTop->getEnclosingBlock()->getNumber(), callBlock->getNumber(), joinBlock->getNumber(),
+            isArrayTreeTop->getEnclosingBlock()->getNumber(), arrayAccessTreeTop->getEnclosingBlock()->getNumber(),
+            compareTree->getEnclosingBlock()->getNumber());
     } else if (arrayBlockNeeded) // in case (2), we generate only the null test diamond
     {
-        callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, isNullTreeTop, defaultAccessTreeTop,
-            arrayAccessTreeTop, comp()->getFlowGraph(), false, false);
+        joinBlock = callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, isNullTreeTop, defaultAccessTreeTop,
+            arrayAccessTreeTop, cfg, false, false);
+        compareValueVTInsertionPointTT = isNullTreeTop;
     } else if (compareTree != NULL) // in case (1), we only generate the low tagged test diamond
     {
-        callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, compareTree, defaultAccessTreeTop,
-            lowTagAccessTreeTop, comp()->getFlowGraph(), false, false);
+        joinBlock = callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, compareTree, defaultAccessTreeTop,
+            fallbackUnsafeCallTT, cfg, false, false);
+        insertedFallbackIL = true;
+    }
+
+    // Generate runtime test of whether the compare value parameter is a value object
+    //
+    if (runtimeCompareValueTypeTestNeeded) {
+        TR::Block *nonValueTypeBlock = callBlock->split(compareValueVTInsertionPointTT, cfg, true);
+        TR::Block *testIsCompareValueVTBlock = NULL;
+
+        if (!compareValueIsKnownNonNull) {
+            // If compare value is null at run time, skip the test of whether it is a value object
+            //
+            // ifacmpeq ...
+            //   aload compareValue
+            //   aconst 0
+            // Fall through to test for value type instance
+            //
+            TR::Node *testNullCompareValueNode = TR::Node::createif(TR::ifacmpeq, compareValueNode->duplicateTree(),
+                TR::Node::aconst(compareValueNode, 0), nonValueTypeBlock->getEntry());
+            TR::TreeTop *testNullCompareValueTT = TR::TreeTop::create(comp(), testNullCompareValueNode);
+
+            callBlock->append(testNullCompareValueTT);
+
+            testIsCompareValueVTBlock
+                = TR::Block::createEmptyBlock(compareValueNode, comp(), callBlock->getFrequency(), callBlock);
+            callBlock->getExit()->insertTreeTopsAfterMe(testIsCompareValueVTBlock->getEntry(),
+                testIsCompareValueVTBlock->getExit());
+
+            cfg->addNode(testIsCompareValueVTBlock);
+            cfg->addEdge(callBlock, testIsCompareValueVTBlock);
+
+            TR::Block *lowTagAccessBlock
+                = TR::Block::createEmptyBlock(compareValueNode, comp(), testIsCompareValueVTBlock->getFrequency());
+        } else {
+            testIsCompareValueVTBlock = callBlock;
+        }
+
+        // Generate test of whether compare value is a value object.  If the fallback case (relying on VM to perform
+        // compare-and-swap) has not been generated yet, use ificmpeq to branch to inline IL if the compare operand
+        // is not a value object and fall through to the fallback case if the compare operand is a value object.
+        // If IL for the fallback case has already been generated, use ificmpne to branch to it if the compare operand
+        // is a value object, and fall through to faster inline IL otherwise.
+        //
+        // ificmpeq/ne
+        //   iand
+        //     iloadi classFlags
+        //       aloadi <vft-symbol>
+        //         aload compareValue
+        //     iconst J9ClassIsValueType
+        //   iconst 0
+        //
+        TR::SymbolReference *vftSymRef = comp()->getSymRefTab()->findOrCreateVftSymbolRef();
+        TR::Node *compareValueVftLoad
+            = TR::Node::createWithSymRef(callNode, TR::aloadi, 1, compareValueNode->duplicateTree(), vftSymRef);
+        TR::Node *isCompareValVTNode = comp()->fej9()->testIsClassValueType(compareValueVftLoad);
+
+        cfg->addEdge(testIsCompareValueVTBlock, nonValueTypeBlock);
+
+        // If fallback call hasn't been inserted yet, generate runtime test of whether compare
+        // object is a value type, and fall through to fallback code if it is a value type instance
+        // using ificmpeq.
+        // If the fallback call has already been generated, have the runtime test of whether
+        // the object is a value type branch to it using ificmpne
+        //
+        if (!insertedFallbackIL) {
+            TR::Node *testIsCompareValVTNode = TR::Node::createif(TR::ificmpeq, isCompareValVTNode,
+                TR::Node::iconst(callNode, 0), nonValueTypeBlock->getEntry());
+            TR::TreeTop *testIsCompareValVTTT = TR::TreeTop::create(comp(), testIsCompareValVTNode);
+
+            testIsCompareValueVTBlock->append(testIsCompareValVTTT);
+            TR::Block *lowTagAccessBlock = TR::Block::createEmptyBlock(testIsCompareValVTNode, comp(),
+                nonValueTypeBlock->getFrequency(), nonValueTypeBlock);
+            lowTagAccessBlock->append(fallbackUnsafeCallTT);
+            TR::Node *gotoJoinNode = TR::Node::create(testIsCompareValVTNode, TR::Goto, 0, joinBlock->getEntry());
+            lowTagAccessBlock->append(TR::TreeTop::create(comp(), gotoJoinNode));
+            insertedFallbackIL = true;
+
+            testIsCompareValueVTBlock->getExit()->insertTreeTopsAfterMe(lowTagAccessBlock->getEntry(),
+                lowTagAccessBlock->getExit());
+
+            cfg->addNode(lowTagAccessBlock);
+            cfg->addEdge(testIsCompareValueVTBlock, lowTagAccessBlock);
+            cfg->addEdge(lowTagAccessBlock, joinBlock);
+        } else {
+            TR::Node *testIsCompareValVTNode = TR::Node::createif(TR::ificmpne, isCompareValVTNode,
+                TR::Node::iconst(callNode, 0), fallbackUnsafeCallTT->getEnclosingBlock()->getEntry());
+            TR::TreeTop *testIsCompareValVTTT = TR::TreeTop::create(comp(), testIsCompareValVTNode);
+
+            testIsCompareValueVTBlock->append(testIsCompareValVTTT);
+
+            cfg->addEdge(testIsCompareValueVTBlock, fallbackUnsafeCallTT->getEnclosingBlock());
+        }
     }
 
     // the original call will be deleted by createConditionalBlocksBeforeTree, but if the refcount was > 1, we need to
@@ -1851,13 +2045,13 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
         debugTrace(tracer(), "Inserted store tree %p for branch target (taken) side of the diamond",
             defaultAccessStoreNode);
 
-        if (compareTree != NULL) // cases (1) and (3) only
+        if (insertedFallbackIL) // cases (1) and (3) only
         {
             TR::Node *lowTagAccessStoreNode = TR::Node::createWithSymRef(comp()->il.opCodeForDirectStore(dataType), 1,
-                1, lowTagAccessTreeTop->getNode()->getFirstChild(), newSymbolReference);
+                1, fallbackUnsafeCallTT->getNode()->getFirstChild(), newSymbolReference);
             TR::TreeTop *lowTagAccessStoreTree = TR::TreeTop::create(comp(), lowTagAccessStoreNode);
 
-            lowTagAccessTreeTop->insertAfter(lowTagAccessStoreTree);
+            fallbackUnsafeCallTT->insertAfter(lowTagAccessStoreTree);
 
             debugTrace(tracer(), "Inserted store tree %p for fall-through side of the diamond", lowTagAccessStoreNode);
         }
