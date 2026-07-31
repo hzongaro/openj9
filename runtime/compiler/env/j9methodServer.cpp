@@ -1822,15 +1822,16 @@ U_16 TR_ResolvedJ9JITServerMethod::archetypeArgPlaceholderSlot()
     return paramSlots;
 }
 
-bool TR_ResolvedJ9JITServerMethod::isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic,
+TR_YesNoMaybe TR_ResolvedJ9JITServerMethod::isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic,
     bool isStore)
 {
-    if (!TR::Compiler->om.areFlattenableValueTypesEnabled() || (-1 == cpIndex))
-        return false;
+    if (!TR::Compiler->om.areFlattenableValueTypesEnabled() || (-1 == cpIndex)) {
+        return TR_no;
+    }
 
     _stream->write(JITServer::MessageType::ResolvedMethod_isFieldNullRestricted, _remoteMirror, cpIndex, isStatic,
         isStore);
-    return std::get<0>(_stream->read<bool>());
+    return std::get<0>(_stream->read<TR_YesNoMaybe>());
 }
 
 bool TR_ResolvedJ9JITServerMethod::isFieldFlattened(TR::Compilation *comp, int32_t cpIndex, bool isStatic)

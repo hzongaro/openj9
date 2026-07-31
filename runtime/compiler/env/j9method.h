@@ -563,7 +563,7 @@ public:
      * @param[in] isStatic: whether the field is static
      * @param[in] isStore : whether the field is being used in the context of a store into the field
      */
-    virtual bool isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic, bool isStore);
+    virtual TR_YesNoMaybe isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic, bool isStore);
 
     /**
      * @brief Check if a field is flattened or not by calling the VM API.

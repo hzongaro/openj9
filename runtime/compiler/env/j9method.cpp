@@ -9461,38 +9461,34 @@ void TR_J9ByteCodeIlGenerator::packReferenceChainOffsets(TR::Node *node, std::ve
 }
 #endif
 
-bool TR_ResolvedJ9Method::isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic, bool isStore)
+TR_YesNoMaybe TR_ResolvedJ9Method::isFieldNullRestricted(TR::Compilation *comp, int32_t cpIndex, bool isStatic,
+    bool isStore)
 {
-    if (!TR::Compiler->om.areFlattenableValueTypesEnabled() || (-1 == cpIndex))
-        return false;
+    if (!TR::Compiler->om.areFlattenableValueTypesEnabled() || (-1 == cpIndex)) {
+        return TR_no;
+    }
 
     J9VMThread *vmThread = fej9()->vmThread();
     J9ROMFieldShape *fieldShape = NULL;
 
-    bool failCompilation = false;
     {
         TR::VMAccessCriticalSection isFieldNullRestricted(fej9());
         if (isStatic) {
             void *staticAddress
                 = jitCTResolveStaticFieldRefWithMethod(vmThread, ramMethod(), cpIndex, isStore, &fieldShape);
             if (!staticAddress) {
-                failCompilation = true;
+                return TR_maybe;
             }
         } else {
             IDATA fieldOffset
                 = jitCTResolveInstanceFieldRefWithMethod(vmThread, ramMethod(), cpIndex, isStore, &fieldShape);
             if (fieldOffset == -1) {
-                failCompilation = true;
+                return TR_maybe;
             }
         }
     }
 
-    if (failCompilation) {
-        comp->failCompilation<TR::CompilationException>(
-            isStatic ? "jitCTResolveStaticFieldRefWithMethod failed" : "jitCTResolveInstanceFieldRefWithMethod failed");
-    }
-
-    return vmThread->javaVM->internalVMFunctions->isFieldNullRestricted(fieldShape);
+    return vmThread->javaVM->internalVMFunctions->isFieldNullRestricted(fieldShape) ? TR_yes : TR_no;
 }
 
 bool TR_ResolvedJ9Method::isFieldFlattened(TR::Compilation *comp, int32_t cpIndex, bool isStatic)
