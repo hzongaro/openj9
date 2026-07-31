@@ -5293,44 +5293,69 @@ void TR_J9ByteCodeIlGenerator::loadAuto(TR::DataType type, int32_t slot, bool is
     push(load);
 }
 
-/**
- * @brief Returns whether a field ref in the constant pool resolved
- *
- * Importantly, when this function returns false, a ResolveCHK is guarenteed to be needed.
- *
- * @param comp is a pointer the current compilation object
- * @param owningMethod is the method that owns the constant pool
- * @param cpIndex is the index into the constant pool of the field
- * @param isStore specifies whether the check is done for a store of the field
- * @return true when the constant pool entry for the field is resolved, false otherwise
- */
-static bool isFieldResolved(TR::Compilation *comp, TR_ResolvedJ9Method *owningMethod, int32_t cpIndex, bool isStore)
-{
-    uint32_t offset = 0;
-    TR::DataType type = TR::NoType;
-    bool isVolatile = true, isFinal = false, isPrivate = false, isUnresolvedInCP;
-    return owningMethod->fieldAttributes(comp, cpIndex, &offset, &type, &isVolatile, &isFinal, &isPrivate, isStore,
-        &isUnresolvedInCP, true /* needsAOTValidation */);
-}
-
 void TR_J9ByteCodeIlGenerator::loadInstance(int32_t cpIndex)
 {
     if (_generateReadBarriersForFieldWatch && comp()->compileRelocatableCode())
         comp()->failCompilation<J9::AOTNoSupportForAOTFailure>("NO support for AOT in field watch");
 
     TR_ResolvedJ9Method *owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
+    TR::SymbolReference *symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, cpIndex, false);
 
-    if (owningMethod->isFieldNullRestricted(comp(), cpIndex, false /* isStatic */, false /* isStore */)) {
-        if (!isFieldResolved(comp(), owningMethod, cpIndex, false)) {
-            abortForUnresolvedValueTypeOp("getfield", "field");
-        } else if (owningMethod->isFieldFlattened(comp(), cpIndex, false /* isStatic */)) {
-            return comp()->getOption(TR_UseFlattenedFieldRuntimeHelpers) ? loadFlattenableInstanceWithHelper(cpIndex)
-                                                                         : loadFlattenableInstance(cpIndex);
+    TR_YesNoMaybe isNullRestrictedField = TR_no;
+    bool useSymRefLoad = true;
+
+    if (TR::Compiler->om.areValueTypesEnabled()) {
+        TR::Symbol *symbol = symRef->getSymbol();
+        TR::DataType type = symbol->getDataType();
+
+        bool isResolved = !symRef->isUnresolved();
+
+        // Null-restricted fields must be reference fields.  We only know for certain whether such a
+        // field is null-restricted if it is resolved.
+        //
+        if (type == TR::Address) {
+            if (isResolved) {
+                isNullRestrictedField
+                    = owningMethod->isFieldNullRestricted(comp(), cpIndex, false /* isStatic */, false /* isStore */)
+                    ? TR_yes
+                    : TR_no;
+            } else {
+                isNullRestrictedField = TR_maybe;
+            }
+        }
+
+        // If null-restricted types are never flattened, there's no need to do anything special
+        // for a load of a reference type field that is null-restricted.  Determine whether
+        // flattening is a possibility in this case - if the field might be null-restricted
+        //
+        if ((isNullRestrictedField != TR_no) && TR::Compiler->om.isValueTypeFlatteningEnabled()
+            && (!isResolved || owningMethod->isFieldFlattened(comp(), cpIndex, false /* isStatic */))) {
+            int len;
+            const char *fieldClassChars = owningMethod->fieldSignatureChars(cpIndex, len);
+            TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldClassChars, len, owningMethod);
+
+            // If either the field or its class is not resolved, the JIT doesn't have any information about the
+            // layout of the field, so it needs to call JVM helpers to load the instance.  Otherwise, create a
+            // new instance from the flattened field
+            //
+            if (!isResolved || (fieldClass == NULL) || comp()->getOption(TR_UseFlattenedFieldRuntimeHelpers)) {
+                loadFlattenableInstanceWithHelper(owningMethod, cpIndex, isResolved);
+            } else {
+                loadFlattenableInstance(owningMethod, fieldClass, cpIndex);
+            }
+
+            useSymRefLoad = false;
         }
     }
 
-    TR::SymbolReference *symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, cpIndex, false);
-    loadInstance(symRef);
+    if (useSymRefLoad) {
+        loadInstance(symRef);
+    }
+
+    // If the field is known to be null-restricted, the value loaded from it must be non-null
+    if (isNullRestrictedField == TR_yes) {
+        top()->setIsNonNull(true);
+    }
 }
 
 void TR_J9ByteCodeIlGenerator::loadInstance(TR::SymbolReference *symRef)
@@ -5400,20 +5425,47 @@ void TR_J9ByteCodeIlGenerator::loadInstance(TR::SymbolReference *symRef)
     push(dummyLoad);
 }
 
-void TR_J9ByteCodeIlGenerator::loadFlattenableInstanceWithHelper(int32_t cpIndex)
+void TR_J9ByteCodeIlGenerator::loadFlattenableInstanceWithHelper(TR_ResolvedJ9Method *owningMethod, int32_t cpIndex,
+    bool isResolved)
 {
     TR::Node *address = pop();
+
+    // If it's needed, the test of resolution must happen before any NULLCHK of the object that's being dereferenced
+    //
+    if (!isResolved) {
+        // Ensure address calculation is anchored before the call to resolve the field
+        //
+        genTreeTop(TR::Node::create(TR::treetop, 1, address));
+        TR::SymbolReference *resolveFieldCallSymRef
+            = comp()->getSymRefTab()->findOrCreateResolveFlattenableFieldSymbolRef();
+        TR::Node *getFieldFlagNode = TR::Node::iconst(J9TR_FLAT_RESOLVE_GETFIELD);
+        TR::Node *cpIndexNode = TR::Node::iconst(cpIndex);
+        TR::Node *j9MethodPtrNode = TR::Node::aconst((uintptr_t)owningMethod->getPersistentIdentifier());
+        j9MethodPtrNode->setIsMethodPointerConstant(true);
+        TR::Node *resolveCallNode = TR::Node::createWithSymRef(TR::call, 3, 3, getFieldFlagNode, cpIndexNode,
+            j9MethodPtrNode, resolveFieldCallSymRef);
+
+        genTreeTop(resolveCallNode);
+    }
+
     if (!address->isNonNull()) {
-        auto *nullchk = TR::Node::create(TR::PassThrough, 1, address);
+        TR::Node *nullchk = TR::Node::create(TR::PassThrough, 1, address);
         nullchk = genNullCheck(nullchk);
         genTreeTop(nullchk);
     }
-    auto *j9ResolvedMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
-    auto *ramFieldRef = reinterpret_cast<J9RAMFieldRef *>(j9ResolvedMethod->cp()) + cpIndex;
-    auto *ramFieldRefNode = TR::Node::aconst(reinterpret_cast<uintptr_t>(ramFieldRef));
-    auto *receiverNode = address;
-    auto *helperCallNode = TR::Node::createWithSymRef(TR::acall, 2, 2, receiverNode, ramFieldRefNode,
+
+    TR::SymbolReference *cpSymRef = comp()->getSymRefTab()->findOrCreateConstantPoolAddressSymbolRef(_methodSymbol);
+
+    TR::Node *cpLoadNode = TR::Node::createWithSymRef(TR::loadaddr, 0, cpSymRef);
+    TR::Node *cpIndexOffsetNode = comp()->target().is64Bit() ? TR::Node::lconst(cpIndex * sizeof(J9RAMFieldRef))
+                                                             : TR::Node::iconst(cpIndex * sizeof(J9RAMFieldRef));
+    TR::ILOpCodes addrAddOp = comp()->target().is64Bit() ? TR::aladd : TR::aiadd;
+
+    TR::Node *ramFieldAddrNode = TR::Node::create(addrAddOp, 2, cpLoadNode, cpIndexOffsetNode);
+
+    TR::Node *helperCallNode = TR::Node::createWithSymRef(TR::acall, 2, 2, address, ramFieldAddrNode,
         comp()->getSymRefTab()->findOrCreateGetFlattenableFieldSymbolRef());
+
     handleSideEffect(helperCallNode);
     genTreeTop(helperCallNode);
     push(helperCallNode);
@@ -5434,7 +5486,8 @@ static char *getTopLevelPrefixForFlattenedFields(TR_ResolvedJ9Method *owningMeth
     return newName;
 }
 
-void TR_J9ByteCodeIlGenerator::loadFlattenableInstance(int32_t cpIndex)
+void TR_J9ByteCodeIlGenerator::loadFlattenableInstance(TR_ResolvedJ9Method *owningMethod,
+    TR_OpaqueClassBlock *fieldClass, int32_t cpIndex)
 {
     /* An example on what the tree with flattened fields looks like
      *
@@ -5469,11 +5522,6 @@ void TR_J9ByteCodeIlGenerator::loadFlattenableInstance(int32_t cpIndex)
      * @0 n9n      (  1)  ==>newvalue (Identityless sharedMemory )
      * ============================================================
      */
-    TR_ResolvedJ9Method *owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
-
-    int len;
-    const char *fieldClassChars = owningMethod->fieldSignatureChars(cpIndex, len);
-    TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldClassChars, len, owningMethod);
 
     int32_t prefixLen = 0;
     char *fieldNamePrefix = getTopLevelPrefixForFlattenedFields(owningMethod, cpIndex, prefixLen,
@@ -6100,8 +6148,9 @@ void TR_J9ByteCodeIlGenerator::loadArrayElement(TR::DataType dataType, TR::ILOpC
     // we won't have flattening, so no call to flattenable array element access
     // helper is needed.
     //
-    if (mayBeValueType && TR::Compiler->om.isValueTypeArrayFlatteningEnabled()
-        && // isValueTypeArrayFlatteningEnabled() checks areFlattenableValueTypesEnabled()
+    if (mayBeValueType && TR::Compiler->om.isValueTypeFlatteningEnabled()
+        && TR::Compiler->om.isValueTypeArrayFlatteningEnabled()
+        && // isNullRestrictedArrayFlatteningEnabled() checks areNullRestrictedTypesEnabled()
         !TR::Compiler->om.canGenerateArraylets() && dataType == TR::Address
         && !_methodSymbol->skipFlattenableArrayElementNonHelperCall()) {
         TR::Node *elementIndex = pop();
@@ -6750,29 +6799,69 @@ void TR_J9ByteCodeIlGenerator::storeInstance(int32_t cpIndex)
         comp()->failCompilation<J9::AOTNoSupportForAOTFailure>("NO support for AOT in field watch");
 
     TR_ResolvedJ9Method *owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
+    TR::SymbolReference *symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, cpIndex, false);
 
-    if (owningMethod->isFieldNullRestricted(comp(), cpIndex, false /* isStatic */, true /* isStore */)) {
-        if (!isFieldResolved(comp(), owningMethod, cpIndex, true)) {
-            abortForUnresolvedValueTypeOp("putfield", "field");
-        } else if (owningMethod->isFieldFlattened(comp(), cpIndex, false /* isStatic */)) {
-            return comp()->getOption(TR_UseFlattenedFieldRuntimeHelpers) ? storeFlattenableInstanceWithHelper(cpIndex)
-                                                                         : storeFlattenableInstance(cpIndex);
+    if (TR::Compiler->om.areValueTypesEnabled()) {
+        TR::Symbol *symbol = symRef->getSymbol();
+        TR::DataType type = symbol->getDataType();
+
+        bool isResolved = !symRef->isUnresolved();
+        TR_YesNoMaybe isNullRestrictedField;
+
+        // Null-restricted fields must be reference fields.  We only know for certain whether such a
+        // field is null-restricted if it is resolved.
+        //
+        if (type != TR::Address) {
+            isNullRestrictedField = TR_no;
+        } else if (isResolved) {
+            isNullRestrictedField
+                = owningMethod->isFieldNullRestricted(comp(), cpIndex, false /* isStatic */, false /* isStore */)
+                ? TR_yes
+                : TR_no;
         } else {
-            TR::Node *value = pop();
-            logprintf(comp()->getOption(TR_TraceILGen), comp()->log(),
-                "%s: cpIndex %d isFieldFlattened 0 value n%dn isNonNull %d\n", __FUNCTION__, cpIndex,
-                value->getGlobalIndex(), value->isNonNull());
+            isNullRestrictedField = TR_maybe;
+        }
 
-            if (!value->isNonNull()) {
-                TR::Node *passThruNode = TR::Node::create(TR::PassThrough, 1, value);
-                genTreeTop(genNullCheck(passThruNode));
+        if (isNullRestrictedField != TR_no) {
+            // If a field or its class is unresolved and it could be null-restricted, the JIT will
+            // need to use helpers if the field could be flattened or if the value assigned to the
+            // field could be null.  As the JIT doesn't have enough information to determine whether
+            // a NULLCHK actually is required for an unresolved field when null-restricted types
+            // are enabled, helper calls are still needed even if flattening is not enabled.
+            //
+            int len;
+            const char *fieldClassChars = owningMethod->fieldSignatureChars(cpIndex, len);
+            TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldClassChars, len, owningMethod);
+
+            bool isFlatteningEnabled = TR::Compiler->om.isValueTypeFlatteningEnabled();
+            bool mustUseHelpersForUnresolvedField
+                = (!isResolved || (fieldClass == NULL) && (isFlatteningEnabled || !top()->isNonNull()));
+
+            if (mustUseHelpersForUnresolvedField
+                || (isFlatteningEnabled && owningMethod->isFieldFlattened(comp(), cpIndex, false /* isStatic */))) {
+                if (!isResolved || (fieldClass == NULL) || comp()->getOption(TR_UseFlattenedFieldRuntimeHelpers)) {
+                    storeFlattenableInstanceWithHelper(owningMethod, cpIndex, isResolved);
+                } else {
+                    storeFlattenableInstance(owningMethod, fieldClass, cpIndex);
+                }
+
+                return;
+            } else {
+                TR::Node *value = pop();
+                logprintf(comp()->getOption(TR_TraceILGen), comp()->log(),
+                    "%s: cpIndex %d isFieldFlattened 0 value n%dn isNonNull %d\n", __FUNCTION__, cpIndex,
+                    value->getGlobalIndex(), value->isNonNull());
+
+                if (!value->isNonNull()) {
+                    TR::Node *passThruNode = TR::Node::create(TR::PassThrough, 1, value);
+                    genTreeTop(genNullCheck(passThruNode));
+                }
+
+                push(value);
             }
-
-            push(value);
         }
     }
 
-    TR::SymbolReference *symRef = symRefTab()->findOrCreateShadowSymbol(_methodSymbol, cpIndex, true);
     storeInstance(symRef);
 }
 
@@ -6927,25 +7016,56 @@ void TR_J9ByteCodeIlGenerator::storeInstance(TR::SymbolReference *symRef)
     }
 }
 
-void TR_J9ByteCodeIlGenerator::storeFlattenableInstanceWithHelper(int32_t cpIndex)
+void TR_J9ByteCodeIlGenerator::storeFlattenableInstanceWithHelper(TR_ResolvedJ9Method *owningMethod, int32_t cpIndex,
+    bool isResolved)
 {
     TR::Node *value = pop();
     TR::Node *address = pop();
+
+    // If it's needed, the test of resolution must happen before any NULLCHK of the object that's being dereferenced
+    //
+    if (!isResolved) {
+        // Ensure address and value calculations are anchored before the call to resolve the field
+        //
+        genTreeTop(TR::Node::create(TR::treetop, 1, address));
+        genTreeTop(TR::Node::create(TR::treetop, 1, value));
+
+        TR::SymbolReference *resolveFieldCallSymRef
+            = comp()->getSymRefTab()->findOrCreateResolveFlattenableFieldSymbolRef();
+        TR::Node *getFieldFlagNode = TR::Node::iconst(J9TR_FLAT_RESOLVE_PUTFIELD);
+        TR::Node *cpIndexNode = TR::Node::iconst(cpIndex);
+        TR::Node *j9MethodPtrNode = TR::Node::aconst((uintptr_t)owningMethod->getPersistentIdentifier());
+        j9MethodPtrNode->setIsMethodPointerConstant(true);
+        TR::Node *resolveCallNode = TR::Node::createWithSymRef(TR::call, 3, 3, getFieldFlagNode, cpIndexNode,
+            j9MethodPtrNode, resolveFieldCallSymRef);
+
+        genTreeTop(TR::Node::create(TR::treetop, 1, resolveCallNode));
+    }
+
     if (!address->isNonNull()) {
         auto *nullchk = TR::Node::create(TR::PassThrough, 1, address);
         nullchk = genNullCheck(nullchk);
         genTreeTop(nullchk);
     }
-    auto *j9ResolvedMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
-    auto *ramFieldRef = reinterpret_cast<J9RAMFieldRef *>(j9ResolvedMethod->cp()) + cpIndex;
-    auto *ramFieldRefNode = TR::Node::aconst(reinterpret_cast<uintptr_t>(ramFieldRef));
-    auto *helperCallNode = TR::Node::createWithSymRef(TR::acall, 3, 3, value, address, ramFieldRefNode,
+
+    TR::SymbolReference *cpSymRef = comp()->getSymRefTab()->findOrCreateConstantPoolAddressSymbolRef(_methodSymbol);
+
+    TR::Node *cpLoadNode = TR::Node::createWithSymRef(TR::loadaddr, 0, cpSymRef);
+    TR::Node *cpIndexOffsetNode = comp()->target().is64Bit() ? TR::Node::lconst(cpIndex * sizeof(J9RAMFieldRef))
+                                                             : TR::Node::iconst(cpIndex * sizeof(J9RAMFieldRef));
+    TR::ILOpCodes addrAddOp = comp()->target().is64Bit() ? TR::aladd : TR::aiadd;
+
+    TR::Node *ramFieldAddrNode = TR::Node::create(addrAddOp, 2, cpLoadNode, cpIndexOffsetNode);
+
+    TR::Node *helperCallNode = TR::Node::createWithSymRef(TR::acall, 3, 3, value, address, ramFieldAddrNode,
         comp()->getSymRefTab()->findOrCreatePutFlattenableFieldSymbolRef());
+
     handleSideEffect(helperCallNode);
     genTreeTop(helperCallNode);
 }
 
-void TR_J9ByteCodeIlGenerator::storeFlattenableInstance(int32_t cpIndex)
+void TR_J9ByteCodeIlGenerator::storeFlattenableInstance(TR_ResolvedJ9Method *owningMethod,
+    TR_OpaqueClassBlock *fieldClass, int32_t cpIndex)
 {
     /* An example on what the tree with flattened fields would look like
      *
@@ -6985,7 +7105,6 @@ void TR_J9ByteCodeIlGenerator::storeFlattenableInstance(int32_t cpIndex)
      */
     OMR::Logger *log = comp()->log();
     bool trace = comp()->getOption(TR_TraceILGen);
-    TR_ResolvedJ9Method *owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
 
     int32_t prefixLen = 0;
     char *fieldNamePrefix = getTopLevelPrefixForFlattenedFields(owningMethod, cpIndex, prefixLen,
@@ -7024,10 +7143,6 @@ void TR_J9ByteCodeIlGenerator::storeFlattenableInstance(int32_t cpIndex)
 
         return;
     }
-
-    int len;
-    const char *fieldClassChars = owningMethod->fieldSignatureChars(cpIndex, len);
-    TR_OpaqueClassBlock *fieldClass = fej9()->getClassFromSignature(fieldClassChars, len, owningMethod);
 
     for (size_t idx = 0; idx < fieldCount; idx++) {
         const TR::TypeLayoutEntry &fieldEntry = containingClassLayout->entry(idx);
@@ -7265,8 +7380,9 @@ void TR_J9ByteCodeIlGenerator::storeArrayElement(TR::DataType dataType, TR::ILOp
 
     if (TR::Compiler->om.areFlattenableValueTypesEnabled() && !TR::Compiler->om.canGenerateArraylets()
         && dataType == TR::Address) {
-        generateNonHelper = (TR::Compiler->om.isValueTypeArrayFlatteningEnabled()
-                                && !_methodSymbol->skipFlattenableArrayElementNonHelperCall())
+        generateNonHelper
+            = (TR::Compiler->om.isValueTypeFlatteningEnabled() && TR::Compiler->om.isValueTypeArrayFlatteningEnabled()
+                  && !_methodSymbol->skipFlattenableArrayElementNonHelperCall())
             || !_methodSymbol->skipNonNullableArrayNullStoreCheck();
     }
 
