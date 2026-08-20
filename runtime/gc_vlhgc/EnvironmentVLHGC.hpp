@@ -48,6 +48,7 @@
 class MM_GCExtensions;
 class MM_CopyForwardCompactGroup;
 class MM_CopyScanCache;
+class MM_CopyScanCacheVLHGC;
 class MM_RememberedSetCardList;
 
 struct MM_CardBufferControlBlock;
@@ -61,7 +62,7 @@ class MM_EnvironmentVLHGC : public MM_EnvironmentBase
 {
 /* Data Section */
 public:
-	MM_CopyScanCache *_survivorCopyScanCache; /**< the current copy cache for flipping */
+	MM_CopyScanCacheVLHGC *_survivorCopyScanCache; /**< the current copy cache for flipping */
 	MM_CopyScanCache *_scanCache; /**< the current scan cache */
 	MM_CopyScanCache *_deferredScanCache; /**< a partially scanned cache, to be scanned later */
 

@@ -2947,8 +2947,6 @@ MM_CopyForwardScheme::aliasToCopyCache(MM_EnvironmentVLHGC *env, MM_CopyScanCach
 {
 	bool interruptScanning = false;
 
-	Assert_MM_unimplemented();
-#if 0
 	/* VMDESIGN 1359.
 	 * Only alias the _survivorCopyScanCache IF there are 0 threads waiting.  If the current thread is the only producer and
 	 * it aliases it's survivor cache then it will be the only thread able to consume.  This will alleviate the stalling issues
@@ -2957,7 +2955,6 @@ MM_CopyForwardScheme::aliasToCopyCache(MM_EnvironmentVLHGC *env, MM_CopyScanCach
 	if (0 == *_workQueueWaitCountPtr) {
 		interruptScanning = bestCacheForScanning(env->_survivorCopyScanCache, nextScanCache) || interruptScanning;
 	}
-#endif /* 0 */
 
 	return interruptScanning;
 }
