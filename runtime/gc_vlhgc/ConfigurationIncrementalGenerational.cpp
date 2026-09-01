@@ -289,19 +289,16 @@ MM_ConfigurationIncrementalGenerational::initialize(MM_EnvironmentBase *env)
 	/* By default disable hot field depth copying */
 	env->disableHotFieldDepthCopy();
 
-	extensions->scavengerScanOrdering = MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL;
-/*
 	if (result) {
 		if (MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_NONE == extensions->scavengerScanOrdering) {
-			extensions->scavengerScanOrdering = MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST;
-		} else if (MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL == extensions->scavengerScanOrdering) {
+			extensions->scavengerScanOrdering = MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL;
+		} /* else if (MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_HIERARCHICAL == extensions->scavengerScanOrdering) {
 			PORT_ACCESS_FROM_ENVIRONMENT(env);
 			j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_GC_OPTIONS_HIERARCHICAL_SCAN_ORDERING_NOT_SUPPORTED_WARN, "balanced");
 			extensions->scavengerScanOrdering = MM_GCExtensions::OMR_GC_SCAVENGER_SCANORDERING_DYNAMIC_BREADTH_FIRST;
-		}
+		} */
 		extensions->setVLHGC(true);
 	}
-*/
 
 #define DEFAULT_MAX_AGE_FOR_PGC_COUNT_BASED				24
 #define DEFAULT_MAX_NURSERY_AGE							1
