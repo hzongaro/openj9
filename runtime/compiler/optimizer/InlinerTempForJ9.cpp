@@ -3658,6 +3658,16 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                 if (node->getOpCode().isFunctionCall() && node->getVisitCount() != _visitCount) {
                     TR_CallStack::SetCurrentCallNode sccn(callStack, node);
 
+                    const bool isCheckPackageSigners
+                        = (memcmp(tracer()->traceSignature(node->getSymbolReference()->getSymbol()->castToMethodSymbol),
+                               "java/lang/ClassLoader.checkPackageSigners", 41)
+                            == 0);
+
+                    if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                            "(1) Looking on inlining java/lang/ClassLoader.checkPackageSigners\n");
+                    }
+
                     TR::Symbol *sym = node->getSymbol();
                     bool forceInlineInCold = false;
 
@@ -3683,6 +3693,12 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                         }
 
                         getSymbolAndFindInlineTargets(&callStack, callsite);
+                        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "(2) After getSymbolAndFindInlineTargets for java/lang/ClassLoader.checkPackageSigners "
+                                "- (prevCallStack == NULL) == %d; numTargets == %d \n",
+                                (prevCallStack == NULL), callsite->numTargets());
+                        }
 
                         if (!prevCallStack && callsite->numTargets() > 0) {
                             // buildPrexArgInfo and propagateArgs use the caller symbol to look up the invoke bytecode.
@@ -3720,6 +3736,11 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                                     anySuccess2 = true;
                                     flag = true;
                                 }
+                            }
+
+                            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                    "(3) For java/lang/ClassLoader.checkPackageSigners flag == %d \n", flag);
                             }
 
                             if (!flag) {
