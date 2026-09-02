@@ -3659,7 +3659,8 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                     TR_CallStack::SetCurrentCallNode sccn(callStack, node);
 
                     const bool isCheckPackageSigners
-                        = (memcmp(tracer()->traceSignature(node->getSymbolReference()->getSymbol()->castToMethodSymbol),
+                        = (memcmp(
+                               tracer()->traceSignature(node->getSymbolReference()->getSymbol()->castToMethodSymbol()),
                                "java/lang/ClassLoader.checkPackageSigners", 41)
                             == 0);
 
