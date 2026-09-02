@@ -3658,10 +3658,9 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                 if (node->getOpCode().isFunctionCall() && node->getVisitCount() != _visitCount) {
                     TR_CallStack::SetCurrentCallNode sccn(callStack, node);
 
-                    const bool isCheckPackageSigners
-                        = (memcmp(
-                               tracer()->traceSignature(node->getSymbolReference()->getSymbol()->castToMethodSymbol()),
-                               "java/lang/ClassLoader.checkPackageSigners", 41)
+                    const bool isCheckPackageSigners = node->getSymbol()->isResolvedMethod()
+                        && (memcmp(tracer()->traceSignature(node->getSymbol()->getResolvedMethodSymbol()),
+                                "java/lang/ClassLoader.checkPackageSigners", 41)
                             == 0);
 
                     if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
