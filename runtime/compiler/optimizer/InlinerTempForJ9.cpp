@@ -3969,6 +3969,10 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
 
         TR_CallTarget *calltarget = callsite->getTarget(k);
 
+        const bool isCheckPackageSigners = (memcmp(tracer()->traceSignature(calltarget->_calleeSymbol),
+                                                "java/lang/ClassLoader.checkPackageSigners", 41)
+            == 0);
+
         // for partial inlining:
         calltarget->_originatingBlock = callsite->_callNodeTreeTop->getEnclosingBlock();
 
@@ -3976,8 +3980,14 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
 
         if (calltarget->_calleeSymbol && calltarget->_calleeSymbol->getResolvedMethod()
             && comp()->isGeneratedReflectionMethod(calltarget->_calleeSymbol->getResolvedMethod())
-            && !comp()->isGeneratedReflectionMethod(comp()->getCurrentMethod()))
+            && !comp()->isGeneratedReflectionMethod(comp()->getCurrentMethod())) {
+            if (isCheckPackageSigners && self()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(1) Bailing on inlining java/lang/ClassLoader.checkPackageSigners\n");
+            }
+
             return;
+        }
 
         if (calltarget->_calleeSymbol->getRecognizedMethod() == TR::java_lang_Class_newInstance
             || calltarget->_calleeSymbol->getRecognizedMethod() == TR::java_util_Arrays_fill
@@ -4058,6 +4068,10 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
                     tracer()->traceSignature(callStack->_methodSymbol), callsite->_callNode,
                     comp()->getLineNumber(callsite->_callNode));
 
+                if (isCheckPackageSigners && self()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                        "(2) Bailing on inlining java/lang/ClassLoader.checkPackageSigners\n");
+                }
                 continue;
             }
 
@@ -4298,6 +4312,11 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
                     "inliner: size exceeds call graph size threshold: %d > %d: %s\n", size,
                     _maxRecursiveCallByteCodeSizeEstimate, tracer()->traceSignature(calltarget->_calleeSymbol));
 
+                if (isCheckPackageSigners && self()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                        "(3) Bailing on inlining java/lang/ClassLoader.checkPackageSigners\n");
+                }
+
                 callsite->removecalltarget(k, tracer(), Exceeds_Size_Threshold);
                 k--;
                 continue;
@@ -4362,6 +4381,10 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
         TR_LinkHead<TR_ParameterMapping> map;
         if (!((TR_J9InlinerPolicy *)getPolicy())->validateArguments(calltarget, map)) // passing map by reference
         {
+            if (isCheckPackageSigners && self()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(4) Bailing on inlining java/lang/ClassLoader.checkPackageSigners\n");
+            }
             continue; // arguments are not valid for this calltarget
         }
 
