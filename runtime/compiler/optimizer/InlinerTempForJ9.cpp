@@ -3658,10 +3658,15 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                 if (node->getOpCode().isFunctionCall() && node->getVisitCount() != _visitCount) {
                     TR_CallStack::SetCurrentCallNode sccn(callStack, node);
 
+#if 0
                     const bool isCheckPackageSigners = node->getSymbol()->isResolvedMethod()
                         && (memcmp(node->getSymbol()->getResolvedMethodSymbol()->signature(trMemory()),
                                 "java/lang/ClassLoader.checkPackageSigners", 41)
                             == 0);
+#endif
+
+                    const bool isCheckPackageSigners = node->getSymbol()->isResolvedMethod()
+                        && (memcmp(node->getSymbol()->getResolvedMethodSymbol()->nameChars(), "Spoof.outer", 11) == 0);
 
                     if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
                         TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
@@ -3990,9 +3995,13 @@ void TR_MultipleCallTargetInliner::weighCallSite(TR_CallStack *callStack, TR_Cal
 
         TR_CallTarget *calltarget = callsite->getTarget(k);
 
+#if 0
         const bool isCheckPackageSigners
             = (memcmp(calltarget->_calleeSymbol->signature(trMemory()), "java/lang/ClassLoader.checkPackageSigners", 41)
                 == 0);
+#endif
+
+        const bool isCheckPackageSigners = (memcmp(calltarget->_calleeSymbol->nameChars(), "Spoof.outer", 11) == 0);
 
         // for partial inlining:
         calltarget->_originatingBlock = callsite->_callNodeTreeTop->getEnclosingBlock();
@@ -4712,7 +4721,9 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
     bool trace = comp()->trace(OMR::inlining);
 
     const bool isCheckPackageSigners
-        = (memcmp(calleeResolvedMethod->signature(trMemory()), "java/lang/ClassLoader.checkPackageSigners", 41) == 0);
+        //        = (memcmp(calleeResolvedMethod->signature(trMemory()), "java/lang/ClassLoader.checkPackageSigners",
+        //        41) == 0);
+        = (memcmp(calleeResolvedMethod->nameChars(), "Spoof.outer", 11) == 0);
 
     if (alwaysWorthInlining(calleeResolvedMethod, callNode)) {
         if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
