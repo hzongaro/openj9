@@ -4711,8 +4711,18 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
     OMR::Logger *log = comp()->log();
     bool trace = comp()->trace(OMR::inlining);
 
-    if (alwaysWorthInlining(calleeResolvedMethod, callNode))
+    const bool isCheckPackageSigners
+        = (memcmp(tracer()->traceSignature(calleeResolvedMethod), "java/lang/ClassLoader.checkPackageSigners", 41)
+            == 0);
+
+    if (alwaysWorthInlining(calleeResolvedMethod, callNode)) {
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(1) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+                "is false\n");
+        }
         return false;
+    }
 
     TR_J9InlinerPolicy *j9InlinerPolicy = (TR_J9InlinerPolicy *)getPolicy();
     static const char *polymorphicCalleeSizeThresholdStr = feGetEnv("TR_InlinerPolymorphicConservatismCalleeSize");
@@ -4763,13 +4773,26 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
                 TR::DebugCounter::debugCounterName(comp(), "inliner.highlyPolymorphicFail/(%s)/%s/(%s)/sizes=%d.%d",
                     comp()->signature(), comp()->getHotnessName(comp()->getMethodHotness()),
                     callSite->_interfaceMethod->signature(trMemory()), bytecodeSize, outterMethodSize));
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(2) TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners is true\n");
+            }
             return true;
         }
     }
 
-    if (comp()->getMethodHotness() > warm && !comp()->isServerInlining())
-        return TR_InlinerBase::exceedsSizeThreshold(callSite, bytecodeSize, block, bcInfo, numLocals,
+    if (comp()->getMethodHotness() > warm && !comp()->isServerInlining()) {
+        bool res = TR_InlinerBase::exceedsSizeThreshold(callSite, bytecodeSize, block, bcInfo, numLocals,
             callerResolvedMethod, calleeResolvedMethod, callNode, allConsts);
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(3) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+                "is %s\n",
+                res ? "true" : "false");
+        }
+        return res;
+    }
 
     heuristicTrace(tracer(),
         "### Checking multiple call target inliner sizeThreshold. bytecodeSize = %d, block = %p, numLocals = %p, "
@@ -4902,6 +4925,11 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
         // where we know we have alot of fan-in
         if (j9InlinerPolicy->adjustFanInSizeInExceedsSizeThreshold(bytecodeSize, calculatedSize, calleeResolvedMethod,
                 callerResolvedMethod, bcInfo.getByteCodeIndex())) {
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(4) TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners is true\n");
+            }
             return true;
         }
     }
@@ -4925,6 +4953,11 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
             "### Exceeds Size Threshold because call is cold and has a bytecodeSize %d > "
             "_methodInColdBlockByteCodeSizeThreshold %d",
             bytecodeSize, _methodInColdBlockByteCodeSizeThreshold);
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(5) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+                "is true\n");
+        }
         return true; // exceeds size threshold
     }
 
@@ -4964,6 +4997,11 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
                 "### Exceeds Size Threshold because  bytecodeSize %d > _methodInWarmBlockByteCodeSizeThreshold %d",
                 bytecodeSize, _methodInWarmBlockByteCodeSizeThreshold);
 
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(6) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+                "is true\n");
+        }
         return true; // Exceeds size threshold
     }
 
@@ -4976,6 +5014,12 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
             heuristicTrace(tracer(),
                 "### Avoiding estimation (even though size is reasonable) of call %s.(Exceeding Size Threshold)",
                 tracer()->traceSignature(calleeResolvedMethod));
+
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(7) TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners is true\n");
+            }
             return true;
         }
     }
@@ -4983,6 +5027,11 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
     heuristicTrace(tracer(), "### Did not exceed size threshold, bytecodeSize %d <= inlineThreshold %d", bytecodeSize,
         _methodInWarmBlockByteCodeSizeThreshold);
 
+    if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+            "(8) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners is "
+            "false\n");
+    }
     // Does not exceed size threshold
     return false;
 }
