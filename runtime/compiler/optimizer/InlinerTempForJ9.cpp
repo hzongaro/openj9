@@ -4712,8 +4712,7 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
     OMR::Logger *log = comp()->log();
     bool trace = comp()->trace(OMR::inlining);
 
-    const bool isCheckPackageSigners
-        = (memcmp(calleeResolvedMethod->nameChars(), "java/lang/ClassLoader.checkPackageSigners", 41) == 0);
+    const bool isCheckPackageSigners = (memcmp(calleeResolvedMethod->nameChars(), "checkPackageSigners", 19) == 0);
 
     if (alwaysWorthInlining(calleeResolvedMethod, callNode)) {
         if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
