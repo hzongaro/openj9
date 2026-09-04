@@ -7358,17 +7358,16 @@ bool TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy(TR_In
             ? new (comp()->trHeapMemory()) TR_VirtualGuardSelection(TR_HierarchyGuard, TR_MethodTest)
             : new (comp()->trHeapMemory())
                   TR_VirtualGuardSelection(TR_HierarchyGuard, TR_VftTest, callsite->_receiverClass);
-        callsite->addTarget(
-            comp()->trMemory(), inliner(), guard, callsite->_initialCalleeMethod,
+        callsite->addTarget(comp()->trMemory(), inliner(), guard, callsite->_initialCalleeMethod,
+            callsite->_receiverClass, heapAlloc);
 
-            if (callsite->_vlogTrace) {
-                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                    "(1.4.1.1.2) Adding target in "
-                    "TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy "
-                    "java/lang/ClassLoader.checkPackageSigners - adding target %d\n",
-                    callsite->numTargets());
-            } callsite->_receiverClass,
-            heapAlloc);
+        if (callsite->_vlogTrace) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(1.4.1.1.2) Adding target in "
+                "TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy "
+                "java/lang/ClassLoader.checkPackageSigners - adding target %d\n",
+                callsite->numTargets());
+        }
         return true;
     }
     return false;
