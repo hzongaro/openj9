@@ -7329,6 +7329,11 @@ bool TR_J9TransformInlinedFunction::isSyncReturnBlock(TR::Compilation *comp, TR:
  */
 bool TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy(TR_IndirectCallSite *callsite)
 {
+    if (callsite->_vlogTrace) {
+        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+            "(1.4.1.1.1) In TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy "
+            "java/lang/ClassLoader.checkPackageSigners\n");
+    }
     TR_PersistentCHTable *chTable = comp()->getPersistentInfo()->getPersistentCHTable();
 
     if (!chTable->isOverriddenInThisHierarchy(callsite->_initialCalleeMethod, callsite->_receiverClass,
@@ -7353,8 +7358,17 @@ bool TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy(TR_In
             ? new (comp()->trHeapMemory()) TR_VirtualGuardSelection(TR_HierarchyGuard, TR_MethodTest)
             : new (comp()->trHeapMemory())
                   TR_VirtualGuardSelection(TR_HierarchyGuard, TR_VftTest, callsite->_receiverClass);
-        callsite->addTarget(comp()->trMemory(), inliner(), guard, callsite->_initialCalleeMethod,
-            callsite->_receiverClass, heapAlloc);
+        callsite->addTarget(
+            comp()->trMemory(), inliner(), guard, callsite->_initialCalleeMethod,
+
+            if (callsite->_vlogTrace) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(1.4.1.1.2) Adding target in "
+                    "TR_J9InlinerUtil::addTargetIfMethodIsNotOverridenInReceiversHierarchy "
+                    "java/lang/ClassLoader.checkPackageSigners - adding target %d\n",
+                    callsite->numTargets());
+            } callsite->_receiverClass,
+            heapAlloc);
         return true;
     }
     return false;
@@ -7368,6 +7382,11 @@ TR_ResolvedMethod *TR_J9InlinerUtil::findSingleJittedImplementer(TR_IndirectCall
 
 bool TR_J9InlinerUtil::addTargetIfThereIsSingleImplementer(TR_IndirectCallSite *callsite)
 {
+    if (callsite->_vlogTrace) {
+        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+            "(1.4.1.1.1) In TR_J9InlinerUtil::addTargetIfThereIsSingleImplementer "
+            "java/lang/ClassLoader.checkPackageSigners\n");
+    }
     static bool disableSingleJittedImplementerInlining
         = feGetEnv("TR_DisableSingleJittedImplementerInlining") ? true : false;
     TR_ResolvedMethod *implementer; // A temp to be used to find an implementer in abstract implementer analysis
@@ -7390,6 +7409,12 @@ bool TR_J9InlinerUtil::addTargetIfThereIsSingleImplementer(TR_IndirectCallSite *
         else
             guard = new (comp()->trHeapMemory()) TR_VirtualGuardSelection(TR_ProfiledGuard, TR_MethodTest);
         callsite->addTarget(comp()->trMemory(), inliner(), guard, implementer, implementer->classOfMethod(), heapAlloc);
+        if (callsite->_vlogTrace) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(1.4.1.1.2) Adding target in TR_J9InlinerUtil::addTargetIfThereIsSingleImplementer "
+                "java/lang/ClassLoader.checkPackageSigners - numTargets %d\n",
+                callsite->numTargets());
+        }
         return true;
     }
     return false;
