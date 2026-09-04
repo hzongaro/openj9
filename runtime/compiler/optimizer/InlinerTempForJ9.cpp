@@ -3692,6 +3692,8 @@ bool TR_MultipleCallTargetInliner::inlineCallTargets(TR::ResolvedMethodSymbol *c
                                 node, callsite);
                         }
 
+                        callsite->_vlogTrace = isCheckPackageSigners;
+
                         getSymbolAndFindInlineTargets(&callStack, callsite);
                         if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
                             TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
