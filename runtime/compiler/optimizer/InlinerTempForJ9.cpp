@@ -4714,6 +4714,14 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
 
     const bool isCheckPackageSigners = (memcmp(calleeResolvedMethod->nameChars(), "checkPackageSigners", 19) == 0);
 
+    if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+            "(5) Entering TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+            "java/lang/ClassLoader.checkPackageSigners "
+            "- bytecodeSize == %d\n",
+            bytecodeSize);
+    }
+
     if (alwaysWorthInlining(calleeResolvedMethod, callNode)) {
         if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
             TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
@@ -4831,10 +4839,27 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
         debugTrace(tracer(), "exceedsSizeThreshold: Call with block_%d has frequency2 %d ", block->getNumber(),
             frequency2);
 
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(5.1) In TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                "java/lang/ClassLoader.checkPackageSigners "
+                "- bytecodeSize == %d; allowBiggerMethods() == %d; doJSR292PerfTweaks() == %d; calleeResolvedMethod == "
+                "%d; frequencyIsInaccurate == %d\n",
+                bytecodeSize, allowBiggerMethods(), comp()->getMethodSymbol()->doJSR292PerfTweaks(),
+                calleeResolvedMethod != NULL, frequencyIsInaccurate);
+        }
         if (allowBiggerMethods() && !comp()->getMethodSymbol()->doJSR292PerfTweaks() && calleeResolvedMethod
             && !frequencyIsInaccurate && !j9InlinerPolicy->isInlineableJNI(calleeResolvedMethod, callNode)) {
             bytecodeSize = scaleSizeBasedOnBlockFrequency(bytecodeSize, frequency2, borderFrequency,
                 calleeResolvedMethod, callNode, veryColdBorderFrequency);
+
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(5.2) In TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners "
+                    "- bytecodeSize == %d\n",
+                    bytecodeSize);
+            }
         } else if (getPolicy()->aggressiveSmallAppOpts()) {
             logprints(trace, log, "Reached new code 2\n");
             int32_t blockNestingDepth = 1;
@@ -4898,17 +4923,39 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
             }
         }
 
-        if (!allconstsfromCallNode)
+        if (!allconstsfromCallNode) {
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(5.3) In TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners "
+                    "- Changing bytecodeSize from %d to %d\n",
+                    bytecodeSize, originalbcSize);
+            }
             bytecodeSize = originalbcSize;
+        }
 
         heuristicTrace(tracer(), " to %d because of const arguments", bytecodeSize);
     } else if (allConsts) {
+        if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                "(5.4) In TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                "java/lang/ClassLoader.checkPackageSigners "
+                "- allConsts == %d\n",
+                allConsts);
+        }
         int32_t originalbcSize = bytecodeSize;
         heuristicTrace(tracer(), "In ExceedsSizeThreshold.  Reducing size from %d", bytecodeSize);
 
         int32_t numArgs = calleeResolvedMethod->numberOfExplicitParameters();
         for (int32_t i = 0; i < numArgs; ++i) {
             bytecodeSize = bytecodeSize - (bytecodeSize / 10);
+            if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(5.4.1) In TR_MultipleCallTargetInliner::exceedsSizeThreshold for "
+                    "java/lang/ClassLoader.checkPackageSigners "
+                    "- changed bytecodeSize to %d\n",
+                    bytecodeSize);
+            }
         }
 
         heuristicTrace(tracer(), " to %d because of const arguments", bytecodeSize);
@@ -4961,7 +5008,7 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
     }
     if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
         TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-            "(5.1) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+            "(5.6) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
             "bytecodeSize == %d; _methodInWarmBlockByteCodeSizeThreshold == %d; calculatedSize == %d; multiplier == "
             "%d\n",
             bytecodeSize, _methodInWarmBlockByteCodeSizeThreshold, calculatedSize, multiplier);
