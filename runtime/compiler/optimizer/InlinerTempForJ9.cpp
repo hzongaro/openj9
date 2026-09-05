@@ -4959,6 +4959,13 @@ bool TR_MultipleCallTargetInliner::exceedsSizeThreshold(TR_CallSite *callSite, i
         }
         return true; // exceeds size threshold
     }
+    if (isCheckPackageSigners && comp()->getOptions()->getVerboseOption(TR_VerboseInlining)) {
+        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+            "(5.1) TR_MultipleCallTargetInliner::exceedsSizeThreshold for java/lang/ClassLoader.checkPackageSigners "
+            "bytecodeSize == %d; _methodInWarmBlockByteCodeSizeThreshold == %d; calculatedSize == %d; multiplier == "
+            "%d\n",
+            bytecodeSize, _methodInWarmBlockByteCodeSizeThreshold, calculatedSize, multiplier);
+    }
 
     if (bytecodeSize > _methodInWarmBlockByteCodeSizeThreshold
         || calculatedSize > _methodInWarmBlockByteCodeSizeThreshold * multiplier) {
