@@ -3509,23 +3509,21 @@ void lowerCompilationLimitsOnLowVirtualMemory(TR::CompilationInfo *compInfo, J9V
         if (!TR::Options::getAOTCmdLineOptions()->getOption(TR_NoOptServer)) {
             TR::Options::getAOTCmdLineOptions()->setOption(TR_NoOptServer);
             doDisableServerMode = true;
-            if (options->getVerboseOption(TR_VerboseInlining)))
-                {
-                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                        "(1) In lowerCompilationLimitsOnLowVirtualMemory - setting options.getOption(TR_NoOptServer) "
-                        "to "
-                        "true\n");
-                }
+            if (TR::Options::getAOTCmdLinOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(1) In lowerCompilationLimitsOnLowVirtualMemory - setting options.getOption(TR_NoOptServer) "
+                    "to "
+                    "true\n");
+            }
         }
         if (!TR::Options::getJITCmdLineOptions()->getOption(TR_NoOptServer)) {
             TR::Options::getJITCmdLineOptions()->setOption(TR_NoOptServer);
-            if (options->getVerboseOption(TR_VerboseInlining)))
-                {
-                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                        "(2) In lowerCompilationLimitsOnLowVirtualMemory - setting options.getOption(TR_NoOptServer) "
-                        "to "
-                        "true\n");
-                }
+            if (TR::Options::getJITCmdLinOptions()->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "(2) In lowerCompilationLimitsOnLowVirtualMemory - setting options.getOption(TR_NoOptServer) "
+                    "to "
+                    "true\n");
+            }
             doDisableServerMode = true;
         }
         if (doDisableServerMode && TR::Options::getCmdLineOptions()->getVerboseOption(TR_VerbosePerformance)) {

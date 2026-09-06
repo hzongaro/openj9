@@ -8360,12 +8360,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 if (that->_methodBeingCompiled->_priority >= CP_SYNC_MIN
                                     && that->getCompilationInfo()->asynchronousCompilation()) {
                                     options->setOption(TR_NoOptServer);
-                                    if (options->getVerboseOption(TR_VerboseInlining)))
-                                        {
-                                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                                "(1) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
-                                                "true\n");
-                                        }
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "(1) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
+                                            "true\n");
+                                    }
                                     reducedWarm = true;
                                 }
                                 // all first time compilations during startup
@@ -8373,12 +8372,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     && details.isOrdinaryMethod()
                                     && !options->getOption(TR_DisableNoServerDuringStartup)) {
                                     options->setOption(TR_NoOptServer);
-                                    if (options->getVerboseOption(TR_VerboseInlining)))
-                                        {
-                                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                                "(2) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
-                                                "true\n");
-                                        }
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "(2) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
+                                            "true\n");
+                                    }
                                     reducedWarm = true;
                                     // These guys should be compiled with GCR hooks so that we get the throughput back
                                     options->setInsertGCRTrees();
@@ -8389,12 +8387,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 // Upgrades from cold need to be cheaper in startup or idle mode
                                 if (p->_optimizationPlan->isUpgradeRecompilation()) {
                                     options->setOption(TR_NoOptServer);
-                                    if (options->getVerboseOption(TR_VerboseInlining)))
-                                        {
-                                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                                "(3) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
-                                                "true\n");
-                                        }
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "(3) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
+                                            "true\n");
+                                    }
                                 } else // recompilations triggered through GCR need to be cheaper
                                 {
                                     // Note that we may have a warm compilation with NoOptServer that has embedded
@@ -8410,13 +8407,12 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                                                       // transitions
                                         {
                                             options->setOption(TR_NoOptServer);
-                                            if (options->getVerboseOption(TR_VerboseInlining)))
-                                                {
-                                                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                                        "(4) In wrappedCompiled - setting "
-                                                        "options.getOption(TR_NoOptServer) to "
-                                                        "true\n");
-                                                }
+                                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                                    "(4) In wrappedCompiled - setting "
+                                                    "options.getOption(TR_NoOptServer) to "
+                                                    "true\n");
+                                            }
                                         }
                                     }
                                 }
@@ -8439,12 +8435,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 options->setInlinerVeryColdBorderFrequency(5500 - 40 * inlAggr);
                                 if (inlAggr < 25) {
                                     options->setOption(TR_NoOptServer);
-                                    if (options->getVerboseOption(TR_VerboseInlining)))
-                                        {
-                                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                                "(5) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
-                                                "true\n");
-                                        }
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "(5) In wrappedCompiled - setting options.getOption(TR_NoOptServer) to "
+                                            "true\n");
+                                    }
                                 }
                             }
                         }
