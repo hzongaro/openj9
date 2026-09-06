@@ -53,13 +53,21 @@ void preventAllocationOfBTLMemory(J9MemorySegment *&segment, J9JavaVM *javaVM, T
                 // Perhaps we should consider lowering the compilation aggressiveness
                 if (!TR::Options::getAOTCmdLineOptions()->getOption(TR_NoOptServer)) {
                     TR::Options::getAOTCmdLineOptions()->setOption(TR_NoOptServer);
-                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                        "(1) In preventAllocationofBTLMemory - setting options.getOption(TR_NoOptServer) to true\n");
+                    if (options->getVerboseOption(TR_VerboseInlining)))
+                        {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "(1) In preventAllocationofBTLMemory - setting options.getOption(TR_NoOptServer) to "
+                                "true\n");
+                        }
                 }
                 if (!TR::Options::getJITCmdLineOptions()->getOption(TR_NoOptServer)) {
                     TR::Options::getJITCmdLineOptions()->setOption(TR_NoOptServer);
-                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                        "(2) In preventAllocationofBTLMemory - setting options.getOption(TR_NoOptServer) to true\n");
+                    if (options->getVerboseOption(TR_VerboseInlining)))
+                        {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "(2) In preventAllocationofBTLMemory - setting options.getOption(TR_NoOptServer) to "
+                                "true\n");
+                        }
                 }
             }
 
