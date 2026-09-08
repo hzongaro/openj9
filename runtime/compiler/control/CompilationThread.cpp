@@ -7904,6 +7904,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
     TR::Compilation * volatile compiler = 0;
     TR::Options *options = 0;
     TR_ResolvedMethod *compilee = 0;
+    const char *signature = 0;
 
     TR::CompilationInfoPerThreadBase *that = p->_compilationInfo; // static method, no this
     TR_J9VMBase *vm = p->_vm;
@@ -7991,6 +7992,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
             int32_t lineNumber = filterInfo ? filterInfo->getLineNumber() : 0;
 
             TR_ASSERT(p->_optimizationPlan, "Must have an optimization plan");
+
+            if (options->getVerboseOption(TR_VerboseInlining)) {
+                signature = compilee->signature(p->trMemory());
+            }
 
 #if defined(J9VM_OPT_JITSERVER)
             // If the options come from a remote party, skip the setup options process
@@ -8307,6 +8312,9 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                     //
                     if (jitConfig->javaVM->phase != J9VM_PHASE_NOT_STARTUP
                         || that->getCompilationInfo()->getPersistentInfo()->getJitState() == IDLE_STATE) {
+                        if (options->getVerboseOption(TR_VerboseInlining)) {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (1)\n", signature);
+                        }
                         // Disable idiomRecognition during startup of -Xquickstart runs to save memory
                         if (TR::Options::isQuickstartDetected())
                             options->setDisabled(OMR::idiomRecognition, true);
@@ -8361,6 +8369,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     && that->getCompilationInfo()->asynchronousCompilation()) {
                                     options->setOption(TR_NoOptServer);
                                     reducedWarm = true;
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (2)\n",
+                                            signature);
+                                    }
                                 }
                                 // all first time compilations during startup
                                 else if (jitConfig->javaVM->phase != J9VM_PHASE_NOT_STARTUP
@@ -8368,13 +8380,17 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     && !options->getOption(TR_DisableNoServerDuringStartup)) {
                                     options->setOption(TR_NoOptServer);
                                     if (options->getVerboseOption(TR_VerboseInlining)) {
-                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                            "In wrappedCompile Setting TR_NoOptServer to true for %s\n",
-                                            compilee->signature(p->trMemory()));
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (3)\n",
+                                            signature);
                                     }
                                     reducedWarm = true;
                                     // These guys should be compiled with GCR hooks so that we get the throughput back
                                     options->setInsertGCRTrees();
+                                } else {
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (4)\n",
+                                            signature);
+                                    }
                                 }
 
                             } else // recompilation requests
@@ -8382,8 +8398,16 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 // Upgrades from cold need to be cheaper in startup or idle mode
                                 if (p->_optimizationPlan->isUpgradeRecompilation()) {
                                     options->setOption(TR_NoOptServer);
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (5)\n",
+                                            signature);
+                                    }
                                 } else // recompilations triggered through GCR need to be cheaper
                                 {
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (6)\n",
+                                            signature);
+                                    }
                                     // Note that we may have a warm compilation with NoOptServer that has embedded
                                     // GCR trees to recompile without NoOptServer (thus better generated code)
                                     // We want to make sure that the recompilation uses server mode in that case
@@ -8397,6 +8421,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                                                       // transitions
                                         {
                                             options->setOption(TR_NoOptServer);
+                                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                                    "In wrappedCompile for %s (7)\n", signature);
+                                            }
                                         }
                                     }
                                 }
@@ -8404,6 +8432,9 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         }
                     } // Strategy tweaks during STARTUP and IDLE
                     else {
+                        if (options->getVerboseOption(TR_VerboseInlining)) {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (8)\n", signature);
+                        }
                         // Tweak inlining aggressiveness based on time. Only for non-AOT warm compilations and only in
                         // Xtune:virtualized mode.
                         if (options->getOption(TR_VaryInlinerAggressivenessWithTime)) {
@@ -8417,8 +8448,13 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 options->setInlinerCGVeryColdBorderFrequency(5000 - 35 * inlAggr);
                                 options->setInlinerBorderFrequency(9000 - 30 * inlAggr);
                                 options->setInlinerVeryColdBorderFrequency(5500 - 40 * inlAggr);
-                                if (inlAggr < 25)
+                                if (inlAggr < 25) {
                                     options->setOption(TR_NoOptServer);
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (8)\n",
+                                            signature);
+                                    }
+                                }
                             }
                         }
                     }
