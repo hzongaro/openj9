@@ -8367,6 +8367,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     && details.isOrdinaryMethod()
                                     && !options->getOption(TR_DisableNoServerDuringStartup)) {
                                     options->setOption(TR_NoOptServer);
+                                    if (options->getVerboseOption(TR_VerboseInlining)) {
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "In wrappedCompile Setting TR_NoOptServer to true for %s\n",
+                                            compilee->signature(p->trMemory()));
+                                    }
                                     reducedWarm = true;
                                     // These guys should be compiled with GCR hooks so that we get the throughput back
                                     options->setInsertGCRTrees();
