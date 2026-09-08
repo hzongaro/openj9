@@ -8313,13 +8313,31 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                     if (jitConfig->javaVM->phase != J9VM_PHASE_NOT_STARTUP
                         || that->getCompilationInfo()->getPersistentInfo()->getJitState() == IDLE_STATE) {
                         if (options->getVerboseOption(TR_VerboseInlining)) {
-                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (1)\n", signature);
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                "TR_DisableNoServerDuringStartup == %d\n",
+                                signature, "1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                options->getOption(TR_DisableNoServerDuringStartup));
                         }
                         // Disable idiomRecognition during startup of -Xquickstart runs to save memory
                         if (TR::Options::isQuickstartDetected())
                             options->setDisabled(OMR::idiomRecognition, true);
 
+                        if (options->getVerboseOption(TR_VerboseInlining)) {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                "TR_DisableNoServerDuringStartup == %d\n",
+                                signature, "1.1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                options->getOption(TR_DisableNoServerDuringStartup));
+                        }
                         if (options->getOptLevel() < warm) {
+                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                    "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                    "TR_DisableNoServerDuringStartup == %d\n",
+                                    signature, "1.2", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                    options->getOption(TR_DisableNoServerDuringStartup));
+                            }
                             if (!vm->isAOT_DEPRECATED_DO_NOT_USE()) {
                                 // Adjust DumbInliner cutoff parameter as to make it more conservative in constrained
                                 // situations For AOT we can be more aggressive because the cost is payed only during
@@ -8329,6 +8347,14 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 // Disable rematerialization to cut on compilation costs
                                 if (!options->getOption(TR_DisableJava8StartupHeuristics))
                                     options->setDisabled(OMR::rematerialization, true);
+
+                                if (options->getVerboseOption(TR_VerboseInlining)) {
+                                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                        "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                        "TR_DisableNoServerDuringStartup == %d\n",
+                                        signature, "1.3", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                        options->getOption(TR_DisableNoServerDuringStartup));
+                                }
                             }
                             // Increase the trivial inliner max size for 'important methods' (could be bootstrap
                             // methods) We could filter by AOT only, or quickstart only
@@ -8350,6 +8376,14 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                             && (disableNextGenHCRDuringStartup || that->_methodBeingCompiled->isDLTCompile()
                                 || (options->getOptLevel() <= warm && !enableStartupNextGenHCRAtAllOpts))) {
                             options->setOption(TR_DisableNextGenHCR);
+
+                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                    "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                    "TR_DisableNoServerDuringStartup == %d\n",
+                                    signature, "1.4", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                    options->getOption(TR_DisableNoServerDuringStartup));
+                            }
                         }
 
                         // Do not allow switching to profiling if this is a big app
@@ -8357,6 +8391,14 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         if (that->getCompilationInfo()->getPersistentInfo()->getNumLoadedClasses()
                             >= TR::Options::_bigAppThreshold)
                             p->_optimizationPlan->setDoNotSwitchToProfiling(true);
+
+                        if (options->getVerboseOption(TR_VerboseInlining)) {
+                            TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                "TR_DisableNoServerDuringStartup == %d\n",
+                                signature, "1.5", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                options->getOption(TR_DisableNoServerDuringStartup));
+                        }
 
                         // Disable optServer for some classes of compilations during STARTUP and IDLE
                         //
@@ -8380,8 +8422,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     && !options->getOption(TR_DisableNoServerDuringStartup)) {
                                     options->setOption(TR_NoOptServer);
                                     if (options->getVerboseOption(TR_VerboseInlining)) {
-                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL, "In wrappedCompile for %s (3)\n",
-                                            signature);
+                                        TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                            "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                            "TR_DisableNoServerDuringStartup == %d\n",
+                                            signature, "3", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                            options->getOption(TR_DisableNoServerDuringStartup));
                                     }
                                     reducedWarm = true;
                                     // These guys should be compiled with GCR hooks so that we get the throughput back
