@@ -8317,7 +8317,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
                                 "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
                                 signature, "1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                 options->getOption(TR_DisableNoServerDuringStartup));
                         }
                         // Disable idiomRecognition during startup of -Xquickstart runs to save memory
@@ -8329,7 +8329,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
                                 "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
                                 signature, "1.1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                 options->getOption(TR_DisableNoServerDuringStartup));
                         }
                         if (options->getOptLevel() < warm) {
@@ -8338,7 +8338,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
                                     "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
                                     signature, "1.2", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                    options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                    options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                     options->getOption(TR_DisableNoServerDuringStartup));
                             }
                             if (!vm->isAOT_DEPRECATED_DO_NOT_USE()) {
@@ -8357,7 +8357,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                         "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == "
                                         "%d\n",
                                         signature, "1.3", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                        options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                        options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                         options->getOption(TR_DisableNoServerDuringStartup));
                                 }
                             }
@@ -8387,7 +8387,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                     "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
                                     "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
                                     signature, "1.4", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                    options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                    options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                     options->getOption(TR_DisableNoServerDuringStartup));
                             }
                         }
@@ -8403,7 +8403,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
                                 "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
                                 signature, "1.5", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                 options->getOption(TR_DisableNoServerDuringStartup));
                         }
 
@@ -8434,7 +8434,7 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                             "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == "
                                             "%d\n",
                                             signature, "5", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
-                                            options->getOption(TR_NoOptServver), options->getOption(TR_Server),
+                                            options->getOption(TR_NoOptServer), options->getOption(TR_Server),
                                             options->getOption(TR_DisableNoServerDuringStartup));
                                     }
                                     reducedWarm = true;
