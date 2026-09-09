@@ -8411,6 +8411,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         //
                         if (!options->getOption(TR_NoOptServer) && !options->getOption(TR_DisableSelectiveNoOptServer)
                             && !options->getOption(TR_Server)) {
+                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                    "In wrappedCompile for %s (1.9) that->_methodBeingCompiled->_oldStartPC == %p\n",
+                                    signature, that->_methodBeingCompiled->_oldStartPC);
+                            }
                             if (that->_methodBeingCompiled->_oldStartPC == 0) // first time compilations
                             {
                                 // sync requests during startup in an asynchronous environment
