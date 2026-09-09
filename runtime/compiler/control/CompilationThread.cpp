@@ -8413,8 +8413,12 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                             && !options->getOption(TR_Server)) {
                             if (options->getVerboseOption(TR_VerboseInlining)) {
                                 TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
-                                    "In wrappedCompile for %s (1.9) that->_methodBeingCompiled->_oldStartPC == %p\n",
-                                    signature, that->_methodBeingCompiled->_oldStartPC);
+                                    "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                    "TR_NoOptServer == "
+                                    "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                    signature, "1.9", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                    options->getOption(TR_NoOptServer), options->getOption(TR_Server),
+                                    options->getOption(TR_DisableNoServerDuringStartup));
                             }
                             if (that->_methodBeingCompiled->_oldStartPC == 0) // first time compilations
                             {
@@ -8487,6 +8491,16 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                         }
                                     }
                                 }
+                            }
+                        } else {
+                            if (options->getVerboseOption(TR_VerboseInlining)) {
+                                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                                    "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
+                                    "TR_NoOptServer == "
+                                    "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                    signature, "7.5", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
+                                    options->getOption(TR_NoOptServer), options->getOption(TR_Server),
+                                    options->getOption(TR_DisableNoServerDuringStartup));
                             }
                         }
                     } // Strategy tweaks during STARTUP and IDLE
