@@ -8315,10 +8315,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         if (options->getVerboseOption(TR_VerboseInlining)) {
                             TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
-                                "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                "%d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                 signature, "1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                 options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                options->getOption(TR_DisableNoServerDuringStartup));
+                                options->getOption(TR_DisableSelectiveNoOptServer));
                         }
                         // Disable idiomRecognition during startup of -Xquickstart runs to save memory
                         if (TR::Options::isQuickstartDetected())
@@ -8327,19 +8327,19 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         if (options->getVerboseOption(TR_VerboseInlining)) {
                             TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
-                                "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                "%d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                 signature, "1.1", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                 options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                options->getOption(TR_DisableNoServerDuringStartup));
+                                options->getOption(TR_DisableSelectiveNoOptServer));
                         }
                         if (options->getOptLevel() < warm) {
                             if (options->getVerboseOption(TR_VerboseInlining)) {
                                 TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                     "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
-                                    "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                    "TR_NoOptServer == %d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                     signature, "1.2", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                     options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                    options->getOption(TR_DisableNoServerDuringStartup));
+                                    options->getOption(TR_DisableSelectiveNoOptServer));
                             }
                             if (!vm->isAOT_DEPRECATED_DO_NOT_USE()) {
                                 // Adjust DumbInliner cutoff parameter as to make it more conservative in constrained
@@ -8354,11 +8354,11 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 if (options->getVerboseOption(TR_VerboseInlining)) {
                                     TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                         "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
-                                        "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == "
+                                        "TR_NoOptServer == %d; TR_Server == %d; TR_DisableSelectiveNoOptServer == "
                                         "%d\n",
                                         signature, "1.3", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                         options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                        options->getOption(TR_DisableNoServerDuringStartup));
+                                        options->getOption(TR_DisableSelectiveNoOptServer));
                                 }
                             }
                             // Increase the trivial inliner max size for 'important methods' (could be bootstrap
@@ -8385,10 +8385,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                             if (options->getVerboseOption(TR_VerboseInlining)) {
                                 TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                     "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
-                                    "TR_NoOptServer == %d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                    "TR_NoOptServer == %d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                     signature, "1.4", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                     options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                    options->getOption(TR_DisableNoServerDuringStartup));
+                                    options->getOption(TR_DisableSelectiveNoOptServer));
                             }
                         }
 
@@ -8401,10 +8401,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                         if (options->getVerboseOption(TR_VerboseInlining)) {
                             TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                 "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; TR_NoOptServer == "
-                                "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                "%d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                 signature, "1.5", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                 options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                options->getOption(TR_DisableNoServerDuringStartup));
+                                options->getOption(TR_DisableSelectiveNoOptServer));
                         }
 
                         // Disable optServer for some classes of compilations during STARTUP and IDLE
@@ -8415,10 +8415,10 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                                 TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
                                     "In wrappedCompile for %s (%s); phase == %d; isOrdinaryMethod == %d; "
                                     "TR_NoOptServer == "
-                                    "%d; TR_Server == %d; TR_DisableNoServerDuringStartup == %d\n",
+                                    "%d; TR_Server == %d; TR_DisableSelectiveNoOptServer == %d\n",
                                     signature, "1.9", jitConfig->javaVM->phase, details.isOrdinaryMethod(),
                                     options->getOption(TR_NoOptServer), options->getOption(TR_Server),
-                                    options->getOption(TR_DisableNoServerDuringStartup));
+                                    options->getOption(TR_DisableSelectiveNoOptServer));
                             }
                             if (that->_methodBeingCompiled->_oldStartPC == 0) // first time compilations
                             {
