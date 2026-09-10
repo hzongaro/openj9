@@ -5598,10 +5598,9 @@ static void classLoadPhaseLogic(J9JITConfig *jitConfig, TR::CompilationInfo *com
                 if (TR::Options::getCmdLineOptions()->getOption(TR_TurnOffSelectiveNoOptServerIfNoStartupHint)
                     && !TR::Options::getCmdLineOptions()->getOption(TR_AssumeStartupPhaseUntilToldNotTo)
                     && !TR::Options::getCmdLineOptions()->getOption(TR_DisableSelectiveNoOptServer)) {
-                    TR::Options::getCmdLineOptions()->setOption(
-                        TR_DisableSelectiveNoOptServer); // Turn this feature off
-                    TR::Options::getAOTCmdLineOptions()->setOption(
-                        TR_DisableSelectiveNoOptServer); // Turn this feature off
+                    // Turn this feature off everywhere
+                    TR::Options::setOptionInAllOptionSets(TR_DisableSelectiveNoOptServer);
+
                     if (TR::Options::getCmdLineOptions()->getVerboseOption(TR_VerbosePerformance))
                         TR_VerboseLog::writeLineLocked(TR_Vlog_INFO, "t=%u selectiveNoOptServer feature turned off",
                             crtElapsedTime);
