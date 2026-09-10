@@ -7966,11 +7966,24 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
             that->_methodBeingCompiled->_compErrCode = compilationRestrictedMethod;
 
             TR::Options *options = TR::Options::getJITCmdLineOptions();
-            if (vm->isAOT_DEPRECATED_DO_NOT_USE())
-                options = TR::Options::getAOTCmdLineOptions();
             if (options->getVerboseOption(TR_VerboseCompileExclude)) {
                 TR_VerboseLog::writeLineLocked(TR_Vlog_COMPFAIL, "%s j9m=%p cannot be translated compThreadID=%d",
                     compilee->signature(p->trMemory()), method, that->getCompThreadId());
+            }
+            if (options->getVerboseOption(TR_VerboseInlining)) {
+                TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                    "Setting options from getJITCmdLineOptions for %s - options == %p; TR_DisableSelectiveNoOptServer "
+                    "== %d\n",
+                    signature, options, options->getOption(TR_DisableSelectiveNoOptServer));
+            }
+            if (vm->isAOT_DEPRECATED_DO_NOT_USE()) {
+                options = TR::Options::getAOTCmdLineOptions();
+                if (options->getVerboseOption(TR_VerboseInlining)) {
+                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                        "Setting options under vm->isAOT_DEPRECATED_DO_NOT_USE() for %s - options == %p; "
+                        "TR_DisableSelectiveNoOptServer == %d\n",
+                        signature, options, options->getOption(TR_DisableSelectiveNoOptServer));
+                }
             }
             Trc_JIT_noAttemptToJit(vmThread, compilee->signature(p->trMemory()));
 
@@ -8006,6 +8019,12 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                     "client options must be set for an out-of-process compilation");
                 options = TR::Options::unpackOptions(compInfoPTRemote->getClientOptions(),
                     compInfoPTRemote->getClientOptionsSize(), that, vm, p->trMemory());
+                if (options->getVerboseOption(TR_VerboseInlining)) {
+                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                        "Setting options using TR::Options::unpackOptions for %s - options == %p; "
+                        "TR_DisableSelectiveNoOptServer == %d\n",
+                        signature, options, options->getOption(TR_DisableSelectiveNoOptServer));
+                }
                 if (!p->_optimizationPlan->isLogCompilation()) {
                     options->setLoggerForClientOptions();
                 } else {
@@ -8067,6 +8086,13 @@ TR_MethodMetaData *TR::CompilationInfoPerThreadBase::wrappedCompile(J9PortLibrar
                     compilee, that->_methodBeingCompiled->_oldStartPC, p->_optimizationPlan,
                     (vm->isAOT_DEPRECATED_DO_NOT_USE() || that->_methodBeingCompiled->isAotLoad()),
                     that->getCompThreadId());
+
+                if (options->getVerboseOption(TR_VerboseInlining)) {
+                    TR_VerboseLog::writeLineLocked(TR_Vlog_INL,
+                        "In wrappedCompile after constructing options for %s - optionSetIndex == %p; "
+                        "TR_DisableSelectiveNoOptServer == %d\n",
+                        signature, optionSetIndex, options->getOption(TR_DisableSelectiveNoOptServer));
+                }
                 // JITServer TODO determine if we care to support annotations
                 if (that->_methodBeingCompiled->isRemoteCompReq()) {
                     options->setOption(TR_EnableAnnotations, false);
