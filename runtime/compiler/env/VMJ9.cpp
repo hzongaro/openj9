@@ -2500,24 +2500,6 @@ int32_t TR_J9VMBase::findFirstHotFieldTenuredClassOffset(TR::Compilation *comp, 
 #define CACHE_LINE_SIZE 256
 #endif
 
-void TR_J9VMBase::markClassForTenuredAlignment(TR::Compilation *comp, TR_OpaqueClassBlock *opclazz,
-    uint32_t alignFromStart)
-{
-    if (!jitConfig->javaVM->memoryManagerFunctions->j9gc_hot_reference_field_required(jitConfig->javaVM)
-        && !isAOT_DEPRECATED_DO_NOT_USE()) {
-        J9Class *clazz = TR::Compiler->cls.convertClassOffsetToClassPtr(opclazz);
-        UDATA hotFieldsWordValue = 0x1; // mark for alignment
-
-        TR_ASSERT(0 == (alignFromStart % TR::Compiler->om.getObjectAlignmentInBytes()),
-            "alignment undershot should be multiple of %d bytes", TR::Compiler->om.getObjectAlignmentInBytes());
-        TR_ASSERT((alignFromStart < 128), "alignment undershot should be less than 128 (124 max)");
-
-        hotFieldsWordValue |= (((alignFromStart & 0x7f) / TR::Compiler->om.getObjectAlignmentInBytes()) << 1);
-
-        *(UDATA *)((char *)clazz + offsetOfHotFields()) = hotFieldsWordValue;
-    }
-}
-
 char *TR_J9VMBase::getClassSignature_DEPRECATED(TR_OpaqueClassBlock *clazz, int32_t &length, TR_Memory *trMemory)
 {
     int32_t numDims = 0;

@@ -1788,8 +1788,6 @@ public:
     virtual bool isHotReferenceFieldRequired();
     virtual bool isIndexableDataAddrPresent();
     virtual bool isOffHeapAllocationEnabled();
-    virtual void markClassForTenuredAlignment(TR::Compilation *comp, TR_OpaqueClassBlock *opclazz,
-        uint32_t alignFromStart);
 
     virtual bool shouldDelayAotLoad() { return false; }
 
