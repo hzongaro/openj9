@@ -2325,10 +2325,7 @@ bool TR_J9VMBase::scanReferenceSlotsInClassForOffset(TR::Compilation *comp, TR_O
                     getClassFromSignature(fieldSignature, (int32_t)strlen(fieldSignature), comp->getCurrentMethod()));
 
                 if (fieldClass != NULL) {
-                    UDATA hotWordValue = *(UDATA *)((char *)fieldClass + offsetOfHotFields());
-
-                    if (hotWordValue & 0x1)
-                        return true;
+                    return true;
                 }
             }
         }
