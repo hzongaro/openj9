@@ -2338,26 +2338,11 @@ int32_t TR_J9VMBase::findFirstHotFieldTenuredClassOffset(TR::Compilation *comp, 
 {
     if (!isAOT_DEPRECATED_DO_NOT_USE()) {
         J9Class *clazz = TR::Compiler->cls.convertClassOffsetToClassPtr(opclazz);
-        UDATA hotFieldsWordValue = *(UDATA *)((char *)clazz + offsetOfHotFields());
-
-        if (!hotFieldsWordValue)
-            return -1;
-
-        if (hotFieldsWordValue & 0x1) {
-            // this class is marked for tenured alignment ignore it
-            return -1;
-        }
-
-        for (int i = 1; i < 31; i++) {
-            uint32_t flag = (uint32_t)(hotFieldsWordValue & ((UDATA)1 << i));
-
-            // if the field is marked find the
-            // class type of this field and see if that class
-            // is marked for tenured alignment
-            if (flag) {
-                uint32_t offset = (i - 1) * TR::Compiler->om.sizeofReferenceField();
-                if (scanReferenceSlotsInClassForOffset(comp, opclazz, offset))
-                    return (int32_t)(offset + getObjectHeaderSizeInBytes());
+        if (NULL != clazz->hotFieldsInfo) {
+            uint8_t slotIndex = clazz->hotFieldsInfo->hotFieldOffset1;
+            if (slotIndex != U_8_MAX) {
+                return (int32_t)(((clazz->hotFieldsInfo->hotFieldOffset1 - 1) * TR::Compiler->om.sizeofReferenceField())
+                    + getObjectHeaderSizeInBytes());
             }
         }
     }
