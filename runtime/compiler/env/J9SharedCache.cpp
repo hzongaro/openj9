@@ -1151,7 +1151,7 @@ bool TR_J9SharedCache::writeFlattenedFieldsToChain(J9ROMClass *currRomClass, J9C
 
                     /* We'll need two slots for each flattened field; make sure there's enough space for both.
                      * For each field record the index of the flattened field amongst the instance fields and
-                     * the size of the field in bytes.
+                     * the class chain offset of the flattened field's class.
                      */
                     if ((numSlotsUsed + 2) >= maxClassChainLength) {
                         LOG(1, "No more space available to write flattened fields to class chain.  Bailing!\n");
@@ -1163,9 +1163,8 @@ bool TR_J9SharedCache::writeFlattenedFieldsToChain(J9ROMClass *currRomClass, J9C
 
                     *chainPtr++ = nextInstanceFieldIndex;
 
-                    UDATA fieldSize
-                        = _javaVM->internalVMFunctions->getFlattenableFieldSize(vmThread, nextClass, currentField);
-                    *chainPtr++ = fieldSize;
+                    UDATA fieldClassChainOffset = rememberClass(nextClass);
+                    *chainPtr++ = fieldClassChainOffset;
 
                     numSlotsUsed++;
                 }
@@ -1355,12 +1354,11 @@ bool TR_J9SharedCache::validateFlattenedFieldsInClassChain(J9ROMClass *currRomCl
                         return false;
                     }
 
-                    UDATA cachedFieldSize = *chainPtr++;
-                    UDATA fieldSize
-                        = _javaVM->internalVMFunctions->getFlattenableFieldSize(vmThread, nextClass, currentField);
+                    uintptr_t *cachedFieldClassChainOffset = (uintptr_t *)*chainPtr++;
 
-                    if (cachedFieldSize != fieldSize) {
-                        LOG(1, "\tCached size of flattened field did not match current size, return false\n");
+                    if (classMatchesCachedVersion(nextClass, cachedFieldClassChainOffset)) {
+                        LOG(1,
+                            "\tCached class of flattened field did not match current of field class, return false\n");
                         return false;
                     }
                 }
