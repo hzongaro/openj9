@@ -65,7 +65,7 @@ public class ValhallaAOTTestClassGenerator extends ClassLoader {
 			boolean isNullRestrictedField = nullRestrictedFields[i];
 			String fieldName = "f" + i;
 			int fieldFlags = ACC_PUBLIC + (isNullRestrictedField ? ValhallaUtils.ACC_STRICT_INIT : 0);
-			FieldVisitor fieldVisitor = classWriter.visitField(ACC_PUBLIC, fieldName, fieldClassDescriptor, null, null);
+			FieldVisitor fieldVisitor = classWriter.visitField(fieldFlags, fieldName, fieldClassDescriptor, null, null);
 
 			if (isNullRestrictedField) {
 				fieldVisitor.visitAttribute(new ValhallaUtils.NullRestrictedAttribute());
@@ -77,21 +77,19 @@ public class ValhallaAOTTestClassGenerator extends ClassLoader {
 		// Generate constructor of form
 		//
 		//	public <className> {
-		//		super();
 		//		before = this;
 		//		f0 = new <fieldClassName>(0);
 		//		f1 = new <fieldClassName>(1);
 		//              ...
 		//		f<n> = new <fieldClassName>(<n>);
 		//		after = this;
+		//		super();
 		//		return;
 		//	}
 		MethodVisitor constructorVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
 		constructorVisitor.visitCode();
 
 		constructorVisitor.visitVarInsn(ALOAD, 0);
-		constructorVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V");
-
 		constructorVisitor.visitVarInsn(ALOAD, 0);
 		constructorVisitor.visitVarInsn(ALOAD, 0);
 		constructorVisitor.visitFieldInsn(PUTFIELD, classNameWithSlashes, "before", jloDescriptor);
@@ -110,8 +108,10 @@ public class ValhallaAOTTestClassGenerator extends ClassLoader {
 		constructorVisitor.visitVarInsn(ALOAD, 0);
 		constructorVisitor.visitFieldInsn(PUTFIELD, classNameWithSlashes, "after", jloDescriptor);
 
+		constructorVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V");
+
 		constructorVisitor.visitInsn(RETURN);
-		constructorVisitor.visitMaxs(4, 1);
+		constructorVisitor.visitMaxs(5, 1);
 		constructorVisitor.visitEnd();
 
 		classWriter.visitEnd();
