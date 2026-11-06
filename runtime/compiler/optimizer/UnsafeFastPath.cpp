@@ -286,9 +286,11 @@ bool TR_UnsafeFastPath::tryTransformUnsafeAtomicCallInVarHandleAccessMethod(TR::
     // Codegen will inline the call with the flag
     //
     if (symbol->getMethod()->isUnsafeCAS()) {
-        // codegen doesn't optimize CAS on a static field
+        // codegen doesn't optimize CAS on a static field or on value type instances
         //
         if (isVarHandleOperationMethodOnNonStaticField(callerMethod)
+            && (!TR::Compiler->om.areValueTypesEnabled()
+                || !TR_J9MethodBase::isUnsafeCASWithObjectArg(symbol->getMethod()->getRecognizedMethod()))
             && performTransformation(comp(),
                 "%s transforming Unsafe.CAS [" POINTER_PRINTF_FORMAT "] into codegen inlineable\n", optDetailString(),
                 node)) {

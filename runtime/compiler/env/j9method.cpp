@@ -5331,6 +5331,23 @@ bool TR_J9MethodBase::isUnsafeCAS()
     return false;
 }
 
+bool TR_J9MethodBase::isUnsafeCASWithObjectArg(TR::RecognizedMethod rm)
+{
+    switch (rm) {
+        case TR::jdk_internal_misc_Unsafe_compareAndExchangeObject:
+        case TR::jdk_internal_misc_Unsafe_compareAndExchangeReference:
+        case TR::sun_misc_Unsafe_compareAndSwapObject_jlObjectJjlObjectjlObject_Z: {
+            return true;
+        }
+
+        default: {
+            break;
+        }
+    }
+
+    return false;
+}
+
 bool TR_J9MethodBase::isUnsafeWithObjectArg()
 {
     TR::RecognizedMethod rm = getRecognizedMethod();

@@ -129,6 +129,7 @@ public:
 
     virtual bool isUnsafeWithObjectArg();
     virtual bool isUnsafeCAS();
+    static bool isUnsafeCASWithObjectArg(TR::RecognizedMethod rm);
     virtual uint32_t numberOfExplicitParameters();
     virtual TR::DataType parmType(uint32_t parmNumber); // returns the type of the parmNumber'th parameter (0-based)
 
