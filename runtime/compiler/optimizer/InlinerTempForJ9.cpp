@@ -1664,12 +1664,12 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
         : NULL;
 
     // There are four cases where we cannot be sure of the Object type at compile time:
-    // 1.) The object's type signature is unavailable/unknown
-    // 2.) The signature names java/lang/Object
-    // 3.) The signature names some interface type, which is a problem because interface types are
-    //     not checked by the verifier
-    // 4.) The signature belongs to a parameter of the calling method, which is a problem because
-    //     parameters can share slots with variables of other, potentially incompatible types
+    // A) The object's type signature is unavailable/unknown
+    // B) The signature names java/lang/Object
+    // C) The signature names some interface type, which is a problem because interface types are
+    //    not checked by the verifier
+    // D) The signature belongs to a parameter of the calling method, which is a problem because
+    //    parameters can share slots with variables of other, potentially incompatible types
     bool objTypeUnknown;
 
     if (objTypeSig == NULL) {
@@ -1783,6 +1783,7 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
             // create lowtag test treetop
             compareTree = genClassCheckForUnsafeGetPut(offsetNode->duplicateTree(), /* branchIfLowTagged */ false);
             compareValueVTInsertionPointTT = compareTree;
+            debugTrace(tracer(), "compareValueVTInsertionPointTT = %p", compareValueVTInsertionPointTT->getNode());
         }
 
         // create lowtag access treetop
@@ -1922,14 +1923,6 @@ bool TR_J9InlinerPolicy::createUnsafeCASCallDiamond(TR::TreeTop *callNodeTreeTop
         cfg->addNode(lowTagAccessBlock);
         cfg->addEdge(TR::CFGEdge::createEdge(isLowTaggedBlock, lowTagAccessBlock, trMemory()));
         cfg->addEdge(TR::CFGEdge::createEdge(lowTagAccessBlock, joinBlock, trMemory()));
-        debugTrace(tracer(),
-            "At end of arrayTestNeeded, blocks created are isNullTreeTop block_%d, defaultAccessTreeTop block_%d, "
-            "nonNullAccessTreeTop block_%d, callBlock block_%d, joinBlock block_%d, isArrayTreeTop block_%d, "
-            "arrayAccessTreeTop block_%d, compareTree/isLowTaggedBlock block_%d\n",
-            isNullTreeTop->getEnclosingBlock()->getNumber(), defaultAccessTreeTop->getEnclosingBlock()->getNumber(),
-            nonNullAccessTreeTop->getEnclosingBlock()->getNumber(), callBlock->getNumber(), joinBlock->getNumber(),
-            isArrayTreeTop->getEnclosingBlock()->getNumber(), arrayAccessTreeTop->getEnclosingBlock()->getNumber(),
-            compareTree->getEnclosingBlock()->getNumber());
     } else if (arrayBlockNeeded) // in case (2), we generate only the null test diamond
     {
         joinBlock = callBlock->createConditionalBlocksBeforeTree(callNodeTreeTop, isNullTreeTop, defaultAccessTreeTop,
