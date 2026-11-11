@@ -289,6 +289,7 @@ bool TR_PPC32RelocationTarget::isOrderedPairRelocation(TR_RelocationRecord *relo
         case TR_MethodEnterExitHookAddress:
         case TR_CallsiteTableEntryAddress:
         case TR_MethodTypeTableEntryAddress:
+        case TR_ConstantPool:
             return true;
         default:
             return false;
